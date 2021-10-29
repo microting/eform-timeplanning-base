@@ -27,6 +27,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
     using eFormApi.BasePn.Abstractions;
     using eFormApi.BasePn.Infrastructure.Database.Entities;
     using Entities;
+    using Extensions.Seed;
     using Microsoft.EntityFrameworkCore;
 
     public class TimePlanningPnDbContext: DbContext, IPluginDbContext
@@ -48,10 +49,12 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<PluginGroupPermissionVersion> PluginGroupPermissionVersions { get; set; }
         public DbSet<PlanRegistration> PlanRegistrations { get; set; }
         public DbSet<DateComment> DateComments { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.SeedLatest();
         }
     }
 }

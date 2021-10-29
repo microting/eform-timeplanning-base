@@ -1,7 +1,7 @@
 ﻿/*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2021 Microting A/S
+Copyright (c) 2007 - 2019 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,29 +23,15 @@ SOFTWARE.
 */
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 {
-    using System;
-
-    public class PlanRegistration : PnBase
+    public class Message
     {
+        public Message(int id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
 
-        public int AssignedSiteId { get; set; }
-        public virtual AssignedSite AssignedSite { get; set; }
-        public DateTime Date { get; set; }
-        public string PlanText { get; set; }
-        public double PlanHours { get; set; }
-        public int Start1Id{ get; set; }
-        public int Stop1Id { get; set; }
-        public int Pause1Id { get; set; }
-        public int Start2Id { get; set; }
-        public int Stop2Id { get; set; }
-        public int Pause2Id { get; set; }
-        public double NettoHours { get; set; }
-        public double Flex { get; set; }
-        public double SumFlex { get; set; }
-        public double PaiedOutFlex { get; set; }
-        public int MessageId { get; set; }
-        public Message Message { get; set; }
-        public string CommentOffice { get; set; }
-        public string CommentOfficeAll { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }

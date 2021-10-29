@@ -1,7 +1,7 @@
 ﻿/*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2021 Microting A/S
+Copyright (c) 2007 - 2019 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,31 +21,24 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
+namespace Microting.TimePlanningBase.Infrastructure.Extensions.Seed
 {
-    using System;
+    using CodeFirstLists;
+    using Data.Entities;
+    using Microsoft.EntityFrameworkCore;
 
-    public class PlanRegistration : PnBase
+    public static class TimePlanningDbSeed
     {
+        public static ModelBuilder SeedLatest(this ModelBuilder modelBuilder)
+        {
+            var messages = MessagesCodeFirst.GetList();
 
-        public int AssignedSiteId { get; set; }
-        public virtual AssignedSite AssignedSite { get; set; }
-        public DateTime Date { get; set; }
-        public string PlanText { get; set; }
-        public double PlanHours { get; set; }
-        public int Start1Id{ get; set; }
-        public int Stop1Id { get; set; }
-        public int Pause1Id { get; set; }
-        public int Start2Id { get; set; }
-        public int Stop2Id { get; set; }
-        public int Pause2Id { get; set; }
-        public double NettoHours { get; set; }
-        public double Flex { get; set; }
-        public double SumFlex { get; set; }
-        public double PaiedOutFlex { get; set; }
-        public int MessageId { get; set; }
-        public Message Message { get; set; }
-        public string CommentOffice { get; set; }
-        public string CommentOfficeAll { get; set; }
+            modelBuilder.Entity<Message>()
+                .Property(m => m.Id)
+                .ValueGeneratedOnAdd();
+            modelBuilder.Entity<Message>().HasData(messages);
+
+            return modelBuilder;
+        }
     }
 }
