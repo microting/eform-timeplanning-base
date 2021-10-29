@@ -56,7 +56,7 @@ namespace Microting.TimePlanningBase.Tests
         {
 
             _connectionString =
-                @$"Server = localhost; port = 3306; Database = {DatabaseName}; user = root; password = asd123; Convert Zero Datetime = true;";
+                @$"Server = localhost; port = 3306; Database = {DatabaseName}; user = root; password = secretpassword; Convert Zero Datetime = true;";
 
             GetContext(_connectionString);
 
