@@ -86,6 +86,125 @@ namespace Microting.TimePlanningBase.Migrations
                     b.ToTable("AssignedSiteVersions");
                 });
 
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.DateComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("CommentOfficeAll")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DateComments");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("AssignedSiteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CommentOffice")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CommentOfficeAll")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<double>("Flex")
+                        .HasColumnType("double");
+
+                    b.Property<int>("Message")
+                        .HasColumnType("int");
+
+                    b.Property<double>("NettoHours")
+                        .HasColumnType("double");
+
+                    b.Property<double>("PaiedOutFlex")
+                        .HasColumnType("double");
+
+                    b.Property<int>("Pause1Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Pause2Id")
+                        .HasColumnType("int");
+
+                    b.Property<double>("PlanHours")
+                        .HasColumnType("double");
+
+                    b.Property<string>("PlanText")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Start1Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Start2Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Stop1Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Stop2Id")
+                        .HasColumnType("int");
+
+                    b.Property<double>("SumFlex")
+                        .HasColumnType("double");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedSiteId");
+
+                    b.ToTable("PlanRegistrations");
+                });
+
             modelBuilder.Entity("Microting.eFormApi.BasePn.Infrastructure.Database.Entities.PluginConfigurationValue", b =>
                 {
                     b.Property<int>("Id")
@@ -275,6 +394,17 @@ namespace Microting.TimePlanningBase.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PluginPermissions");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistration", b =>
+                {
+                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", "AssignedSite")
+                        .WithMany()
+                        .HasForeignKey("AssignedSiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssignedSite");
                 });
 
             modelBuilder.Entity("Microting.eFormApi.BasePn.Infrastructure.Database.Entities.PluginGroupPermission", b =>

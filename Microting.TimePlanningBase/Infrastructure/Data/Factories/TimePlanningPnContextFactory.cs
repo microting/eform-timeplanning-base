@@ -33,7 +33,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Factories
     {
         public TimePlanningPnDbContext CreateDbContext(string[] args)
         {
-            const string defaultCs = "Server = localhost; port = 3306; Database = time-planning-pn; user = root; password = secretpassword;Convert Zero Datetime = true;";
+            const string defaultCs = "Server = localhost; port = 3306; Database = time-planning-pn; user = root; password = asd123;Convert Zero Datetime = true;";
             var optionsBuilder = new DbContextOptionsBuilder<TimePlanningPnDbContext>();
 
             optionsBuilder.UseMySql(args.Any() ? args[0] : defaultCs, new MariaDbServerVersion(
