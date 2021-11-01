@@ -29,7 +29,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
     /// <summary>
     /// PlanRegistrationVersion
     /// </summary>
-    public class PlanRegistrationVersion
+    public class PlanRegistrationVersion : PnBase
     {
         public int AssignedSiteId { get; set; }
         public virtual AssignedSite AssignedSite { get; set; }
