@@ -90,6 +90,8 @@ namespace Microting.TimePlanningBase.Tests
             {
                 "AssignedSites",
                 "AssignedSiteVersions",
+                "PlanRegistrations",
+                "PlanRegistrationVersions",
             };
 
             var firstRunNotDone = true;
