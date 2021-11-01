@@ -86,42 +86,6 @@ namespace Microting.TimePlanningBase.Migrations
                     b.ToTable("AssignedSiteVersions");
                 });
 
-            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.DateComment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("CommentOfficeAll")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("CreatedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("UpdatedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.Property<string>("WorkflowState")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DateComments");
-                });
-
             modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.Message", b =>
                 {
                     b.Property<int>("Id")
@@ -266,6 +230,94 @@ namespace Microting.TimePlanningBase.Migrations
                     b.HasIndex("MessageId");
 
                     b.ToTable("PlanRegistrations");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistrationVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("AssignedSiteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CommentOffice")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CommentOfficeAll")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<double>("Flex")
+                        .HasColumnType("double");
+
+                    b.Property<int>("MessageId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("NettoHours")
+                        .HasColumnType("double");
+
+                    b.Property<double>("PaiedOutFlex")
+                        .HasColumnType("double");
+
+                    b.Property<int>("Pause1Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Pause2Id")
+                        .HasColumnType("int");
+
+                    b.Property<double>("PlanHours")
+                        .HasColumnType("double");
+
+                    b.Property<int>("PlanRegistrationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PlanText")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Start1Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Start2Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Stop1Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Stop2Id")
+                        .HasColumnType("int");
+
+                    b.Property<double>("SumFlex")
+                        .HasColumnType("double");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedSiteId");
+
+                    b.HasIndex("MessageId");
+
+                    b.ToTable("PlanRegistrationVersions");
                 });
 
             modelBuilder.Entity("Microting.eFormApi.BasePn.Infrastructure.Database.Entities.PluginConfigurationValue", b =>
@@ -460,6 +512,25 @@ namespace Microting.TimePlanningBase.Migrations
                 });
 
             modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistration", b =>
+                {
+                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", "AssignedSite")
+                        .WithMany()
+                        .HasForeignKey("AssignedSiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.Message", "Message")
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssignedSite");
+
+                    b.Navigation("Message");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistrationVersion", b =>
                 {
                     b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", "AssignedSite")
                         .WithMany()
