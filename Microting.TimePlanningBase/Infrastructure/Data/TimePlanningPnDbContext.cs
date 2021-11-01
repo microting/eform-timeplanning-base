@@ -41,15 +41,17 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<AssignedSite> AssignedSites { get; set; }
         public DbSet<AssignedSiteVersion> AssignedSiteVersions { get; set; }
 
+        public DbSet<PlanRegistration> PlanRegistrations { get; set; }
+        public DbSet<PlanRegistrationVersion> PlanRegistrationVersions { get; set; }
+
+        public DbSet<Message> Messages { get; set; }
+
         // common tables
         public DbSet<PluginConfigurationValue> PluginConfigurationValues { get; set; }
         public DbSet<PluginConfigurationValueVersion> PluginConfigurationValueVersions { get; set; }
         public DbSet<PluginPermission> PluginPermissions { get; set; }
         public DbSet<PluginGroupPermission> PluginGroupPermissions { get; set; }
         public DbSet<PluginGroupPermissionVersion> PluginGroupPermissionVersions { get; set; }
-        public DbSet<PlanRegistration> PlanRegistrations { get; set; }
-        public DbSet<PlanRegistrationVersion> PlanRegistrationVersions { get; set; }
-        public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
