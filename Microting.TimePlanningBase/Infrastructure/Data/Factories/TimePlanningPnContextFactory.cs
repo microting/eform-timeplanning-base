@@ -28,12 +28,21 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Factories
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Design;
+    using Microsoft.Extensions.Configuration;
 
     public class TimePlanningPnContextFactory : IDesignTimeDbContextFactory<TimePlanningPnDbContext>
     {
+        public readonly IConfiguration Configuration;
+
+        public TimePlanningPnContextFactory(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
         public TimePlanningPnDbContext CreateDbContext(string[] args)
         {
-            const string defaultCs = "Server = localhost; port = 3306; Database = time-planning-pn; user = root; password = secretpassword;Convert Zero Datetime = true;";
+
+            var defaultCs = Configuration.GetConnectionString("ConnectionString");
             var optionsBuilder = new DbContextOptionsBuilder<TimePlanningPnDbContext>();
 
             optionsBuilder.UseMySql(args.Any() ? args[0] : defaultCs, new MariaDbServerVersion(

@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
         <PackageIcon>icon.png</PackageIcon>
+        <UserSecretsId>dd71a7fa-b71e-4452-a03e-a35225a41073</UserSecretsId>
     </PropertyGroup>
 
    <ItemGroup>
@@ -14,6 +15,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="3.1.0" />
       <PackageReference Include="Microting.eForm" Version="5.2.4" />
       <PackageReference Include="Microting.eFormApi.BasePn" Version="3.0.14" />
     </ItemGroup>
