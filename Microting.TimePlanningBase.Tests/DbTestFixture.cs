@@ -30,7 +30,6 @@ namespace Microting.TimePlanningBase.Tests
     using Infrastructure.Data;
     using Infrastructure.Data.Factories;
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.Extensions.Configuration;
     using NUnit.Framework;
 
     [TestFixture]
@@ -40,16 +39,12 @@ namespace Microting.TimePlanningBase.Tests
         private string _connectionString;
         private string _path;
         private const string DatabaseName = "time-planning-pn-tests";
-        public readonly IConfiguration Configuration;
 
-        protected DbTestFixture(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+
 
         private void GetContext(string connectionStr)
         {
-            var contextFactory = new TimePlanningPnContextFactory(Configuration);
+            var contextFactory = new TimePlanningPnContextFactory();
             DbContext = contextFactory.CreateDbContext(new[] { connectionStr });
 
             DbContext.Database.Migrate();
@@ -59,7 +54,9 @@ namespace Microting.TimePlanningBase.Tests
         [SetUp]
         public void Setup()
         {
-            _connectionString = Configuration.GetConnectionString("ConnectionString");
+
+            _connectionString =
+                @$"Server = localhost; port = 3306; Database = {DatabaseName}; user = root; password = secretpassword; Convert Zero Datetime = true;";
 
             GetContext(_connectionString);
 
