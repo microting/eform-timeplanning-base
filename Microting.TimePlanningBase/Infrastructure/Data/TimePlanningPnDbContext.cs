@@ -37,9 +37,13 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public TimePlanningPnDbContext(DbContextOptions<TimePlanningPnDbContext> options) : base(options)
         {
         }
+        
+        public DbSet<AssignedSite> AssignedSites { get; set; }
+        public DbSet<AssignedSiteVersion> AssignedSiteVersions { get; set; }
 
         public DbSet<PlanRegistration> PlanRegistrations { get; set; }
         public DbSet<PlanRegistrationVersion> PlanRegistrationVersions { get; set; }
+
         public DbSet<Message> Messages { get; set; }
 
         // common tables
