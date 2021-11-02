@@ -26,10 +26,10 @@ namespace Microting.TimePlanningBase.Infrastructure.Const
     public static class TimePlanningClaims
     {
         public const string AccessTimePlanningPlugin = "time_planning_plugin_access";
-        public const string CreatePlanning = "time_planning_create";
-        public const string EditPlanning = "time_planning_edit";
-        public const string GetPlanning = "time_planning_get";
-        public const string GetWorkingHours = "time_working_hours_get";
-        public const string GetFlex = "time_flex_get";
+        public const string CreatePlanning = "time_planning_plannings_create";
+        public const string EditPlanning = "time_planning_plannings_edit";
+        public const string GetPlanning = "time_planning_plannings_get";
+        public const string GetWorkingHours = "time_planning_working_hours_get";
+        public const string GetFlex = "time_planning_flex_get";
     }
 }
