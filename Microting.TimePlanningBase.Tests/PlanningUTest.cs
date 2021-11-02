@@ -42,11 +42,6 @@ namespace Microting.TimePlanningBase.Tests
         {
             // Arrange
 
-            var assignedSite = new AssignedSite
-            {
-                SiteId = 1,
-            };
-            await assignedSite.Create(DbContext);
             var planRegistration = new PlanRegistration
             {
                 AssignedSiteId = 1,
@@ -135,16 +130,6 @@ namespace Microting.TimePlanningBase.Tests
         public async Task ItemList_Update_DoesUpdate()
         {
             // Arrange
-            var assignedSite = new AssignedSite
-            {
-                SiteId = 1,
-            };
-            await assignedSite.Create(DbContext);
-            var assignedSiteTwo = new AssignedSite
-            {
-                SiteId = 2,
-            };
-            await assignedSiteTwo.Create(DbContext);
             var planRegistration = new PlanRegistration
             {
                 AssignedSiteId = 1,
@@ -273,16 +258,6 @@ namespace Microting.TimePlanningBase.Tests
         public async Task ItemList_Delete_DoesDelete()
         {
             // Arrange
-            var assignedSite = new AssignedSite
-            {
-                SiteId = 1,
-            };
-            await assignedSite.Create(DbContext);
-            var assignedSiteTwo = new AssignedSite
-            {
-                SiteId = 2,
-            };
-            await assignedSiteTwo.Create(DbContext);
             var planRegistration = new PlanRegistration
             {
                 AssignedSiteId = 1,

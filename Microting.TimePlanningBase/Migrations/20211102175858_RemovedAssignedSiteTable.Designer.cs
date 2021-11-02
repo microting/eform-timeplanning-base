@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microting.TimePlanningBase.Infrastructure.Data;
 
 namespace Microting.TimePlanningBase.Migrations
 {
     [DbContext(typeof(TimePlanningPnDbContext))]
-    partial class TimePlanningPnDbContextModelSnapshot : ModelSnapshot
+    [Migration("20211102175858_RemovedAssignedSiteTable")]
+    partial class RemovedAssignedSiteTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
