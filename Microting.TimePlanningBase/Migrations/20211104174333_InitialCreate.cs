@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Microting.TimePlanningBase.Migrations
 {
-    public partial class InitMigration : Migration
+    public partial class InitialCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -66,6 +66,47 @@ namespace Microting.TimePlanningBase.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Messages", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "PlanRegistrationVersions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    AssignedSiteId = table.Column<int>(type: "int", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    PlanText = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PlanHours = table.Column<double>(type: "double", nullable: false),
+                    Start1Id = table.Column<int>(type: "int", nullable: false),
+                    Stop1Id = table.Column<int>(type: "int", nullable: false),
+                    Pause1Id = table.Column<int>(type: "int", nullable: false),
+                    Start2Id = table.Column<int>(type: "int", nullable: false),
+                    Stop2Id = table.Column<int>(type: "int", nullable: false),
+                    Pause2Id = table.Column<int>(type: "int", nullable: false),
+                    NettoHours = table.Column<double>(type: "double", nullable: false),
+                    Flex = table.Column<double>(type: "double", nullable: false),
+                    SumFlex = table.Column<double>(type: "double", nullable: false),
+                    PaiedOutFlex = table.Column<double>(type: "double", nullable: false),
+                    MessageId = table.Column<int>(type: "int", nullable: true),
+                    CommentOffice = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CommentOfficeAll = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PlanRegistrationId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    WorkflowState = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: false),
+                    UpdatedByUserId = table.Column<int>(type: "int", nullable: false),
+                    Version = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PlanRegistrationVersions", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -186,7 +227,7 @@ namespace Microting.TimePlanningBase.Migrations
                     Flex = table.Column<double>(type: "double", nullable: false),
                     SumFlex = table.Column<double>(type: "double", nullable: false),
                     PaiedOutFlex = table.Column<double>(type: "double", nullable: false),
-                    MessageId = table.Column<int>(type: "int", nullable: false),
+                    MessageId = table.Column<int>(type: "int", nullable: true),
                     CommentOffice = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CommentOfficeAll = table.Column<string>(type: "longtext", nullable: true)
@@ -207,66 +248,13 @@ namespace Microting.TimePlanningBase.Migrations
                         column: x => x.AssignedSiteId,
                         principalTable: "AssignedSites",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_PlanRegistrations_Messages_MessageId",
                         column: x => x.MessageId,
                         principalTable: "Messages",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "PlanRegistrationVersions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    AssignedSiteId = table.Column<int>(type: "int", nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    PlanText = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    PlanHours = table.Column<double>(type: "double", nullable: false),
-                    Start1Id = table.Column<int>(type: "int", nullable: false),
-                    Stop1Id = table.Column<int>(type: "int", nullable: false),
-                    Pause1Id = table.Column<int>(type: "int", nullable: false),
-                    Start2Id = table.Column<int>(type: "int", nullable: false),
-                    Stop2Id = table.Column<int>(type: "int", nullable: false),
-                    Pause2Id = table.Column<int>(type: "int", nullable: false),
-                    NettoHours = table.Column<double>(type: "double", nullable: false),
-                    Flex = table.Column<double>(type: "double", nullable: false),
-                    SumFlex = table.Column<double>(type: "double", nullable: false),
-                    PaiedOutFlex = table.Column<double>(type: "double", nullable: false),
-                    MessageId = table.Column<int>(type: "int", nullable: false),
-                    CommentOffice = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CommentOfficeAll = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    PlanRegistrationId = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    WorkflowState = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CreatedByUserId = table.Column<int>(type: "int", nullable: false),
-                    UpdatedByUserId = table.Column<int>(type: "int", nullable: false),
-                    Version = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PlanRegistrationVersions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PlanRegistrationVersions_AssignedSites_AssignedSiteId",
-                        column: x => x.AssignedSiteId,
-                        principalTable: "AssignedSites",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PlanRegistrationVersions_Messages_MessageId",
-                        column: x => x.MessageId,
-                        principalTable: "Messages",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -323,16 +311,6 @@ namespace Microting.TimePlanningBase.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_PlanRegistrations_MessageId",
                 table: "PlanRegistrations",
-                column: "MessageId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PlanRegistrationVersions_AssignedSiteId",
-                table: "PlanRegistrationVersions",
-                column: "AssignedSiteId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PlanRegistrationVersions_MessageId",
-                table: "PlanRegistrationVersions",
                 column: "MessageId");
 
             migrationBuilder.CreateIndex(
