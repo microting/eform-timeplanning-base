@@ -30,14 +30,14 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
     using Extensions.Seed;
     using Microsoft.EntityFrameworkCore;
 
-    public class TimePlanningPnDbContext: DbContext, IPluginDbContext
+    public class TimePlanningPnDbContext : DbContext, IPluginDbContext
     {
         public TimePlanningPnDbContext() { }
 
         public TimePlanningPnDbContext(DbContextOptions<TimePlanningPnDbContext> options) : base(options)
         {
         }
-        
+
         public DbSet<AssignedSite> AssignedSites { get; set; }
         public DbSet<AssignedSiteVersion> AssignedSiteVersions { get; set; }
 
@@ -56,6 +56,12 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PlanRegistration>().HasOne(x => x.AssignedSite)
+                .WithMany(x => x.PlanRegistrations)
+                .HasForeignKey(x => x.AssignedSiteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.SeedLatest();
         }
     }

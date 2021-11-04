@@ -24,8 +24,13 @@ SOFTWARE.
 
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 {
+    using System.Collections.Generic;
+
     public class AssignedSite: PnBase
     {
         public int SiteId { get; set; }
+
+        public virtual List<PlanRegistration> PlanRegistrations { get; set; }
+            = new();
     }
 }

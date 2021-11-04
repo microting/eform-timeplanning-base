@@ -174,7 +174,7 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<double>("Flex")
                         .HasColumnType("double");
 
-                    b.Property<int>("MessageId")
+                    b.Property<int?>("MessageId")
                         .HasColumnType("int");
 
                     b.Property<double>("NettoHours")
@@ -259,7 +259,7 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<double>("Flex")
                         .HasColumnType("double");
 
-                    b.Property<int>("MessageId")
+                    b.Property<int?>("MessageId")
                         .HasColumnType("int");
 
                     b.Property<double>("NettoHours")
@@ -312,10 +312,6 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AssignedSiteId");
-
-                    b.HasIndex("MessageId");
 
                     b.ToTable("PlanRegistrationVersions");
                 });
@@ -514,35 +510,14 @@ namespace Microting.TimePlanningBase.Migrations
             modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistration", b =>
                 {
                     b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", "AssignedSite")
-                        .WithMany()
+                        .WithMany("PlanRegistrations")
                         .HasForeignKey("AssignedSiteId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.Message", "Message")
                         .WithMany()
-                        .HasForeignKey("MessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AssignedSite");
-
-                    b.Navigation("Message");
-                });
-
-            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistrationVersion", b =>
-                {
-                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", "AssignedSite")
-                        .WithMany()
-                        .HasForeignKey("AssignedSiteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.Message", "Message")
-                        .WithMany()
-                        .HasForeignKey("MessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("MessageId");
 
                     b.Navigation("AssignedSite");
 
@@ -558,6 +533,11 @@ namespace Microting.TimePlanningBase.Migrations
                         .IsRequired();
 
                     b.Navigation("Permission");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", b =>
+                {
+                    b.Navigation("PlanRegistrations");
                 });
 #pragma warning restore 612, 618
         }
