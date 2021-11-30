@@ -29,5 +29,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
         public int SiteId { get; set; }
 
         public int AssignedSiteId { get; set; }
+
+        public int? CaseMicrotingUid { get; set; }
     }
 }
