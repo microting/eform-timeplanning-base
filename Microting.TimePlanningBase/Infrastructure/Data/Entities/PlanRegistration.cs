@@ -64,5 +64,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
         public string CommentOffice { get; set; }
 
         public string CommentOfficeAll { get; set; }
+
+        public int StatusCaseId { get; set; }
     }
 }
