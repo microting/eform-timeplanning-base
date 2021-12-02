@@ -352,9 +352,6 @@ namespace Microting.TimePlanningBase.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int?>("AssignedSiteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("CommentOffice")
                         .HasColumnType("longtext");
 
@@ -429,8 +426,6 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AssignedSiteId");
 
                     b.HasIndex("MessageId");
 
@@ -537,20 +532,11 @@ namespace Microting.TimePlanningBase.Migrations
 
             modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistration", b =>
                 {
-                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", null)
-                        .WithMany("PlanRegistrations")
-                        .HasForeignKey("AssignedSiteId");
-
                     b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.Message", "Message")
                         .WithMany()
                         .HasForeignKey("MessageId");
 
                     b.Navigation("Message");
-                });
-
-            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", b =>
-                {
-                    b.Navigation("PlanRegistrations");
                 });
 #pragma warning restore 612, 618
         }

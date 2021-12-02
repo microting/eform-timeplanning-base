@@ -11,8 +11,8 @@ using Microting.TimePlanningBase.Infrastructure.Data;
 namespace Microting.TimePlanningBase.Migrations
 {
     [DbContext(typeof(TimePlanningPnDbContext))]
-    [Migration("20211202163209_AddingStatusCaseId")]
-    partial class AddingStatusCaseId
+    [Migration("20211202224031_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -354,9 +354,6 @@ namespace Microting.TimePlanningBase.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("AssignedSiteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("CommentOffice")
                         .HasColumnType("longtext");
 
@@ -396,6 +393,9 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<string>("PlanText")
                         .HasColumnType("longtext");
 
+                    b.Property<int>("SdkSitId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Start1Id")
                         .HasColumnType("int");
 
@@ -429,8 +429,6 @@ namespace Microting.TimePlanningBase.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignedSiteId");
-
                     b.HasIndex("MessageId");
 
                     b.ToTable("PlanRegistrations");
@@ -440,9 +438,6 @@ namespace Microting.TimePlanningBase.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("AssignedSiteId")
                         .HasColumnType("int");
 
                     b.Property<string>("CommentOffice")
@@ -486,6 +481,9 @@ namespace Microting.TimePlanningBase.Migrations
 
                     b.Property<string>("PlanText")
                         .HasColumnType("longtext");
+
+                    b.Property<int>("SdkSitId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Start1Id")
                         .HasColumnType("int");
@@ -536,24 +534,11 @@ namespace Microting.TimePlanningBase.Migrations
 
             modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistration", b =>
                 {
-                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", "AssignedSite")
-                        .WithMany("PlanRegistrations")
-                        .HasForeignKey("AssignedSiteId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.Message", "Message")
                         .WithMany()
                         .HasForeignKey("MessageId");
 
-                    b.Navigation("AssignedSite");
-
                     b.Navigation("Message");
-                });
-
-            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", b =>
-                {
-                    b.Navigation("PlanRegistrations");
                 });
 #pragma warning restore 612, 618
         }

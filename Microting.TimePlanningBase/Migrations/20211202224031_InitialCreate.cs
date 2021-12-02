@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#nullable disable
+
 namespace Microting.TimePlanningBase.Migrations
 {
     public partial class InitialCreate : Migration
@@ -18,6 +20,7 @@ namespace Microting.TimePlanningBase.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     SiteId = table.Column<int>(type: "int", nullable: false),
+                    CaseMicrotingUid = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     WorkflowState = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
@@ -40,6 +43,7 @@ namespace Microting.TimePlanningBase.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     SiteId = table.Column<int>(type: "int", nullable: false),
                     AssignedSiteId = table.Column<int>(type: "int", nullable: false),
+                    CaseMicrotingUid = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     WorkflowState = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
@@ -75,7 +79,7 @@ namespace Microting.TimePlanningBase.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    AssignedSiteId = table.Column<int>(type: "int", nullable: false),
+                    SdkSitId = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     PlanText = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -96,6 +100,7 @@ namespace Microting.TimePlanningBase.Migrations
                     CommentOfficeAll = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     PlanRegistrationId = table.Column<int>(type: "int", nullable: false),
+                    StatusCaseId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     WorkflowState = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
@@ -212,7 +217,7 @@ namespace Microting.TimePlanningBase.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    AssignedSiteId = table.Column<int>(type: "int", nullable: false),
+                    SdkSitId = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     PlanText = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -232,6 +237,7 @@ namespace Microting.TimePlanningBase.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CommentOfficeAll = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    StatusCaseId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     WorkflowState = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
@@ -244,17 +250,10 @@ namespace Microting.TimePlanningBase.Migrations
                 {
                     table.PrimaryKey("PK_PlanRegistrations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PlanRegistrations_AssignedSites_AssignedSiteId",
-                        column: x => x.AssignedSiteId,
-                        principalTable: "AssignedSites",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
                         name: "FK_PlanRegistrations_Messages_MessageId",
                         column: x => x.MessageId,
                         principalTable: "Messages",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -304,11 +303,6 @@ namespace Microting.TimePlanningBase.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_PlanRegistrations_AssignedSiteId",
-                table: "PlanRegistrations",
-                column: "AssignedSiteId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_PlanRegistrations_MessageId",
                 table: "PlanRegistrations",
                 column: "MessageId");
@@ -321,6 +315,9 @@ namespace Microting.TimePlanningBase.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AssignedSites");
+
             migrationBuilder.DropTable(
                 name: "AssignedSiteVersions");
 
@@ -341,9 +338,6 @@ namespace Microting.TimePlanningBase.Migrations
 
             migrationBuilder.DropTable(
                 name: "PluginGroupPermissionVersions");
-
-            migrationBuilder.DropTable(
-                name: "AssignedSites");
 
             migrationBuilder.DropTable(
                 name: "Messages");
