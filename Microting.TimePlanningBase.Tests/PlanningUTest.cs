@@ -49,7 +49,7 @@ namespace Microting.TimePlanningBase.Tests
             await assignedSite.Create(DbContext);
             var planRegistration = new PlanRegistration
             {
-                AssignedSiteId = 1,
+                SdkSitId = 1,
                 CommentOffice = Guid.NewGuid().ToString(),
                 CommentOfficeAll = Guid.NewGuid().ToString(),
                 Flex = new Random().NextDouble(),
@@ -72,21 +72,21 @@ namespace Microting.TimePlanningBase.Tests
 
             // Act
             await planRegistration.Create(DbContext);
-            
+
             var planRegistrationList = DbContext.PlanRegistrations
                 .AsNoTracking()
                 .ToList();
-            
+
 
             var planRegistrationVersionsList = DbContext.PlanRegistrationVersions.AsNoTracking().ToList();
-            
+
             // Assert
             Assert.AreEqual(1, planRegistrationList.Count);
             Assert.AreEqual(1, planRegistrationVersionsList.Count);
             Assert.AreEqual(Constants.WorkflowStates.Created, planRegistrationList[0].WorkflowState);
             Assert.AreEqual(planRegistration.CreatedByUserId, planRegistrationList[0].CreatedByUserId);
             Assert.AreEqual(planRegistration.UpdatedByUserId, planRegistrationList[0].UpdatedByUserId);
-            Assert.AreEqual(planRegistration.AssignedSiteId, planRegistrationList[0].AssignedSiteId);
+            Assert.AreEqual(planRegistration.SdkSitId, planRegistrationList[0].SdkSitId);
             Assert.AreEqual(planRegistration.CommentOffice, planRegistrationList[0].CommentOffice);
             Assert.AreEqual(planRegistration.CommentOfficeAll, planRegistrationList[0].CommentOfficeAll);
             Assert.AreEqual(planRegistration.Date.ToString(), planRegistrationList[0].Date.ToString());
@@ -110,7 +110,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(Constants.WorkflowStates.Created, planRegistrationVersionsList[0].WorkflowState);
             Assert.AreEqual(planRegistration.CreatedByUserId, planRegistrationVersionsList[0].CreatedByUserId);
             Assert.AreEqual(planRegistration.UpdatedByUserId, planRegistrationVersionsList[0].UpdatedByUserId);
-            Assert.AreEqual(planRegistration.AssignedSiteId, planRegistrationVersionsList[0].AssignedSiteId);
+            Assert.AreEqual(planRegistration.SdkSitId, planRegistrationVersionsList[0].SdkSitId);
             Assert.AreEqual(planRegistration.CommentOffice, planRegistrationVersionsList[0].CommentOffice);
             Assert.AreEqual(planRegistration.CommentOfficeAll, planRegistrationVersionsList[0].CommentOfficeAll);
             Assert.AreEqual(planRegistration.Date.ToString(), planRegistrationVersionsList[0].Date.ToString());
@@ -147,7 +147,7 @@ namespace Microting.TimePlanningBase.Tests
             await assignedSiteTwo.Create(DbContext);
             var planRegistration = new PlanRegistration
             {
-                AssignedSiteId = 1,
+                SdkSitId = 1,
                 CommentOffice = Guid.NewGuid().ToString(),
                 CommentOfficeAll = Guid.NewGuid().ToString(),
                 Flex = new Random().NextDouble(),
@@ -170,10 +170,10 @@ namespace Microting.TimePlanningBase.Tests
             await planRegistration.Create(DbContext);
 
             // Act
-            
+
             var timePlanningOld = await DbContext.PlanRegistrations.AsNoTracking().FirstOrDefaultAsync();
 
-            planRegistration.AssignedSiteId = 2;
+            planRegistration.SdkSitId = 2;
             planRegistration.CommentOffice = Guid.NewGuid().ToString();
             planRegistration.CommentOfficeAll = Guid.NewGuid().ToString();
             planRegistration.Flex = new Random().NextDouble();
@@ -201,7 +201,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(Constants.WorkflowStates.Created, planRegistrationList[0].WorkflowState);
             Assert.AreEqual(planRegistration.CreatedByUserId, planRegistrationList[0].CreatedByUserId);
             Assert.AreEqual(planRegistration.UpdatedByUserId, planRegistrationList[0].UpdatedByUserId);
-            Assert.AreEqual(planRegistration.AssignedSiteId, planRegistrationList[0].AssignedSiteId);
+            Assert.AreEqual(planRegistration.SdkSitId, planRegistrationList[0].SdkSitId);
             Assert.AreEqual(planRegistration.CommentOffice, planRegistrationList[0].CommentOffice);
             Assert.AreEqual(planRegistration.CommentOfficeAll, planRegistrationList[0].CommentOfficeAll);
             Assert.AreEqual(planRegistration.Date.ToString(), planRegistrationList[0].Date.ToString());
@@ -225,7 +225,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(Constants.WorkflowStates.Created, planRegistrationVersionsList[0].WorkflowState);
             Assert.AreEqual(timePlanningOld.CreatedByUserId, planRegistrationVersionsList[0].CreatedByUserId);
             Assert.AreEqual(timePlanningOld.UpdatedByUserId, planRegistrationVersionsList[0].UpdatedByUserId);
-            Assert.AreEqual(timePlanningOld.AssignedSiteId, planRegistrationVersionsList[0].AssignedSiteId);
+            Assert.AreEqual(timePlanningOld.SdkSitId, planRegistrationVersionsList[0].SdkSitId);
             Assert.AreEqual(timePlanningOld.CommentOffice, planRegistrationVersionsList[0].CommentOffice);
             Assert.AreEqual(timePlanningOld.CommentOfficeAll, planRegistrationVersionsList[0].CommentOfficeAll);
             Assert.AreEqual(timePlanningOld.Date.ToString(), planRegistrationVersionsList[0].Date.ToString());
@@ -248,7 +248,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(Constants.WorkflowStates.Created, planRegistrationVersionsList[1].WorkflowState);
             Assert.AreEqual(planRegistration.CreatedByUserId, planRegistrationVersionsList[1].CreatedByUserId);
             Assert.AreEqual(planRegistration.UpdatedByUserId, planRegistrationVersionsList[1].UpdatedByUserId);
-            Assert.AreEqual(planRegistration.AssignedSiteId, planRegistrationVersionsList[1].AssignedSiteId);
+            Assert.AreEqual(planRegistration.SdkSitId, planRegistrationVersionsList[1].SdkSitId);
             Assert.AreEqual(planRegistration.CommentOffice, planRegistrationVersionsList[1].CommentOffice);
             Assert.AreEqual(planRegistration.CommentOfficeAll, planRegistrationVersionsList[1].CommentOfficeAll);
             Assert.AreEqual(planRegistration.Date.ToString(), planRegistrationVersionsList[1].Date.ToString());
@@ -285,7 +285,7 @@ namespace Microting.TimePlanningBase.Tests
             await assignedSiteTwo.Create(DbContext);
             var planRegistration = new PlanRegistration
             {
-                AssignedSiteId = 1,
+                SdkSitId = 1,
                 CommentOffice = Guid.NewGuid().ToString(),
                 CommentOfficeAll = Guid.NewGuid().ToString(),
                 Flex = new Random().NextDouble(),
@@ -321,7 +321,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(Constants.WorkflowStates.Removed, planRegistrationList[0].WorkflowState);
             Assert.AreEqual(planRegistration.CreatedByUserId, planRegistrationList[0].CreatedByUserId);
             Assert.AreEqual(planRegistration.UpdatedByUserId, planRegistrationList[0].UpdatedByUserId);
-            Assert.AreEqual(planRegistration.AssignedSiteId, planRegistrationList[0].AssignedSiteId);
+            Assert.AreEqual(planRegistration.SdkSitId, planRegistrationList[0].SdkSitId);
             Assert.AreEqual(planRegistration.CommentOffice, planRegistrationList[0].CommentOffice);
             Assert.AreEqual(planRegistration.CommentOfficeAll, planRegistrationList[0].CommentOfficeAll);
             Assert.AreEqual(planRegistration.Date.ToString(), planRegistrationList[0].Date.ToString());
@@ -345,7 +345,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(Constants.WorkflowStates.Created, planRegistrationVersionsList[0].WorkflowState);
             Assert.AreEqual(timePlanningOld.CreatedByUserId, planRegistrationVersionsList[0].CreatedByUserId);
             Assert.AreEqual(timePlanningOld.UpdatedByUserId, planRegistrationVersionsList[0].UpdatedByUserId);
-            Assert.AreEqual(timePlanningOld.AssignedSiteId, planRegistrationVersionsList[0].AssignedSiteId);
+            Assert.AreEqual(timePlanningOld.SdkSitId, planRegistrationVersionsList[0].SdkSitId);
             Assert.AreEqual(timePlanningOld.CommentOffice, planRegistrationVersionsList[0].CommentOffice);
             Assert.AreEqual(timePlanningOld.CommentOfficeAll, planRegistrationVersionsList[0].CommentOfficeAll);
             Assert.AreEqual(timePlanningOld.Date.ToString(), planRegistrationVersionsList[0].Date.ToString());
@@ -368,7 +368,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(Constants.WorkflowStates.Removed, planRegistrationVersionsList[1].WorkflowState);
             Assert.AreEqual(planRegistration.CreatedByUserId, planRegistrationVersionsList[1].CreatedByUserId);
             Assert.AreEqual(planRegistration.UpdatedByUserId, planRegistrationVersionsList[1].UpdatedByUserId);
-            Assert.AreEqual(planRegistration.AssignedSiteId, planRegistrationVersionsList[1].AssignedSiteId);
+            Assert.AreEqual(planRegistration.SdkSitId, planRegistrationVersionsList[1].SdkSitId);
             Assert.AreEqual(planRegistration.CommentOffice, planRegistrationVersionsList[1].CommentOffice);
             Assert.AreEqual(planRegistration.CommentOfficeAll, planRegistrationVersionsList[1].CommentOfficeAll);
             Assert.AreEqual(planRegistration.Date.ToString(), planRegistrationVersionsList[1].Date.ToString());

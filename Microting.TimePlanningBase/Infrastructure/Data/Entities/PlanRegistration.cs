@@ -27,9 +27,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 
     public class PlanRegistration : PnBase
     {
-        public int AssignedSiteId { get; set; }
-
-        public virtual AssignedSite AssignedSite { get; set; }
+        public int SdkSitId { get; set; }
 
         public DateTime Date { get; set; }
 

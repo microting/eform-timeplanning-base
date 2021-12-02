@@ -57,11 +57,6 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<PlanRegistration>().HasOne(x => x.AssignedSite)
-                .WithMany(x => x.PlanRegistrations)
-                .HasForeignKey(x => x.AssignedSiteId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             modelBuilder.SeedLatest();
         }
     }
