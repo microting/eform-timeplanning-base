@@ -21,6 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microting.eForm.Dto;
+using Microting.eForm.Infrastructure.Constants;
+using Microting.eForm.Infrastructure.Data.Entities;
+using Microting.eForm.Infrastructure.Models;
+
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 {
     using System;
@@ -66,5 +77,79 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
         public int StatusCaseId { get; set; }
 
         public string WorkerComment { get; set; }
+
+        private readonly List<string> options = new List<string>();
+
+        public PlanRegistration()
+        {
+            int minute = 0;
+            int hour = 0;
+            for (int i = 0; i < 288; i++)
+            {
+                options.Add($"{hour:00}:{minute:00}");
+                minute += 5;
+                if (minute == 60)
+                {
+                    minute = 0;
+                    hour++;
+                }
+            }
+        }
+
+        public async Task<int> DeployResults(int maxHistoryDays, int eFormId, eFormCore.Core core, Site siteInfo, int folderId)
+        {
+            if (StatusCaseId != 0)
+            {
+                    await core.CaseDelete(StatusCaseId);
+            }
+            await using var sdkDbContext = core.DbContextHelper.GetDbContext();
+            var language = await sdkDbContext.Languages.SingleAsync(x => x.Id == siteInfo.LanguageId);
+            var folder = await sdkDbContext.Folders.SingleOrDefaultAsync(x => x.Id == folderId);
+            var mainElement = await core.ReadeForm(eFormId, language);
+            CultureInfo ci = new CultureInfo(language.LanguageCode);
+            mainElement.Label = Date.ToString("dddd dd. MMM yyyy", ci);
+            mainElement.EndDate = DateTime.UtcNow.AddDays(maxHistoryDays);
+            DateTime startDate = new DateTime(2020, 1, 1);
+            mainElement.DisplayOrder = (startDate - Date).Days;
+            DataElement element = (DataElement)mainElement.ElementList.First();
+            element.Label = mainElement.Label;
+            element.DoneButtonEnabled = false;
+            CDataValue cDataValue = new CDataValue
+            {
+                InderValue = $"<strong>NettoHours: {NettoHours:0.00}</strong><br/>" +
+                             $"{Message}"
+            };
+            element.Description = cDataValue;
+            DataItem dataItem = element.DataItemList.First();
+            dataItem.Color = Constants.FieldColors.Yellow;
+            dataItem.Label = $"<strong>Date: {Date.ToString("dddd dd. MMM yyyy", ci)}</strong>";
+            cDataValue = new CDataValue
+            {
+                InderValue = $"PlanText: {PlanText}<br/>"+
+                             $"PlanHours: {PlanHours}<br/><br/>" +
+                             $"Shift 1 start: {options[Start1Id > 0 ? Start1Id - 1 : 0]}<br/>" +
+                             $"Shift 1 pause: {options[Pause1Id > 0 ? Pause1Id - 1 : 0]}<br/>" +
+                             $"Shift 1 end: {options[Stop1Id > 0 ? Stop1Id - 1 : 0]}<br/><br/>" +
+                             $"Shift 2 start: {options[Start2Id > 0 ? Start2Id - 1 : 0]}<br/>" +
+                             $"Shift 2 pause: {options[Pause2Id > 0 ? Pause2Id - 1 : 0]}<br/>" +
+                             $"Shift 2 end: {options[Stop2Id > 0 ? Stop2Id - 1 : 0]}<br/><br/>" +
+                             $"<strong>NettoHours: {NettoHours:0.00}</strong><br/><br/>" +
+                             $"Flex: {Flex:0.00)}<br/>" +
+                             $"SumFlex: {SumFlex:0.00}<br/>" +
+                             $"PaidOutFlex: {PaiedOutFlex:0.00}<br/><br/>" +
+                             $"Message: {Message}<br/><br/>"+
+                             "<strong>Comments:</strong><br/>" +
+                             $"{WorkerComment}<br/><br/>" +
+                             "<strong>Comment office:</strong><br/>" +
+                             $"{CommentOffice}<br/><br/>" +
+                             "<strong>Comment office all:</strong><br/>" +
+                             $"{CommentOffice}<br/>"
+            };
+            dataItem.Description = cDataValue;
+
+            if (folder != null) mainElement.CheckListFolderName = folder.MicrotingUid.ToString();
+
+            return (int)await core.CaseCreate(mainElement, "", (int)siteInfo.MicrotingUid, folderId);
+        }
     }
 }
