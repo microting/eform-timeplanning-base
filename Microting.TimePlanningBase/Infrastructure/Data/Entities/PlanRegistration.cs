@@ -78,7 +78,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 
         public string WorkerComment { get; set; }
 
-        private readonly List<string> options = new List<string>();
+        public readonly List<string> Options = new();
 
         public PlanRegistration()
         {
@@ -86,7 +86,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
             int hour = 0;
             for (int i = 0; i < 288; i++)
             {
-                options.Add($"{hour:00}:{minute:00}");
+                Options.Add($"{hour:00}:{minute:00}");
                 minute += 5;
                 if (minute == 60)
                 {
@@ -127,12 +127,12 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
             {
                 InderValue = $"PlanText: {PlanText}<br/>"+
                              $"PlanHours: {PlanHours}<br/><br/>" +
-                             $"Shift 1 start: {options[Start1Id > 0 ? Start1Id - 1 : 0]}<br/>" +
-                             $"Shift 1 pause: {options[Pause1Id > 0 ? Pause1Id - 1 : 0]}<br/>" +
-                             $"Shift 1 end: {options[Stop1Id > 0 ? Stop1Id - 1 : 0]}<br/><br/>" +
-                             $"Shift 2 start: {options[Start2Id > 0 ? Start2Id - 1 : 0]}<br/>" +
-                             $"Shift 2 pause: {options[Pause2Id > 0 ? Pause2Id - 1 : 0]}<br/>" +
-                             $"Shift 2 end: {options[Stop2Id > 0 ? Stop2Id - 1 : 0]}<br/><br/>" +
+                             $"Shift 1 start: {Options[Start1Id > 0 ? Start1Id - 1 : 0]}<br/>" +
+                             $"Shift 1 pause: {Options[Pause1Id > 0 ? Pause1Id - 1 : 0]}<br/>" +
+                             $"Shift 1 end: {Options[Stop1Id > 0 ? Stop1Id - 1 : 0]}<br/><br/>" +
+                             $"Shift 2 start: {Options[Start2Id > 0 ? Start2Id - 1 : 0]}<br/>" +
+                             $"Shift 2 pause: {Options[Pause2Id > 0 ? Pause2Id - 1 : 0]}<br/>" +
+                             $"Shift 2 end: {Options[Stop2Id > 0 ? Stop2Id - 1 : 0]}<br/><br/>" +
                              $"<strong>NettoHours: {NettoHours:0.00}</strong><br/><br/>" +
                              $"Flex: {Flex:0.00)}<br/>" +
                              $"SumFlex: {SumFlex:0.00}<br/>" +
