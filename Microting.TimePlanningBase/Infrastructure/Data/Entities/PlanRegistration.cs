@@ -96,7 +96,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
             }
         }
 
-        public async Task<int> DeployResults(int maxHistoryDays, int eFormId, eFormCore.Core core, Site siteInfo, int folderId, Message message)
+        public async Task<int> DeployResults(int maxHistoryDays, int eFormId, eFormCore.Core core, Site siteInfo, int folderId, string messageText)
         {
             if (StatusCaseId != 0)
             {
@@ -117,7 +117,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
             CDataValue cDataValue = new CDataValue
             {
                 InderValue = $"<strong>NettoHours: {NettoHours:0.00}</strong><br/>" +
-                             $"{message.Name}"
+                             $"{messageText}"
             };
             element.Description = cDataValue;
             DataItem dataItem = element.DataItemList.First();
@@ -137,7 +137,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
                              $"Flex: {Flex:0.00)}<br/>" +
                              $"SumFlex: {SumFlex:0.00}<br/>" +
                              $"PaidOutFlex: {PaiedOutFlex:0.00}<br/><br/>" +
-                             $"Message: {message.Name}<br/><br/>"+
+                             $"Message: {messageText}<br/><br/>"+
                              "<strong>Comments:</strong><br/>" +
                              $"{WorkerComment}<br/><br/>" +
                              "<strong>Comment office:</strong><br/>" +
