@@ -134,7 +134,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
                              $"Shift 2 pause: {Options[Pause2Id > 0 ? Pause2Id - 1 : 0]}<br/>" +
                              $"Shift 2 end: {Options[Stop2Id > 0 ? Stop2Id - 1 : 0]}<br/><br/>" +
                              $"<strong>NettoHours: {NettoHours:0.00}</strong><br/><br/>" +
-                             $"Flex: {Flex:0.00)}<br/>" +
+                             $"Flex: {Flex:0.00}<br/>" +
                              $"SumFlex: {SumFlex:0.00}<br/>" +
                              $"PaidOutFlex: {PaiedOutFlex:0.00}<br/><br/>" +
                              $"Message: {messageText}<br/><br/>"+
