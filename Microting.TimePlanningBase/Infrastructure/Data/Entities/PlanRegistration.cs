@@ -25,12 +25,14 @@ SOFTWARE.
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microting.eForm.Dto;
 using Microting.eForm.Infrastructure.Constants;
 using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.eForm.Infrastructure.Models;
+using Microting.TimePlanningBase.Resources;
 
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 {
@@ -106,6 +108,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
             var language = await sdkDbContext.Languages.SingleAsync(x => x.Id == siteInfo.LanguageId);
             var folder = await sdkDbContext.Folders.SingleOrDefaultAsync(x => x.Id == folderId);
             var mainElement = await core.ReadeForm(eFormId, language);
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(language.LanguageCode);
             CultureInfo ci = new CultureInfo(language.LanguageCode);
             mainElement.Label = Date.ToString("dddd dd. MMM yyyy", ci);
             mainElement.EndDate = DateTime.UtcNow.AddDays(maxHistoryDays);
@@ -116,33 +119,33 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
             element.DoneButtonEnabled = false;
             CDataValue cDataValue = new CDataValue
             {
-                InderValue = $"<strong>NettoHours: {NettoHours:0.00}</strong><br/>" +
+                InderValue = $"<strong>{Translations.NettoHours}: {NettoHours:0.00}</strong><br/>" +
                              $"{messageText}"
             };
             element.Description = cDataValue;
             DataItem dataItem = element.DataItemList.First();
             dataItem.Color = Constants.FieldColors.Yellow;
-            dataItem.Label = $"<strong>Date: {Date.ToString("dddd dd. MMM yyyy", ci)}</strong>";
+            dataItem.Label = $"<strong>{Translations.Date}: {Date.ToString("dddd dd. MMM yyyy", ci)}</strong>";
             cDataValue = new CDataValue
             {
-                InderValue = $"PlanText: {PlanText}<br/>"+
-                             $"PlanHours: {PlanHours}<br/><br/>" +
-                             $"Shift 1 start: {Options[Start1Id > 0 ? Start1Id - 1 : 0]}<br/>" +
-                             $"Shift 1 pause: {Options[Pause1Id > 0 ? Pause1Id - 1 : 0]}<br/>" +
-                             $"Shift 1 end: {Options[Stop1Id > 0 ? Stop1Id - 1 : 0]}<br/><br/>" +
-                             $"Shift 2 start: {Options[Start2Id > 0 ? Start2Id - 1 : 0]}<br/>" +
-                             $"Shift 2 pause: {Options[Pause2Id > 0 ? Pause2Id - 1 : 0]}<br/>" +
-                             $"Shift 2 end: {Options[Stop2Id > 0 ? Stop2Id - 1 : 0]}<br/><br/>" +
-                             $"<strong>NettoHours: {NettoHours:0.00}</strong><br/><br/>" +
-                             $"Flex: {Flex:0.00}<br/>" +
-                             $"SumFlex: {SumFlex:0.00}<br/>" +
-                             $"PaidOutFlex: {PaiedOutFlex:0.00}<br/><br/>" +
-                             $"Message: {messageText}<br/><br/>"+
-                             "<strong>Comments:</strong><br/>" +
+                InderValue = $"{Translations.PlanText}: {PlanText}<br/>"+
+                             $"{Translations.PlanHours}: {PlanHours}<br/><br/>" +
+                             $"{Translations.Shift_1__start}: {Options[Start1Id > 0 ? Start1Id - 1 : 0]}<br/>" +
+                             $"{Translations.Shift_1__pause}: {Options[Pause1Id > 0 ? Pause1Id - 1 : 0]}<br/>" +
+                             $"{Translations.Shift_1__end}: {Options[Stop1Id > 0 ? Stop1Id - 1 : 0]}<br/><br/>" +
+                             $"{Translations.Shift_2__start}: {Options[Start2Id > 0 ? Start2Id - 1 : 0]}<br/>" +
+                             $"{Translations.Shift_2__pause}: {Options[Pause2Id > 0 ? Pause2Id - 1 : 0]}<br/>" +
+                             $"{Translations.Shift_2__end}: {Options[Stop2Id > 0 ? Stop2Id - 1 : 0]}<br/><br/>" +
+                             $"<strong>{Translations.NettoHours}: {NettoHours:0.00}</strong><br/><br/>" +
+                             $"{Translations.Flex}: {Flex:0.00}<br/>" +
+                             $"{Translations.SumFlex}: {SumFlex:0.00}<br/>" +
+                             $"{Translations.PaidOutFlex}: {PaiedOutFlex:0.00}<br/><br/>" +
+                             $"{Translations.Message}: {messageText}<br/><br/>"+
+                             $"<strong>{Translations.Comments}:</strong><br/>" +
                              $"{WorkerComment}<br/><br/>" +
-                             "<strong>Comment office:</strong><br/>" +
+                             $"<strong>{Translations.Comment_office}:</strong><br/>" +
                              $"{CommentOffice}<br/><br/>" +
-                             "<strong>Comment office all:</strong><br/>" +
+                             $"<strong>{Translations.Comment_office_all}:</strong><br/>" +
                              $"{CommentOffice}<br/>"
             };
             dataItem.Description = cDataValue;
