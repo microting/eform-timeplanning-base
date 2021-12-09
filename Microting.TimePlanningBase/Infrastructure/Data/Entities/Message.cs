@@ -25,10 +25,13 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 {
     public class Message
     {
-        public Message(int id, string name)
+        public Message(int id, string name, string daName, string enName, string deName)
         {
             Id = id;
             Name = name;
+            DaName = daName;
+            EnName = enName;
+            DeName = deName;
         }
 
         public int Id { get; set; }
