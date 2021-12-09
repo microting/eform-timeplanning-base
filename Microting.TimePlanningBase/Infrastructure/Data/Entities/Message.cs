@@ -33,5 +33,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 
         public int Id { get; set; }
         public string Name { get; set; }
+        public string DaName { get; set; }
+        public string DeName { get; set; }
+        public string EnName { get; set; }
     }
 }
