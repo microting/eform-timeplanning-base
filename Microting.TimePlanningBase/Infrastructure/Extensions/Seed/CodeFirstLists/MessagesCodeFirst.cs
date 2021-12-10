@@ -32,7 +32,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Extensions.Seed.CodeFirstLis
         public static readonly Message VacationMessage = new(2, "Vacation", "Ferie", "Vacation", "Ferien");
         public static readonly Message SickMessage = new(3, "Sick", "Sygdom", "Sick", "Krank");
         public static readonly Message CourseMessage = new(4, "Course", "Kursus", "Course", "Kurs");
-        public static readonly Message LeaveOfAbsenceMessage = new(5, "Leave of absence", "Orlog", "Leave of absence", "Urlaub");
+        public static readonly Message LeaveOfAbsenceMessage = new(5, "Leave of absence", "Orlov", "Leave of absence", "Urlaub");
         public static readonly Message CareMessage = new(6, "Care", "", "", "");
         public static readonly Message ChildrenFirstSickMessage = new(7, "Children's 1st sick", "Barns 1. sygedag", "Children's 1st sick", "Kinder 1. Krank");
         public static readonly Message ChildrenSecondSickMessage = new(8, "Children's 2nd sick", "Barns 2. sygedag", "Children's 2nd sick", "Kinder 2. Krank");
