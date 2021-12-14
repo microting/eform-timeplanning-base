@@ -286,22 +286,6 @@ namespace Microting.TimePlanningBase.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
-            migrationBuilder.InsertData(
-                table: "Messages",
-                columns: new[] { "Id", "Name" },
-                values: new object[,]
-                {
-                    { 1, "Day Off" },
-                    { 2, "Vacation" },
-                    { 3, "Sick" },
-                    { 4, "Course" },
-                    { 5, "Leave of absence" },
-                    { 6, "Care" },
-                    { 7, "Children's 1st sick" },
-                    { 8, "Children's 2nd sick" },
-                    { 9, "Time off" }
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_PlanRegistrations_MessageId",
                 table: "PlanRegistrations",
