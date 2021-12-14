@@ -56,7 +56,7 @@ namespace Microting.TimePlanningBase.Tests
                 Date = DateTime.Now,
                 UpdatedByUserId = 1,
                 CreatedByUserId = 1,
-                MessageId = new Random().Next(1, 8),
+                MessageId = null,
                 NettoHours = new Random().NextDouble(),
                 PlanText = Guid.NewGuid().ToString(),
                 PaiedOutFlex = new Random().NextDouble(),
@@ -154,7 +154,7 @@ namespace Microting.TimePlanningBase.Tests
                 Date = DateTime.Now,
                 UpdatedByUserId = 1,
                 CreatedByUserId = 1,
-                MessageId = new Random().Next(1, 8),
+                MessageId = null,
                 NettoHours = new Random().NextDouble(),
                 PlanText = Guid.NewGuid().ToString(),
                 PaiedOutFlex = new Random().NextDouble(),
@@ -179,7 +179,7 @@ namespace Microting.TimePlanningBase.Tests
             planRegistration.Flex = new Random().NextDouble();
             planRegistration.Date = DateTime.Now;
             planRegistration.UpdatedByUserId = 1;
-            planRegistration.MessageId = new Random().Next(1, 8);
+            planRegistration.MessageId = null;
             planRegistration.NettoHours = new Random().NextDouble();
             planRegistration.PlanText = Guid.NewGuid().ToString();
             planRegistration.Pause1Id = new Random().Next();
@@ -292,7 +292,7 @@ namespace Microting.TimePlanningBase.Tests
                 Date = DateTime.Now,
                 UpdatedByUserId = 1,
                 CreatedByUserId = 1,
-                MessageId = new Random().Next(1, 8),
+                MessageId = null,
                 NettoHours = new Random().NextDouble(),
                 PlanText = Guid.NewGuid().ToString(),
                 PaiedOutFlex = new Random().NextDouble(),
