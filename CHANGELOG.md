@@ -1,5 +1,14 @@
 # Changelog
 
+## [v2.0.24](https://github.com/microting/eform-timeplanning-base/tree/v2.0.24) (2021-12-21)
+
+[Full Changelog](https://github.com/microting/eform-timeplanning-base/compare/v2.0.23...v2.0.24)
+
+**Implemented enhancements:**
+
+- Bump Microting.eFormApi.BasePn from 3.1.12 to 3.1.13 [\#12](https://github.com/microting/eform-timeplanning-base/issues/12)
+- Bump Microting.eForm from 5.3.17 to 5.3.19 [\#11](https://github.com/microting/eform-timeplanning-base/issues/11)
+
 ## [v2.0.23](https://github.com/microting/eform-timeplanning-base/tree/v2.0.23) (2021-12-19)
 
 [Full Changelog](https://github.com/microting/eform-timeplanning-base/compare/v2.0.22...v2.0.23)
