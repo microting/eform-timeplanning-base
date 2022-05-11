@@ -67,7 +67,7 @@ namespace Microting.TimePlanningBase.Tests
                 Stop1Id = new Random().Next(),
                 Stop2Id = new Random().Next(),
                 PlanHours = new Random().NextDouble(),
-                SumFlex = new Random().NextDouble(),
+                SumFlexStart = new Random().NextDouble(),
             };
 
             // Act
@@ -102,7 +102,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(planRegistration.Stop2Id, planRegistrationList[0].Stop2Id);
             Assert.AreEqual(planRegistration.PlanHours, planRegistrationList[0].PlanHours);
             Assert.AreEqual(planRegistration.PlanText, planRegistrationList[0].PlanText);
-            Assert.AreEqual(planRegistration.SumFlex, planRegistrationList[0].SumFlex);
+            Assert.AreEqual(planRegistration.SumFlexStart, planRegistrationList[0].SumFlexStart);
             Assert.AreEqual(planRegistration.Id, planRegistrationList[0].Id);
             Assert.AreEqual(1, planRegistrationList[0].Version);
 
@@ -126,7 +126,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(planRegistration.Stop2Id, planRegistrationVersionsList[0].Stop2Id);
             Assert.AreEqual(planRegistration.PlanHours, planRegistrationVersionsList[0].PlanHours);
             Assert.AreEqual(planRegistration.PlanText, planRegistrationVersionsList[0].PlanText);
-            Assert.AreEqual(planRegistration.SumFlex, planRegistrationVersionsList[0].SumFlex);
+            Assert.AreEqual(planRegistration.SumFlexStart, planRegistrationVersionsList[0].SumFlexStart);
             Assert.AreEqual(planRegistration.Id, planRegistrationVersionsList[0].PlanRegistrationId);
             Assert.AreEqual(1, planRegistrationVersionsList[0].Version);
         }
@@ -165,7 +165,7 @@ namespace Microting.TimePlanningBase.Tests
                 Stop1Id = new Random().Next(),
                 Stop2Id = new Random().Next(),
                 PlanHours = new Random().NextDouble(),
-                SumFlex = new Random().NextDouble(),
+                SumFlexStart = new Random().NextDouble(),
             };
             await planRegistration.Create(DbContext);
 
@@ -189,7 +189,7 @@ namespace Microting.TimePlanningBase.Tests
             planRegistration.Stop1Id = new Random().Next();
             planRegistration.Stop2Id = new Random().Next();
             planRegistration.PlanHours = new Random().NextDouble();
-            planRegistration.SumFlex = new Random().NextDouble();
+            planRegistration.SumFlexStart = new Random().NextDouble();
             await planRegistration.Update(DbContext);
 
             var planRegistrationList = DbContext.PlanRegistrations.AsNoTracking().ToList();
@@ -217,7 +217,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(planRegistration.Stop2Id, planRegistrationList[0].Stop2Id);
             Assert.AreEqual(planRegistration.PlanHours, planRegistrationList[0].PlanHours);
             Assert.AreEqual(planRegistration.PlanText, planRegistrationList[0].PlanText);
-            Assert.AreEqual(planRegistration.SumFlex, planRegistrationList[0].SumFlex);
+            Assert.AreEqual(planRegistration.SumFlexStart, planRegistrationList[0].SumFlexStart);
             Assert.AreEqual(planRegistration.Id, planRegistrationList[0].Id);
             Assert.AreEqual(2, planRegistrationList[0].Version);
 
@@ -241,7 +241,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(timePlanningOld.Stop2Id, planRegistrationVersionsList[0].Stop2Id);
             Assert.AreEqual(timePlanningOld.PlanHours, planRegistrationVersionsList[0].PlanHours);
             Assert.AreEqual(timePlanningOld.PlanText, planRegistrationVersionsList[0].PlanText);
-            Assert.AreEqual(timePlanningOld.SumFlex, planRegistrationVersionsList[0].SumFlex);
+            Assert.AreEqual(timePlanningOld.SumFlexStart, planRegistrationVersionsList[0].SumFlexStart);
             Assert.AreEqual(timePlanningOld.Id, planRegistrationVersionsList[0].PlanRegistrationId);
             Assert.AreEqual(1, planRegistrationVersionsList[0].Version);
 
@@ -264,7 +264,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(planRegistration.Stop2Id, planRegistrationVersionsList[1].Stop2Id);
             Assert.AreEqual(planRegistration.PlanHours, planRegistrationVersionsList[1].PlanHours);
             Assert.AreEqual(planRegistration.PlanText, planRegistrationVersionsList[1].PlanText);
-            Assert.AreEqual(planRegistration.SumFlex, planRegistrationVersionsList[1].SumFlex);
+            Assert.AreEqual(planRegistration.SumFlexStart, planRegistrationVersionsList[1].SumFlexStart);
             Assert.AreEqual(planRegistration.Id, planRegistrationVersionsList[1].PlanRegistrationId);
             Assert.AreEqual(2, planRegistrationVersionsList[1].Version);
         }
@@ -303,7 +303,7 @@ namespace Microting.TimePlanningBase.Tests
                 Stop1Id = new Random().Next(),
                 Stop2Id = new Random().Next(),
                 PlanHours = new Random().NextDouble(),
-                SumFlex = new Random().NextDouble(),
+                SumFlexStart = new Random().NextDouble(),
             };
             await planRegistration.Create(DbContext);
 
@@ -337,7 +337,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(planRegistration.Stop2Id, planRegistrationList[0].Stop2Id);
             Assert.AreEqual(planRegistration.PlanHours, planRegistrationList[0].PlanHours);
             Assert.AreEqual(planRegistration.PlanText, planRegistrationList[0].PlanText);
-            Assert.AreEqual(planRegistration.SumFlex, planRegistrationList[0].SumFlex);
+            Assert.AreEqual(planRegistration.SumFlexStart, planRegistrationList[0].SumFlexStart);
             Assert.AreEqual(planRegistration.Id, planRegistrationList[0].Id);
             Assert.AreEqual(2, planRegistrationList[0].Version);
 
@@ -361,7 +361,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(timePlanningOld.Stop2Id, planRegistrationVersionsList[0].Stop2Id);
             Assert.AreEqual(timePlanningOld.PlanHours, planRegistrationVersionsList[0].PlanHours);
             Assert.AreEqual(timePlanningOld.PlanText, planRegistrationVersionsList[0].PlanText);
-            Assert.AreEqual(timePlanningOld.SumFlex, planRegistrationVersionsList[0].SumFlex);
+            Assert.AreEqual(timePlanningOld.SumFlexStart, planRegistrationVersionsList[0].SumFlexStart);
             Assert.AreEqual(timePlanningOld.Id, planRegistrationVersionsList[0].PlanRegistrationId);
             Assert.AreEqual(1, planRegistrationVersionsList[0].Version);
 
@@ -384,7 +384,7 @@ namespace Microting.TimePlanningBase.Tests
             Assert.AreEqual(planRegistration.Stop2Id, planRegistrationVersionsList[1].Stop2Id);
             Assert.AreEqual(planRegistration.PlanHours, planRegistrationVersionsList[1].PlanHours);
             Assert.AreEqual(planRegistration.PlanText, planRegistrationVersionsList[1].PlanText);
-            Assert.AreEqual(planRegistration.SumFlex, planRegistrationVersionsList[1].SumFlex);
+            Assert.AreEqual(planRegistration.SumFlexStart, planRegistrationVersionsList[1].SumFlexStart);
             Assert.AreEqual(planRegistration.Id, planRegistrationVersionsList[1].PlanRegistrationId);
             Assert.AreEqual(2, planRegistrationVersionsList[1].Version);
         }

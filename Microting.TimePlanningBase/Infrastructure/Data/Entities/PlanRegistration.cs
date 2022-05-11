@@ -54,7 +54,9 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 
         public double Flex { get; set; }
 
-        public double SumFlex { get; set; }
+        public double SumFlexStart { get; set; }
+
+        public double SumFlexEnd { get; set; }
 
         public double PaiedOutFlex { get; set; }
 
