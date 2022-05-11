@@ -11,22 +11,22 @@ namespace Microting.TimePlanningBase.Migrations
             migrationBuilder.RenameColumn(
                 name: "SumFlex",
                 table: "PlanRegistrationVersions",
-                newName: "SumFlexStart");
+                newName: "SumFlexEnd");
 
             migrationBuilder.RenameColumn(
                 name: "SumFlex",
                 table: "PlanRegistrations",
-                newName: "SumFlexStart");
+                newName: "SumFlexEnd");
 
             migrationBuilder.AddColumn<double>(
-                name: "SumFlexEnd",
+                name: "SumFlexStart",
                 table: "PlanRegistrationVersions",
                 type: "double",
                 nullable: false,
                 defaultValue: 0.0);
 
             migrationBuilder.AddColumn<double>(
-                name: "SumFlexEnd",
+                name: "SumFlexStart",
                 table: "PlanRegistrations",
                 type: "double",
                 nullable: false,
@@ -36,20 +36,20 @@ namespace Microting.TimePlanningBase.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "SumFlexEnd",
+                name: "SumFlexStart",
                 table: "PlanRegistrationVersions");
 
             migrationBuilder.DropColumn(
-                name: "SumFlexEnd",
+                name: "SumFlexStart",
                 table: "PlanRegistrations");
 
             migrationBuilder.RenameColumn(
-                name: "SumFlexStart",
+                name: "SumFlexEnd",
                 table: "PlanRegistrationVersions",
                 newName: "SumFlex");
 
             migrationBuilder.RenameColumn(
-                name: "SumFlexStart",
+                name: "SumFlexEnd",
                 table: "PlanRegistrations",
                 newName: "SumFlex");
         }
