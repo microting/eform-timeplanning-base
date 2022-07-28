@@ -37,7 +37,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Factories
             var optionsBuilder = new DbContextOptionsBuilder<TimePlanningPnDbContext>();
 
             optionsBuilder.UseMySql(args.Any() ? args[0] : defaultCs, new MariaDbServerVersion(
-                new Version(10, 4, 0)), mySqlOptionsAction: builder =>
+                ServerVersion.AutoDetect(args.Any() ? args[0] : defaultCs)), mySqlOptionsAction: builder =>
             {
                 builder.EnableRetryOnFailure();
             });
