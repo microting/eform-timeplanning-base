@@ -50,7 +50,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Extensions.Seed.CodeFirstLis
                 CareMessage,
                 ChildrenFirstSickMessage,
                 ChildrenSecondSickMessage,
-                TimeOffMessage,
+                TimeOffMessage
             };
 
             return entryList;
