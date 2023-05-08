@@ -11,4 +11,6 @@ public class TimePlanningBaseSettings
     public int? MaxHistoryDays { get; set; }
 
     public int? MaxDaysEditable { get; set; }
+
+    public int? SiteIdsForCheck { get; set; }
 }
