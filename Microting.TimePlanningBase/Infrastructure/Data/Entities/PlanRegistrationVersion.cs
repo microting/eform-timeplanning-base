@@ -74,5 +74,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
         public string WorkerComment { get; set; }
         
         public bool DataFromDevice { get; set; }
+
+        public int? RegistrationDeviceId { get; set; }
     }
 }

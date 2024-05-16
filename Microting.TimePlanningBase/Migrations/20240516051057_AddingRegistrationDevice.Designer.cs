@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microting.TimePlanningBase.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Microting.TimePlanningBase.Infrastructure.Data;
 namespace Microting.TimePlanningBase.Migrations
 {
     [DbContext(typeof(TimePlanningPnDbContext))]
-    partial class TimePlanningPnDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240516051057_AddingRegistrationDevice")]
+    partial class AddingRegistrationDevice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -250,9 +253,6 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<string>("PlanText")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("RegistrationDeviceId")
-                        .HasColumnType("int");
-
                     b.Property<int>("SdkSitId")
                         .HasColumnType("int");
 
@@ -352,9 +352,6 @@ namespace Microting.TimePlanningBase.Migrations
 
                     b.Property<string>("PlanText")
                         .HasColumnType("longtext");
-
-                    b.Property<int?>("RegistrationDeviceId")
-                        .HasColumnType("int");
 
                     b.Property<int>("SdkSitId")
                         .HasColumnType("int");

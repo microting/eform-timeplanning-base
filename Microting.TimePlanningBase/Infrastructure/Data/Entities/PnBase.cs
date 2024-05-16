@@ -70,10 +70,10 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 
             var returnObj = Activator.CreateInstance(resultType);
 
-            var curreList = obj.GetType().GetProperties();
-            foreach(var prop in curreList)
+            var currentList = obj.GetType().GetProperties();
+            foreach(var prop in currentList)
             {
-                if (!prop.PropertyType.FullName.Contains("Microting.TimePlanningBase.Infrastructure.Data.Entities"))
+                if (!prop.PropertyType.FullName!.Contains("Microting.TimePlanningBase.Infrastructure.Data.Entities"))
                 {
                     try
                     {
@@ -81,21 +81,21 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
                         if (propName != "Id")
                         {
                             var propValue = prop.GetValue(obj);
-                            var targetType = returnObj.GetType();
+                            var targetType = returnObj!.GetType();
                             var targetProp = targetType.GetProperty(propName);
 
-                            targetProp.SetValue(returnObj, propValue, null);
+                            targetProp!.SetValue(returnObj, propValue, null);
                         } else {
                             var propValue = prop.GetValue(obj);
-                            var targetType = returnObj.GetType();
+                            var targetType = returnObj!.GetType();
                             var targetProp = targetType.GetProperty($"{className}Id");
 
-                            targetProp.SetValue(returnObj, propValue, null);
+                            targetProp!.SetValue(returnObj, propValue, null);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"{ex.Message} - Property:{prop.Name} probably not found on Class {returnObj.GetType().Name}");
+                        // Console.WriteLine($"{ex.Message} - Property:{prop.Name} probably not found on Class {returnObj.GetType().Name}");
                     }
                 }
             }

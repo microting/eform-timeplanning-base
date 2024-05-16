@@ -52,6 +52,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<PluginPermission> PluginPermissions { get; set; }
         public DbSet<PluginGroupPermission> PluginGroupPermissions { get; set; }
         public DbSet<PluginGroupPermissionVersion> PluginGroupPermissionVersions { get; set; }
+        public DbSet<RegistrationDevice> RegistrationDevices { get; set; }
+        public DbSet<RegistrationDeviceVersion> RegistrationDeviceVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

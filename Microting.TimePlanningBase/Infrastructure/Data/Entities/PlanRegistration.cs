@@ -76,6 +76,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 
         public readonly List<string> Options = new();
 
+        public int? RegistrationDeviceId { get; set; }
+
         public PlanRegistration()
         {
             int minute = 0;
