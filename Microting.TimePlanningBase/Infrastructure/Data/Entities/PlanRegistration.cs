@@ -78,6 +78,22 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 
         public int? RegistrationDeviceId { get; set; }
 
+        public DateTime? Start1StartedAt { get; set; }
+
+        public DateTime? Stop1StoppedAt { get; set; }
+
+        public DateTime? Pause1StartedAt { get; set; }
+
+        public DateTime? Pause1StoppedAt { get; set; }
+
+        public DateTime? Start2StartedAt { get; set; }
+
+        public DateTime? Stop2StoppedAt { get; set; }
+
+        public DateTime? Pause2StartedAt { get; set; }
+
+        public DateTime? Pause2StoppedAt { get; set; }
+
         public PlanRegistration()
         {
             int minute = 0;
