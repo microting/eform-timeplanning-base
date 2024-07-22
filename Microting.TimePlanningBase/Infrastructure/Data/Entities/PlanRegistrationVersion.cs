@@ -196,5 +196,9 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
         public DateTime? Pause202StartedAt { get; set; }
 
         public DateTime? Pause202StoppedAt { get; set; }
+
+        public int Shift1PauseNumber { get; set; }
+
+        public int Shift2PauseNumber { get; set; }
     }
 }
