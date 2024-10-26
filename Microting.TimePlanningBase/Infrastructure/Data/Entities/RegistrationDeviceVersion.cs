@@ -15,5 +15,7 @@ public class RegistrationDeviceVersion : BaseEntity
     public string OtpCode { get; set; }
     public bool OtpEnabled { get; set; }
     public int RegistrationDeviceId { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
 
 }

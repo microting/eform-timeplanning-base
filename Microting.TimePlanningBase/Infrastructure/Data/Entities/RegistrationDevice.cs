@@ -16,6 +16,8 @@ public class RegistrationDevice : PnBase
     public string LookedUpIp { get; set; }
     public string OtpCode { get; set; }
     public bool OtpEnabled { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
 
     public async Task GenerateOtp(TimePlanningPnDbContext dbContext)
     {
