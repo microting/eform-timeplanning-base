@@ -27,12 +27,12 @@ public class RegistrationDeviceUnitTest : DbTestFixture
 
         // Assert
         var registrationDeviceFromDb = DbContext.RegistrationDevices.AsNoTracking().First();
-        Assert.AreNotEqual("123456", registrationDeviceFromDb.OtpCode);
-        Assert.IsTrue(registrationDeviceFromDb.OtpEnabled);
-        Assert.AreEqual(1, DbContext.RegistrationDevices.Count());
-        Assert.AreEqual(2, DbContext.RegistrationDeviceVersions.Count());
-        Assert.AreEqual(2, registrationDeviceFromDb.Version);
-        Assert.AreEqual(Constants.WorkflowStates.Created, registrationDeviceFromDb.WorkflowState);
+        Assert.That(registrationDeviceFromDb.OtpCode, Is.Not.EqualTo("123456"));
+        Assert.That(registrationDeviceFromDb.OtpEnabled);
+        Assert.That(DbContext.RegistrationDevices.Count(), Is.EqualTo(1));
+        Assert.That(DbContext.RegistrationDeviceVersions.Count(), Is.EqualTo(2));
+        Assert.That(registrationDeviceFromDb.Version, Is.EqualTo(2));
+        Assert.That(registrationDeviceFromDb.WorkflowState, Is.EqualTo(Constants.WorkflowStates.Created));
     }
 
     [Test]
@@ -47,11 +47,11 @@ public class RegistrationDeviceUnitTest : DbTestFixture
 
         // Assert
         var registrationDeviceFromDb = DbContext.RegistrationDevices.AsNoTracking().First();
-        Assert.IsNotNull(registrationDeviceFromDb.Token);
-        Assert.AreEqual(1, DbContext.RegistrationDevices.Count());
-        Assert.AreEqual(2, DbContext.RegistrationDeviceVersions.Count());
-        Assert.AreEqual(2, registrationDeviceFromDb.Version);
-        Assert.AreEqual(Constants.WorkflowStates.Created, registrationDeviceFromDb.WorkflowState);
+        Assert.That(registrationDeviceFromDb.Token, Is.Not.Null);
+        Assert.That(DbContext.RegistrationDevices.Count(), Is.EqualTo(1));
+        Assert.That(DbContext.RegistrationDeviceVersions.Count(), Is.EqualTo(2));
+        Assert.That(registrationDeviceFromDb.Version, Is.EqualTo(2));
+        Assert.That(registrationDeviceFromDb.WorkflowState, Is.EqualTo(Constants.WorkflowStates.Created));
 
     }
 
