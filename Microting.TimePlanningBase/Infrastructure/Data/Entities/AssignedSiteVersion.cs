@@ -74,5 +74,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
         public int EndSunday { get; set; }
         // minutes of break for the shift (0-1440) sunday
         public int BreakSunday { get; set; }
+
+        public bool Resigned { get; set; }
     }
 }

@@ -216,6 +216,14 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
 
         public bool IsDoubleShift { get; set; }
 
+        public bool OnVacation { get; set; }
+
+        public bool Sick { get; set; }
+
+        public bool OtherAllowedAbsence { get; set; }
+
+        public bool AbsenceWithoutPermission { get; set; }
+
         public PlanRegistration()
         {
             int minute = 0;
