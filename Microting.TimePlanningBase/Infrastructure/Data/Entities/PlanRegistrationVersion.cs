@@ -200,5 +200,19 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
         public int Shift1PauseNumber { get; set; }
 
         public int Shift2PauseNumber { get; set; }
+
+        public int PlannedStartOfShift1 { get; set; }
+
+        public int PlannedEndOfShift1 { get; set; }
+
+        public int PlannedBreakOfShift1 { get; set; }
+
+        public int PlannedStartOfShift2 { get; set; }
+
+        public int PlannedEndOfShift2 { get; set; }
+
+        public int PlannedBreakOfShift2 { get; set; }
+
+        public bool IsDoubleShift { get; set; }
     }
 }
