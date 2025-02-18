@@ -16,7 +16,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartTuesday",
@@ -24,7 +25,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartThursday",
@@ -32,7 +34,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartSunday",
@@ -40,7 +43,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartSaturday",
@@ -48,7 +52,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartMonday",
@@ -56,7 +61,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartFriday",
@@ -64,7 +70,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndWednesday",
@@ -72,7 +79,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndTuesday",
@@ -80,7 +88,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndThursday",
@@ -88,7 +97,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndSunday",
@@ -96,7 +106,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndSaturday",
@@ -104,7 +115,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndMonday",
@@ -112,7 +124,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndFriday",
@@ -120,7 +133,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakWednesday",
@@ -128,7 +142,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakTuesday",
@@ -136,7 +151,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakThursday",
@@ -144,7 +160,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakSunday",
@@ -152,7 +169,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakSaturday",
@@ -160,7 +178,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakMonday",
@@ -168,7 +187,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakFriday",
@@ -176,7 +196,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartWednesday",
@@ -184,7 +205,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartTuesday",
@@ -192,7 +214,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartThursday",
@@ -200,7 +223,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartSunday",
@@ -208,7 +232,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartSaturday",
@@ -216,7 +241,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartMonday",
@@ -224,7 +250,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "StartFriday",
@@ -232,7 +259,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndWednesday",
@@ -240,7 +268,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndTuesday",
@@ -248,7 +277,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndThursday",
@@ -256,7 +286,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndSunday",
@@ -264,7 +295,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndSaturday",
@@ -272,7 +304,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndMonday",
@@ -280,7 +313,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "EndFriday",
@@ -288,7 +322,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakWednesday",
@@ -296,7 +331,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakTuesday",
@@ -304,7 +340,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakThursday",
@@ -312,7 +349,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakSunday",
@@ -320,7 +358,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakSaturday",
@@ -328,7 +367,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakMonday",
@@ -336,7 +376,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
 
             migrationBuilder.AlterColumn<int>(
                 name: "BreakFriday",
@@ -344,7 +385,8 @@ namespace Microting.TimePlanningBase.Migrations
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int",
+                defaultValue: null);
         }
 
         /// <inheritdoc />
