@@ -148,4 +148,13 @@ public class PlanRegistrationVersion : PnBase
     public DateTime? Stop5StoppedAt { get; set; }
     public DateTime? Pause5StartedAt { get; set; }
     public DateTime? Pause5StoppedAt { get; set; }
+    public int PlannedStartOfShift3 { get; set; }
+    public int PlannedEndOfShift3 { get; set; }
+    public int PlannedBreakOfShift3 { get; set; }
+    public int PlannedStartOfShift4 { get; set; }
+    public int PlannedEndOfShift4 { get; set; }
+    public int PlannedBreakOfShift4 { get; set; }
+    public int PlannedStartOfShift5 { get; set; }
+    public int PlannedEndOfShift5 { get; set; }
+    public int PlannedBreakOfShift5 { get; set; }
 }
