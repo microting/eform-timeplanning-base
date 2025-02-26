@@ -21,27 +21,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
+namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
+
+public class Message
 {
-    public class Message
+    public Message()
     {
-        public Message()
-        {
 
-        }
-        public Message(int id, string name, string daName, string enName, string deName)
-        {
-            Id = id;
-            Name = name;
-            DaName = daName;
-            EnName = enName;
-            DeName = deName;
-        }
-
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string DaName { get; set; }
-        public string DeName { get; set; }
-        public string EnName { get; set; }
     }
+    public Message(int id, string name, string daName, string enName, string deName)
+    {
+        Id = id;
+        Name = name;
+        DaName = daName;
+        EnName = enName;
+        DeName = deName;
+    }
+
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string DaName { get; set; }
+    public string DeName { get; set; }
+    public string EnName { get; set; }
 }

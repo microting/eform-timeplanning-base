@@ -24,219 +24,122 @@ SOFTWARE.
 
 using System.Collections.Generic;
 
-namespace Microting.TimePlanningBase.Infrastructure.Data.Entities
+namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
+
+using System;
+
+public class PlanRegistration : PnBase
 {
-    using System;
+    public int SdkSitId { get; set; }
+    public DateTime Date { get; set; }
+    public string PlanText { get; set; }
+    public double PlanHours { get; set; }
+    public int Start1Id{ get; set; }
+    public int Stop1Id { get; set; }
+    public int Pause1Id { get; set; }
+    public int Start2Id { get; set; }
+    public int Stop2Id { get; set; }
+    public int Pause2Id { get; set; }
+    public double NettoHours { get; set; }
+    public double Flex { get; set; }
+    public double SumFlexStart { get; set; }
+    public double SumFlexEnd { get; set; }
+    public double PaiedOutFlex { get; set; }
+    public int? MessageId { get; set; }
+    public virtual Message Message { get; set; }
+    public string CommentOffice { get; set; }
+    public string CommentOfficeAll { get; set; }
+    public int StatusCaseId { get; set; }
+    public string WorkerComment { get; set; }
+    public bool DataFromDevice { get; set; }
+    public readonly List<string> Options = new();
+    public int? RegistrationDeviceId { get; set; }
+    public DateTime? Start1StartedAt { get; set; }
+    public DateTime? Stop1StoppedAt { get; set; }
+    public DateTime? Pause1StartedAt { get; set; }
+    public DateTime? Pause1StoppedAt { get; set; }
+    public DateTime? Start2StartedAt { get; set; }
+    public DateTime? Stop2StoppedAt { get; set; }
+    public DateTime? Pause2StartedAt { get; set; }
+    public DateTime? Pause2StoppedAt { get; set; }
+    public DateTime? Pause10StartedAt { get; set; }
+    public DateTime? Pause10StoppedAt { get; set; }
+    public DateTime? Pause11StartedAt { get; set; }
+    public DateTime? Pause11StoppedAt { get; set; }
+    public DateTime? Pause12StartedAt { get; set; }
+    public DateTime? Pause12StoppedAt { get; set; }
+    public DateTime? Pause13StartedAt { get; set; }
+    public DateTime? Pause13StoppedAt { get; set; }
+    public DateTime? Pause14StartedAt { get; set; }
+    public DateTime? Pause14StoppedAt { get; set; }
+    public DateTime? Pause15StartedAt { get; set; }
+    public DateTime? Pause15StoppedAt { get; set; }
+    public DateTime? Pause16StartedAt { get; set; }
+    public DateTime? Pause16StoppedAt { get; set; }
+    public DateTime? Pause17StartedAt { get; set; }
+    public DateTime? Pause17StoppedAt { get; set; }
+    public DateTime? Pause18StartedAt { get; set; }
+    public DateTime? Pause18StoppedAt { get; set; }
+    public DateTime? Pause19StartedAt { get; set; }
+    public DateTime? Pause19StoppedAt { get; set; }
+    public DateTime? Pause100StartedAt { get; set; }
+    public DateTime? Pause100StoppedAt { get; set; }
+    public DateTime? Pause101StartedAt { get; set; }
+    public DateTime? Pause101StoppedAt { get; set; }
+    public DateTime? Pause102StartedAt { get; set; }
+    public DateTime? Pause102StoppedAt { get; set; }
+    public DateTime? Pause20StartedAt { get; set; }
+    public DateTime? Pause20StoppedAt { get; set; }
+    public DateTime? Pause21StartedAt { get; set; }
+    public DateTime? Pause21StoppedAt { get; set; }
+    public DateTime? Pause22StartedAt { get; set; }
+    public DateTime? Pause22StoppedAt { get; set; }
+    public DateTime? Pause23StartedAt { get; set; }
+    public DateTime? Pause23StoppedAt { get; set; }
+    public DateTime? Pause24StartedAt { get; set; }
+    public DateTime? Pause24StoppedAt { get; set; }
+    public DateTime? Pause25StartedAt { get; set; }
+    public DateTime? Pause25StoppedAt { get; set; }
+    public DateTime? Pause26StartedAt { get; set; }
+    public DateTime? Pause26StoppedAt { get; set; }
+    public DateTime? Pause27StartedAt { get; set; }
+    public DateTime? Pause27StoppedAt { get; set; }
+    public DateTime? Pause28StartedAt { get; set; }
+    public DateTime? Pause28StoppedAt { get; set; }
+    public DateTime? Pause29StartedAt { get; set; }
+    public DateTime? Pause29StoppedAt { get; set; }
+    public DateTime? Pause200StartedAt { get; set; }
+    public DateTime? Pause200StoppedAt { get; set; }
+    public DateTime? Pause201StartedAt { get; set; }
+    public DateTime? Pause201StoppedAt { get; set; }
+    public DateTime? Pause202StartedAt { get; set; }
+    public DateTime? Pause202StoppedAt { get; set; }
+    public int Shift1PauseNumber { get; set; }
+    public int Shift2PauseNumber { get; set; }
+    public int PlannedStartOfShift1 { get; set; }
+    public int PlannedEndOfShift1 { get; set; }
+    public int PlannedBreakOfShift1 { get; set; }
+    public int PlannedStartOfShift2 { get; set; }
+    public int PlannedEndOfShift2 { get; set; }
+    public int PlannedBreakOfShift2 { get; set; }
+    public bool IsDoubleShift { get; set; }
+    public bool OnVacation { get; set; }
+    public bool Sick { get; set; }
+    public bool OtherAllowedAbsence { get; set; }
+    public bool AbsenceWithoutPermission { get; set; }
 
-    public class PlanRegistration : PnBase
+    public PlanRegistration()
     {
-        public int SdkSitId { get; set; }
-
-        public DateTime Date { get; set; }
-
-        public string PlanText { get; set; }
-
-        public double PlanHours { get; set; }
-
-        public int Start1Id{ get; set; }
-
-        public int Stop1Id { get; set; }
-
-        public int Pause1Id { get; set; }
-
-        public int Start2Id { get; set; }
-
-        public int Stop2Id { get; set; }
-
-        public int Pause2Id { get; set; }
-
-        public double NettoHours { get; set; }
-
-        public double Flex { get; set; }
-
-        public double SumFlexStart { get; set; }
-
-        public double SumFlexEnd { get; set; }
-
-        public double PaiedOutFlex { get; set; }
-
-        public int? MessageId { get; set; }
-
-        public virtual Message Message { get; set; }
-
-        public string CommentOffice { get; set; }
-
-        public string CommentOfficeAll { get; set; }
-
-        public int StatusCaseId { get; set; }
-
-        public string WorkerComment { get; set; }
-        
-        public bool DataFromDevice { get; set; }
-
-        public readonly List<string> Options = new();
-
-        public int? RegistrationDeviceId { get; set; }
-
-        public DateTime? Start1StartedAt { get; set; }
-
-        public DateTime? Stop1StoppedAt { get; set; }
-
-        public DateTime? Pause1StartedAt { get; set; }
-
-        public DateTime? Pause1StoppedAt { get; set; }
-
-        public DateTime? Start2StartedAt { get; set; }
-
-        public DateTime? Stop2StoppedAt { get; set; }
-
-        public DateTime? Pause2StartedAt { get; set; }
-
-        public DateTime? Pause2StoppedAt { get; set; }
-
-        public DateTime? Pause10StartedAt { get; set; }
-
-        public DateTime? Pause10StoppedAt { get; set; }
-
-        public DateTime? Pause11StartedAt { get; set; }
-
-        public DateTime? Pause11StoppedAt { get; set; }
-
-        public DateTime? Pause12StartedAt { get; set; }
-
-        public DateTime? Pause12StoppedAt { get; set; }
-
-        public DateTime? Pause13StartedAt { get; set; }
-
-        public DateTime? Pause13StoppedAt { get; set; }
-
-        public DateTime? Pause14StartedAt { get; set; }
-
-        public DateTime? Pause14StoppedAt { get; set; }
-
-        public DateTime? Pause15StartedAt { get; set; }
-
-        public DateTime? Pause15StoppedAt { get; set; }
-
-        public DateTime? Pause16StartedAt { get; set; }
-
-        public DateTime? Pause16StoppedAt { get; set; }
-
-        public DateTime? Pause17StartedAt { get; set; }
-
-        public DateTime? Pause17StoppedAt { get; set; }
-
-        public DateTime? Pause18StartedAt { get; set; }
-
-        public DateTime? Pause18StoppedAt { get; set; }
-
-        public DateTime? Pause19StartedAt { get; set; }
-
-        public DateTime? Pause19StoppedAt { get; set; }
-
-        public DateTime? Pause100StartedAt { get; set; }
-
-        public DateTime? Pause100StoppedAt { get; set; }
-
-        public DateTime? Pause101StartedAt { get; set; }
-
-        public DateTime? Pause101StoppedAt { get; set; }
-
-        public DateTime? Pause102StartedAt { get; set; }
-
-        public DateTime? Pause102StoppedAt { get; set; }
-
-        public DateTime? Pause20StartedAt { get; set; }
-
-        public DateTime? Pause20StoppedAt { get; set; }
-
-        public DateTime? Pause21StartedAt { get; set; }
-
-        public DateTime? Pause21StoppedAt { get; set; }
-
-        public DateTime? Pause22StartedAt { get; set; }
-
-        public DateTime? Pause22StoppedAt { get; set; }
-
-        public DateTime? Pause23StartedAt { get; set; }
-
-        public DateTime? Pause23StoppedAt { get; set; }
-
-        public DateTime? Pause24StartedAt { get; set; }
-
-        public DateTime? Pause24StoppedAt { get; set; }
-
-        public DateTime? Pause25StartedAt { get; set; }
-
-        public DateTime? Pause25StoppedAt { get; set; }
-
-        public DateTime? Pause26StartedAt { get; set; }
-
-        public DateTime? Pause26StoppedAt { get; set; }
-
-        public DateTime? Pause27StartedAt { get; set; }
-
-        public DateTime? Pause27StoppedAt { get; set; }
-
-        public DateTime? Pause28StartedAt { get; set; }
-
-        public DateTime? Pause28StoppedAt { get; set; }
-
-        public DateTime? Pause29StartedAt { get; set; }
-
-        public DateTime? Pause29StoppedAt { get; set; }
-
-        public DateTime? Pause200StartedAt { get; set; }
-
-        public DateTime? Pause200StoppedAt { get; set; }
-
-        public DateTime? Pause201StartedAt { get; set; }
-
-        public DateTime? Pause201StoppedAt { get; set; }
-
-        public DateTime? Pause202StartedAt { get; set; }
-
-        public DateTime? Pause202StoppedAt { get; set; }
-
-        public int Shift1PauseNumber { get; set; }
-
-        public int Shift2PauseNumber { get; set; }
-
-        public int PlannedStartOfShift1 { get; set; }
-
-        public int PlannedEndOfShift1 { get; set; }
-
-        public int PlannedBreakOfShift1 { get; set; }
-
-        public int PlannedStartOfShift2 { get; set; }
-
-        public int PlannedEndOfShift2 { get; set; }
-
-        public int PlannedBreakOfShift2 { get; set; }
-
-        public bool IsDoubleShift { get; set; }
-
-        public bool OnVacation { get; set; }
-
-        public bool Sick { get; set; }
-
-        public bool OtherAllowedAbsence { get; set; }
-
-        public bool AbsenceWithoutPermission { get; set; }
-
-        public PlanRegistration()
+        int minute = 0;
+        int hour = 0;
+        for (int i = 0; i < 288; i++)
         {
-            int minute = 0;
-            int hour = 0;
-            for (int i = 0; i < 288; i++)
+            Options.Add($"{hour:00}:{minute:00}");
+            minute += 5;
+            if (minute == 60)
             {
-                Options.Add($"{hour:00}:{minute:00}");
-                minute += 5;
-                if (minute == 60)
-                {
-                    minute = 0;
-                    hour++;
-                }
+                minute = 0;
+                hour++;
             }
         }
     }
