@@ -1,7 +1,7 @@
 ﻿/*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2021 Microting A/S
+Copyright (c) 2007 - 2025 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,12 +34,21 @@ public class PlanRegistration : PnBase
     public DateTime Date { get; set; }
     public string PlanText { get; set; }
     public double PlanHours { get; set; }
-    public int Start1Id{ get; set; }
+    public int Start1Id { get; set; }
     public int Stop1Id { get; set; }
     public int Pause1Id { get; set; }
     public int Start2Id { get; set; }
     public int Stop2Id { get; set; }
     public int Pause2Id { get; set; }
+    public int Start3Id { get; set; }
+    public int Stop3Id { get; set; }
+    public int Pause3Id { get; set; }
+    public int Start4Id { get; set; }
+    public int Stop4Id { get; set; }
+    public int Pause4Id { get; set; }
+    public int Start5Id { get; set; }
+    public int Stop5Id { get; set; }
+    public int Pause5Id { get; set; }
     public double NettoHours { get; set; }
     public double Flex { get; set; }
     public double SumFlexStart { get; set; }
@@ -127,6 +136,18 @@ public class PlanRegistration : PnBase
     public bool Sick { get; set; }
     public bool OtherAllowedAbsence { get; set; }
     public bool AbsenceWithoutPermission { get; set; }
+    public DateTime? Start3StartedAt { get; set; }
+    public DateTime? Stop3StoppedAt { get; set; }
+    public DateTime? Pause3StartedAt { get; set; }
+    public DateTime? Pause3StoppedAt { get; set; }
+    public DateTime? Start4StartedAt { get; set; }
+    public DateTime? Stop4StoppedAt { get; set; }
+    public DateTime? Pause4StartedAt { get; set; }
+    public DateTime? Pause4StoppedAt { get; set; }
+    public DateTime? Start5StartedAt { get; set; }
+    public DateTime? Stop5StoppedAt { get; set; }
+    public DateTime? Pause5StartedAt { get; set; }
+    public DateTime? Pause5StoppedAt { get; set; }
 
     public PlanRegistration()
     {
