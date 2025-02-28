@@ -161,4 +161,6 @@ public class AssignedSiteVersion: PnBase
     public int? StartSunday5ThShift { get; set; }
     public int? EndSunday5ThShift { get; set; }
     public int? BreakSunday5ThShift { get; set; }
+    public bool UseGoogleSheetAsDefault { get; set; } = true;
+    public bool UseOnlyPlanHours { get; set; }
 }
