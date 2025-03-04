@@ -270,6 +270,9 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<int>("FridayBreakMinutesUpperLimit")
                         .HasColumnType("int");
 
+                    b.Property<int>("FridayPlanHours")
+                        .HasColumnType("int");
+
                     b.Property<int>("MondayBreakMinutesDivider")
                         .HasColumnType("int");
 
@@ -277,6 +280,9 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("MondayBreakMinutesUpperLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MondayPlanHours")
                         .HasColumnType("int");
 
                     b.Property<bool>("Resigned")
@@ -289,6 +295,9 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("SaturdayBreakMinutesUpperLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SaturdayPlanHours")
                         .HasColumnType("int");
 
                     b.Property<int>("SiteId")
@@ -408,6 +417,9 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<int>("SundayBreakMinutesUpperLimit")
                         .HasColumnType("int");
 
+                    b.Property<int>("SundayPlanHours")
+                        .HasColumnType("int");
+
                     b.Property<int>("ThursdayBreakMinutesDivider")
                         .HasColumnType("int");
 
@@ -417,6 +429,9 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<int>("ThursdayBreakMinutesUpperLimit")
                         .HasColumnType("int");
 
+                    b.Property<int>("ThursdayPlanHours")
+                        .HasColumnType("int");
+
                     b.Property<int>("TuesdayBreakMinutesDivider")
                         .HasColumnType("int");
 
@@ -424,6 +439,9 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("TuesdayBreakMinutesUpperLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TuesdayPlanHours")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -451,6 +469,9 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("WednesdayBreakMinutesUpperLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WednesdayPlanHours")
                         .HasColumnType("int");
 
                     b.Property<string>("WorkflowState")
@@ -713,6 +734,9 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<int>("FridayBreakMinutesUpperLimit")
                         .HasColumnType("int");
 
+                    b.Property<int>("FridayPlanHours")
+                        .HasColumnType("int");
+
                     b.Property<int>("MondayBreakMinutesDivider")
                         .HasColumnType("int");
 
@@ -720,6 +744,9 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("MondayBreakMinutesUpperLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MondayPlanHours")
                         .HasColumnType("int");
 
                     b.Property<bool>("Resigned")
@@ -732,6 +759,9 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("SaturdayBreakMinutesUpperLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SaturdayPlanHours")
                         .HasColumnType("int");
 
                     b.Property<int>("SiteId")
@@ -851,6 +881,9 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<int>("SundayBreakMinutesUpperLimit")
                         .HasColumnType("int");
 
+                    b.Property<int>("SundayPlanHours")
+                        .HasColumnType("int");
+
                     b.Property<int>("ThursdayBreakMinutesDivider")
                         .HasColumnType("int");
 
@@ -860,6 +893,9 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<int>("ThursdayBreakMinutesUpperLimit")
                         .HasColumnType("int");
 
+                    b.Property<int>("ThursdayPlanHours")
+                        .HasColumnType("int");
+
                     b.Property<int>("TuesdayBreakMinutesDivider")
                         .HasColumnType("int");
 
@@ -867,6 +903,9 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("TuesdayBreakMinutesUpperLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TuesdayPlanHours")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -894,6 +933,9 @@ namespace Microting.TimePlanningBase.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("WednesdayBreakMinutesUpperLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WednesdayPlanHours")
                         .HasColumnType("int");
 
                     b.Property<string>("WorkflowState")
