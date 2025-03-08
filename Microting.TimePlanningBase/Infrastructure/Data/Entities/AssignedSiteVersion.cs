@@ -170,4 +170,5 @@ public class AssignedSiteVersion: PnBase
     public int FridayPlanHours { get; set; }
     public int SaturdayPlanHours { get; set; }
     public int SundayPlanHours { get; set; }
+    public bool UsePunchClock { get; set; }
 }
