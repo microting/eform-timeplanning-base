@@ -157,4 +157,5 @@ public class PlanRegistrationVersion : PnBase
     public int PlannedStartOfShift5 { get; set; }
     public int PlannedEndOfShift5 { get; set; }
     public int PlannedBreakOfShift5 { get; set; }
+    public bool PlanChangedByAdmin { get; set; }
 }

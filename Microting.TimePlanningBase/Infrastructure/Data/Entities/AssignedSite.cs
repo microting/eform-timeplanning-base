@@ -190,4 +190,5 @@ public class AssignedSite: PnBase
     public int SaturdayPlanHours { get; set; }
     public int SundayPlanHours { get; set; }
     public bool UsePunchClock { get; set; }
+    public bool UseDetailedPauseEditing { get; set; }
 }
