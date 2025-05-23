@@ -192,4 +192,7 @@ public class AssignedSite: PnBase
     public bool UsePunchClock { get; set; }
     public bool UseDetailedPauseEditing { get; set; }
     public bool UsePunchClockWithAllowRegisteringInHistory { get; set; }
+    public bool ThirdShiftActive { get; set; }
+    public bool FourthShiftActive { get; set; }
+    public bool FifthShiftActive { get; set; }
 }
