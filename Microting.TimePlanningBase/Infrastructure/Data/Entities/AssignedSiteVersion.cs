@@ -176,4 +176,6 @@ public class AssignedSiteVersion: PnBase
     public bool ThirdShiftActive { get; set; }
     public bool FourthShiftActive { get; set; }
     public bool FifthShiftActive { get; set; }
+    public bool DaysBackInTimeAllowedEditingEnabled { get; set; } = false;
+    public int DaysBackInTimeAllowedEditing { get; set; } = 2;
 }
