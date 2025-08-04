@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
+
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
 
 public class AssignedSiteVersion: PnBase
@@ -178,4 +180,5 @@ public class AssignedSiteVersion: PnBase
     public bool FifthShiftActive { get; set; }
     public bool DaysBackInTimeAllowedEditingEnabled { get; set; } = false;
     public int DaysBackInTimeAllowedEditing { get; set; } = 2;
+    public DateTime ResignedAtDate { get; set; }
 }
