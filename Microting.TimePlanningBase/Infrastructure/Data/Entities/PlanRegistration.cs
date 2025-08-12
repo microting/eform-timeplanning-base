@@ -158,7 +158,7 @@ public class PlanRegistration : PnBase
     public int PlannedEndOfShift5 { get; set; }
     public int PlannedBreakOfShift5 { get; set; }
     public bool PlanChangedByAdmin { get; set; }
-    public int NettoHoursOverride { get; set; }
+    public double NettoHoursOverride { get; set; }
     public bool NettoHoursOverrideActive { get; set; }
 
     public PlanRegistration()
