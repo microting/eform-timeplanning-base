@@ -160,6 +160,29 @@ public class PlanRegistration : PnBase
     public bool PlanChangedByAdmin { get; set; }
     public double NettoHoursOverride { get; set; }
     public bool NettoHoursOverrideActive { get; set; }
+    
+    // Faster lookups in db
+    public bool IsSaturday { get; set; }
+    public bool IsSunday { get; set; }
+
+    // Total net hours after override logic
+    public double? EffectiveNetHours { get; set; }
+
+    // Hour category splits
+    public double? NormalHours { get; set; }
+    public double? OvertimeHours { get; set; }
+    public double? WeekendHours { get; set; }
+    public double? NightHours { get; set; }
+    public double? HolidayHours { get; set; }
+    public double? AbsenceHours { get; set; }
+
+    // First/last work interval timestamps for rest calculation
+    public DateTime? FirstWorkStartUtc { get; set; }
+    public DateTime? LastWorkEndUtc { get; set; }
+
+    // Calculation metadata
+    public bool RuleEngineCalculated { get; set; }
+    public DateTime? RuleEngineCalculatedAt { get; set; }
 
     public PlanRegistration()
     {
