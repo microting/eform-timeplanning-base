@@ -68,6 +68,19 @@ namespace Microting.TimePlanningBase.Tests
                 Stop2Id = new Random().Next(),
                 PlanHours = new Random().NextDouble(),
                 SumFlexStart = new Random().NextDouble(),
+                IsSaturday = true,
+                IsSunday = false,
+                EffectiveNetHours = 8.5,
+                NormalHours = 7.5,
+                OvertimeHours = 1.0,
+                WeekendHours = 0.0,
+                NightHours = 0.5,
+                HolidayHours = null,
+                AbsenceHours = null,
+                FirstWorkStartUtc = DateTime.UtcNow.AddHours(-8),
+                LastWorkEndUtc = DateTime.UtcNow,
+                RuleEngineCalculated = true,
+                RuleEngineCalculatedAt = DateTime.UtcNow,
             };
 
             // Act
@@ -105,6 +118,19 @@ namespace Microting.TimePlanningBase.Tests
             Assert.That(planRegistrationList[0].SumFlexStart, Is.EqualTo(planRegistration.SumFlexStart));
             Assert.That(planRegistrationList[0].Id, Is.EqualTo(planRegistration.Id));
             Assert.That(planRegistrationList[0].Version, Is.EqualTo(1));
+            Assert.That(planRegistrationList[0].IsSaturday, Is.EqualTo(planRegistration.IsSaturday));
+            Assert.That(planRegistrationList[0].IsSunday, Is.EqualTo(planRegistration.IsSunday));
+            Assert.That(planRegistrationList[0].EffectiveNetHours, Is.EqualTo(planRegistration.EffectiveNetHours));
+            Assert.That(planRegistrationList[0].NormalHours, Is.EqualTo(planRegistration.NormalHours));
+            Assert.That(planRegistrationList[0].OvertimeHours, Is.EqualTo(planRegistration.OvertimeHours));
+            Assert.That(planRegistrationList[0].WeekendHours, Is.EqualTo(planRegistration.WeekendHours));
+            Assert.That(planRegistrationList[0].NightHours, Is.EqualTo(planRegistration.NightHours));
+            Assert.That(planRegistrationList[0].HolidayHours, Is.EqualTo(planRegistration.HolidayHours));
+            Assert.That(planRegistrationList[0].AbsenceHours, Is.EqualTo(planRegistration.AbsenceHours));
+            Assert.That(planRegistrationList[0].RuleEngineCalculated, Is.EqualTo(planRegistration.RuleEngineCalculated));
+            Assert.That(planRegistrationList[0].FirstWorkStartUtc?.ToString(), Is.EqualTo(planRegistration.FirstWorkStartUtc?.ToString()));
+            Assert.That(planRegistrationList[0].LastWorkEndUtc?.ToString(), Is.EqualTo(planRegistration.LastWorkEndUtc?.ToString()));
+            Assert.That(planRegistrationList[0].RuleEngineCalculatedAt?.ToString(), Is.EqualTo(planRegistration.RuleEngineCalculatedAt?.ToString()));
 
             // versions
             Assert.That(planRegistrationVersionsList[0].WorkflowState, Is.EqualTo(Constants.WorkflowStates.Created));
@@ -129,6 +155,19 @@ namespace Microting.TimePlanningBase.Tests
             Assert.That(planRegistrationVersionsList[0].SumFlexStart, Is.EqualTo(planRegistration.SumFlexStart));
             Assert.That(planRegistrationVersionsList[0].PlanRegistrationId, Is.EqualTo(planRegistration.Id));
             Assert.That(planRegistrationVersionsList[0].Version, Is.EqualTo(1));
+            Assert.That(planRegistrationVersionsList[0].IsSaturday, Is.EqualTo(planRegistration.IsSaturday));
+            Assert.That(planRegistrationVersionsList[0].IsSunday, Is.EqualTo(planRegistration.IsSunday));
+            Assert.That(planRegistrationVersionsList[0].EffectiveNetHours, Is.EqualTo(planRegistration.EffectiveNetHours));
+            Assert.That(planRegistrationVersionsList[0].NormalHours, Is.EqualTo(planRegistration.NormalHours));
+            Assert.That(planRegistrationVersionsList[0].OvertimeHours, Is.EqualTo(planRegistration.OvertimeHours));
+            Assert.That(planRegistrationVersionsList[0].WeekendHours, Is.EqualTo(planRegistration.WeekendHours));
+            Assert.That(planRegistrationVersionsList[0].NightHours, Is.EqualTo(planRegistration.NightHours));
+            Assert.That(planRegistrationVersionsList[0].HolidayHours, Is.EqualTo(planRegistration.HolidayHours));
+            Assert.That(planRegistrationVersionsList[0].AbsenceHours, Is.EqualTo(planRegistration.AbsenceHours));
+            Assert.That(planRegistrationVersionsList[0].RuleEngineCalculated, Is.EqualTo(planRegistration.RuleEngineCalculated));
+            Assert.That(planRegistrationVersionsList[0].FirstWorkStartUtc?.ToString(), Is.EqualTo(planRegistration.FirstWorkStartUtc?.ToString()));
+            Assert.That(planRegistrationVersionsList[0].LastWorkEndUtc?.ToString(), Is.EqualTo(planRegistration.LastWorkEndUtc?.ToString()));
+            Assert.That(planRegistrationVersionsList[0].RuleEngineCalculatedAt?.ToString(), Is.EqualTo(planRegistration.RuleEngineCalculatedAt?.ToString()));
         }
 
         [Test]
@@ -166,6 +205,12 @@ namespace Microting.TimePlanningBase.Tests
                 Stop2Id = new Random().Next(),
                 PlanHours = new Random().NextDouble(),
                 SumFlexStart = new Random().NextDouble(),
+                IsSaturday = false,
+                IsSunday = true,
+                EffectiveNetHours = 7.0,
+                NormalHours = 7.0,
+                OvertimeHours = null,
+                WeekendHours = 0.0,
             };
             await planRegistration.Create(DbContext);
 
@@ -190,6 +235,11 @@ namespace Microting.TimePlanningBase.Tests
             planRegistration.Stop2Id = new Random().Next();
             planRegistration.PlanHours = new Random().NextDouble();
             planRegistration.SumFlexStart = new Random().NextDouble();
+            planRegistration.IsSaturday = true;
+            planRegistration.IsSunday = false;
+            planRegistration.EffectiveNetHours = 9.5;
+            planRegistration.NormalHours = 8.0;
+            planRegistration.OvertimeHours = 1.5;
             await planRegistration.Update(DbContext);
 
             var planRegistrationList = DbContext.PlanRegistrations.AsNoTracking().ToList();
