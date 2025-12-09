@@ -32,46 +32,27 @@ public class AssignedSite: PnBase
     public int? CaseMicrotingUid { get; set; }
 
     public int? StartMonday { get; set; }
-
     public int? EndMonday { get; set; }
-
     public int? BreakMonday { get; set; }
-
     public int? StartTuesday { get; set; }
-
     public int? EndTuesday { get; set; }
-
     public int? BreakTuesday { get; set; }
-
     public int? StartWednesday { get; set; }
-
     public int? EndWednesday { get; set; }
-
     public int? BreakWednesday { get; set; }
-
     public int? StartThursday { get; set; }
-
     public int? EndThursday { get; set; }
-
     public int? BreakThursday { get; set; }
-
     public int? StartFriday { get; set; }
-
     public int? EndFriday { get; set; }
-
     public int? BreakFriday { get; set; }
-
     public int? StartSaturday { get; set; }
-
     public int? EndSaturday { get; set; }
-
     public int? BreakSaturday { get; set; }
-
     public int? StartSunday { get; set; }
-
     public int? EndSunday { get; set; }
     public int? BreakSunday { get; set; }
-    public bool Resigned { get; set; }
+
     public int MondayBreakMinutesDivider { get; set; }
     public int MondayBreakMinutesPrDivider { get; set; }
     public int TuesdayBreakMinutesDivider { get; set; }
@@ -94,10 +75,7 @@ public class AssignedSite: PnBase
     public int FridayBreakMinutesUpperLimit { get; set; }
     public int SaturdayBreakMinutesUpperLimit { get; set; }
     public int SundayBreakMinutesUpperLimit { get; set; }
-    public bool UseOneMinuteIntervals { get; set; }
-    public bool AllowAcceptOfPlannedHours { get; set; }
-    public bool AllowEditOfRegistrations { get; set; }
-    public bool AllowPersonalTimeRegistration { get; set; }
+
     public int? StartMonday2NdShift { get; set; }
     public int? EndMonday2NdShift { get; set; }
     public int? BreakMonday2NdShift { get; set; }
@@ -182,8 +160,7 @@ public class AssignedSite: PnBase
     public int? StartSunday5ThShift { get; set; }
     public int? EndSunday5ThShift { get; set; }
     public int? BreakSunday5ThShift { get; set; }
-    public bool UseGoogleSheetAsDefault { get; set; } = true;
-    public bool UseOnlyPlanHours { get; set; }
+
     public int MondayPlanHours { get; set; }
     public int TuesdayPlanHours { get; set; }
     public int WednesdayPlanHours { get; set; }
@@ -191,13 +168,22 @@ public class AssignedSite: PnBase
     public int FridayPlanHours { get; set; }
     public int SaturdayPlanHours { get; set; }
     public int SundayPlanHours { get; set; }
+
+    public bool Resigned { get; set; }
+    public bool EnableMobileAccess { get; set; }
+    public bool UseGoogleSheetAsDefault { get; set; } = true;
+    public bool UseOnlyPlanHours { get; set; }
     public bool UsePunchClock { get; set; }
     public bool UseDetailedPauseEditing { get; set; }
     public bool UsePunchClockWithAllowRegisteringInHistory { get; set; }
     public bool ThirdShiftActive { get; set; }
     public bool FourthShiftActive { get; set; }
     public bool FifthShiftActive { get; set; }
-    public bool DaysBackInTimeAllowedEditingEnabled { get; set; } = false;
+    public bool DaysBackInTimeAllowedEditingEnabled { get; set; }
     public int DaysBackInTimeAllowedEditing { get; set; } = 2;
     public DateTime ResignedAtDate { get; set; }
+    public bool UseOneMinuteIntervals { get; set; }
+    public bool AllowAcceptOfPlannedHours { get; set; }
+    public bool AllowEditOfRegistrations { get; set; }
+    public bool AllowPersonalTimeRegistration { get; set; }
 }
