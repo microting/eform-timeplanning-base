@@ -102,10 +102,10 @@ namespace Microting.TimePlanningBase.Tests
                 "HolidayVersions",
                 "WorkingTimeRuleSettings",
                 "WorkingTimeRuleSettingsVersions",
-                "BreakPolicyRules",
                 "BreakPolicyRuleVersions",
-                "BreakPolicies",
+                "BreakPolicyRules",
                 "BreakPolicyVersions",
+                "BreakPolicies",
             };
 
             var firstRunNotDone = true;
