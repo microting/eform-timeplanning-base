@@ -58,6 +58,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<GpsCoordinateVersion> GpsCoordinateVersions { get; set; }
         public DbSet<PictureSnapshot> PictureSnapshots { get; set; }
         public DbSet<PictureSnapshotVersion> PictureSnapshotVersions { get; set; }
+        public DbSet<Holiday> Holidays { get; set; }
+        public DbSet<HolidayVersion> HolidayVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
