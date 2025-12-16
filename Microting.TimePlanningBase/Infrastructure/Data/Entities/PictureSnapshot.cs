@@ -29,7 +29,9 @@ public class PictureSnapshot : PnBase
     public int PlanRegistrationId { get; set; }
     public virtual PlanRegistration PlanRegistration { get; set; }
     
+    // Hash of the picture (e.g., SHA-256)
     public string PictureHash { get; set; }
     
+    // Type of registration (e.g., "Start1StartedAt", "Stop1StoppedAt")
     public string RegistrationType { get; set; }
 }

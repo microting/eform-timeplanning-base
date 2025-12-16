@@ -29,8 +29,12 @@ public class GpsCoordinate : PnBase
     public int PlanRegistrationId { get; set; }
     public virtual PlanRegistration PlanRegistration { get; set; }
     
+    // Valid range: -90 to 90 degrees
     public double Latitude { get; set; }
+    
+    // Valid range: -180 to 180 degrees
     public double Longitude { get; set; }
     
+    // Type of registration (e.g., "Start1StartedAt", "Stop1StoppedAt")
     public string RegistrationType { get; set; }
 }
