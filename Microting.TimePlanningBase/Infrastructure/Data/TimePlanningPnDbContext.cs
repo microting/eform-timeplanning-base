@@ -29,6 +29,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
     using Entities;
     using Extensions.Seed;
     using Microsoft.EntityFrameworkCore;
+    using WorkingTime;
 
     public class TimePlanningPnDbContext : DbContext, IPluginDbContext
     {
@@ -60,6 +61,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<PictureSnapshotVersion> PictureSnapshotVersions { get; set; }
         public DbSet<Holiday> Holidays { get; set; }
         public DbSet<HolidayVersion> HolidayVersions { get; set; }
+        public DbSet<WorkingTimeRuleSettings> WorkingTimeRuleSettings { get; set; }
+        public DbSet<WorkingTimeRuleSettingsVersion> WorkingTimeRuleSettingsVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

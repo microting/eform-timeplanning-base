@@ -100,6 +100,8 @@ namespace Microting.TimePlanningBase.Tests
                 "RegistrationDeviceVersions",
                 "Holidays",
                 "HolidayVersions",
+                "WorkingTimeRuleSettings",
+                "WorkingTimeRuleSettingsVersions",
             };
 
             var firstRunNotDone = true;
