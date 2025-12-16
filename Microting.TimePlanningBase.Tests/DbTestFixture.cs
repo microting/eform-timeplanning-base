@@ -88,6 +88,10 @@ namespace Microting.TimePlanningBase.Tests
         {
             var modelNames = new List<string>
             {
+                "GpsCoordinates",
+                "GpsCoordinateVersions",
+                "PictureSnapshots",
+                "PictureSnapshotVersions",
                 "AssignedSites",
                 "AssignedSiteVersions",
                 "PlanRegistrations",

@@ -54,6 +54,10 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<PluginGroupPermissionVersion> PluginGroupPermissionVersions { get; set; }
         public DbSet<RegistrationDevice> RegistrationDevices { get; set; }
         public DbSet<RegistrationDeviceVersion> RegistrationDeviceVersions { get; set; }
+        public DbSet<GpsCoordinate> GpsCoordinates { get; set; }
+        public DbSet<GpsCoordinateVersion> GpsCoordinateVersions { get; set; }
+        public DbSet<PictureSnapshot> PictureSnapshots { get; set; }
+        public DbSet<PictureSnapshotVersion> PictureSnapshotVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
