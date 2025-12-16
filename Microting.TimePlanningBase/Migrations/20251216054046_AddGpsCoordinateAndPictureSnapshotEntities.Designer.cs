@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microting.TimePlanningBase.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Microting.TimePlanningBase.Infrastructure.Data;
 namespace Microting.TimePlanningBase.Migrations
 {
     [DbContext(typeof(TimePlanningPnDbContext))]
-    partial class TimePlanningPnDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251216054046_AddGpsCoordinateAndPictureSnapshotEntities")]
+    partial class AddGpsCoordinateAndPictureSnapshotEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -288,9 +291,6 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<int>("FridayPlanHours")
                         .HasColumnType("int");
 
-                    b.Property<bool>("GpsEnabled")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<int>("MondayBreakMinutesDivider")
                         .HasColumnType("int");
 
@@ -323,9 +323,6 @@ namespace Microting.TimePlanningBase.Migrations
 
                     b.Property<int>("SiteId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("SnapshotEnabled")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<int?>("StartFriday")
                         .HasColumnType("int");
@@ -788,9 +785,6 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<int>("FridayPlanHours")
                         .HasColumnType("int");
 
-                    b.Property<bool>("GpsEnabled")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<int>("MondayBreakMinutesDivider")
                         .HasColumnType("int");
 
@@ -823,9 +817,6 @@ namespace Microting.TimePlanningBase.Migrations
 
                     b.Property<int>("SiteId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("SnapshotEnabled")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<int?>("StartFriday")
                         .HasColumnType("int");
