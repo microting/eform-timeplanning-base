@@ -70,7 +70,7 @@ public class WorkingTimeRuleSettingsUTest : DbTestFixture
 
         Assert.That(settingsRecords[0].RuleSetName, Is.EqualTo("Default Rules"));
         Assert.That(settingsRecords[0].WeeklyNormalHours, Is.EqualTo(TimeSpan.FromHours(37)));
-        Assert.That(settingsRecords[0].DailyNormalHours, Is.EqualTo(TimeSpan.FromMinutes(444)));
+        Assert.That(settingsRecords[0].DailyNormalHours, Is.EqualTo(TimeSpan.FromHours(7) + TimeSpan.FromMinutes(24)));
         Assert.That(settingsRecords[0].MinimumDailyRest, Is.EqualTo(TimeSpan.FromHours(11)));
         Assert.That(settingsRecords[0].MinimumWeeklyRest, Is.EqualTo(TimeSpan.FromHours(24)));
         Assert.That(settingsRecords[0].WeekStartsOn, Is.EqualTo(DayOfWeek.Monday));
@@ -168,7 +168,7 @@ public class WorkingTimeRuleSettingsUTest : DbTestFixture
         Assert.That(settingsRecords.Count, Is.EqualTo(1));
         Assert.That(settingsRecords[0].RuleSetName, Is.EqualTo("Default"));
         Assert.That(settingsRecords[0].WeeklyNormalHours, Is.EqualTo(TimeSpan.FromHours(37)));
-        Assert.That(settingsRecords[0].DailyNormalHours, Is.EqualTo(TimeSpan.FromMinutes(444)));
+        Assert.That(settingsRecords[0].DailyNormalHours, Is.EqualTo(TimeSpan.FromHours(7) + TimeSpan.FromMinutes(24)));
         Assert.That(settingsRecords[0].MinimumDailyRest, Is.EqualTo(TimeSpan.FromHours(11)));
         Assert.That(settingsRecords[0].MinimumWeeklyRest, Is.EqualTo(TimeSpan.FromHours(24)));
         Assert.That(settingsRecords[0].WeekStartsOn, Is.EqualTo(DayOfWeek.Monday));
