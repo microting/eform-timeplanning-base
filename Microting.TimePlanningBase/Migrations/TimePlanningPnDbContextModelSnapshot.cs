@@ -42,6 +42,9 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<bool>("AutoBreakCalculationActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int?>("BreakPolicyId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("BreakFriday")
                         .HasColumnType("int");
 
@@ -516,6 +519,8 @@ namespace Microting.TimePlanningBase.Migrations
 
                     b.HasKey("Id");
 
+
+                    b.HasIndex("BreakPolicyId");
                     b.ToTable("AssignedSites");
                 });
 
@@ -541,6 +546,9 @@ namespace Microting.TimePlanningBase.Migrations
 
                     b.Property<bool>("AutoBreakCalculationActive")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("BreakPolicyId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("BreakFriday")
                         .HasColumnType("int");
@@ -1017,6 +1025,184 @@ namespace Microting.TimePlanningBase.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AssignedSiteVersions");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.BreakPolicy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AppliesOnlyIfWorkMinutesAtLeast")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ExtraPauseCountsAsUnpaid")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BreakPolicies");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.BreakPolicyRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BreakPolicyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PaidBreakMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UnpaidBreakMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BreakPolicyId");
+
+                    b.ToTable("BreakPolicyRules");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.BreakPolicyRuleVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BreakPolicyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BreakPolicyRuleId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PaidBreakMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UnpaidBreakMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BreakPolicyRuleVersions");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.BreakPolicyVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AppliesOnlyIfWorkMinutesAtLeast")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BreakPolicyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ExtraPauseCountsAsUnpaid")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BreakPolicyVersions");
                 });
 
             modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.GpsCoordinate", b =>
@@ -2817,6 +3003,26 @@ namespace Microting.TimePlanningBase.Migrations
                         .IsRequired();
 
                     b.Navigation("Permission");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", b =>
+                {
+                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.BreakPolicy", "BreakPolicy")
+                        .WithMany()
+                        .HasForeignKey("BreakPolicyId");
+
+                    b.Navigation("BreakPolicy");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.BreakPolicyRule", b =>
+                {
+                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.BreakPolicy", "BreakPolicy")
+                        .WithMany("Rules")
+                        .HasForeignKey("BreakPolicyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BreakPolicy");
                 });
 #pragma warning restore 612, 618
         }
