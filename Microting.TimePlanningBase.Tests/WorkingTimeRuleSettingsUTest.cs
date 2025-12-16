@@ -43,7 +43,7 @@ public class WorkingTimeRuleSettingsUTest : DbTestFixture
         {
             RuleSetName = "Default Rules",
             WeeklyNormalHours = TimeSpan.FromHours(37),
-            DailyNormalHours = TimeSpan.FromMinutes(444),
+            DailyNormalHours = TimeSpan.FromHours(7) + TimeSpan.FromMinutes(24),
             MinimumDailyRest = TimeSpan.FromHours(11),
             MinimumWeeklyRest = TimeSpan.FromHours(24),
             WeekStartsOn = DayOfWeek.Monday,
@@ -95,7 +95,7 @@ public class WorkingTimeRuleSettingsUTest : DbTestFixture
         {
             RuleSetName = "Initial Rules",
             WeeklyNormalHours = TimeSpan.FromHours(37),
-            DailyNormalHours = TimeSpan.FromMinutes(444),
+            DailyNormalHours = TimeSpan.FromHours(7) + TimeSpan.FromMinutes(24),
             OvertimeBasis = OvertimeBasis.Weekly
         };
         await settings.Create(DbContext).ConfigureAwait(false);
