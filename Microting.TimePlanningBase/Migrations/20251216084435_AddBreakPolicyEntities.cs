@@ -154,16 +154,16 @@ namespace Microting.TimePlanningBase.Migrations
                 table: "AssignedSites");
 
             migrationBuilder.DropTable(
-                name: "BreakPolicyRules");
-
-            migrationBuilder.DropTable(
                 name: "BreakPolicyRuleVersions");
 
             migrationBuilder.DropTable(
-                name: "BreakPolicies");
+                name: "BreakPolicyRules");
 
             migrationBuilder.DropTable(
                 name: "BreakPolicyVersions");
+
+            migrationBuilder.DropTable(
+                name: "BreakPolicies");
 
             migrationBuilder.DropIndex(
                 name: "IX_AssignedSites_BreakPolicyId",

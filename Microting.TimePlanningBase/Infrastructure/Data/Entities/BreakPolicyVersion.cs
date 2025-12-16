@@ -29,5 +29,5 @@ public class BreakPolicyVersion : PnBase
     public int BreakPolicyId { get; set; }
     public string Name { get; set; }
     public int? AppliesOnlyIfWorkMinutesAtLeast { get; set; }
-    public bool ExtraPauseCountsAsUnpaid { get; set; } = true;
+    public bool ExtraPauseCountsAsUnpaid { get; set; }
 }
