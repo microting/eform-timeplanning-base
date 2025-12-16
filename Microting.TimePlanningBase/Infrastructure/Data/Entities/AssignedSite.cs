@@ -190,4 +190,7 @@ public class AssignedSite: PnBase
     // GPS and snapshot settings
     public bool GpsEnabled { get; set; }
     public bool SnapshotEnabled { get; set; }
+    
+    public int? BreakPolicyId { get; set; }
+    public virtual BreakPolicy BreakPolicy { get; set; }
 }
