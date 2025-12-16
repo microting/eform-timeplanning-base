@@ -187,4 +187,8 @@ public class AssignedSiteVersion: PnBase
     public bool AllowAcceptOfPlannedHours { get; set; }
     public bool AllowEditOfRegistrations { get; set; }
     public bool AllowPersonalTimeRegistration { get; set; }
+    
+    // GPS and snapshot settings
+    public bool GpsEnabled { get; set; }
+    public bool SnapshotEnabled { get; set; }
 }
