@@ -35,7 +35,7 @@ public class WorkingTimeRuleSettingsVersion : PnBase
     public TimeSpan WeeklyNormalHours { get; set; } = TimeSpan.FromHours(37);
 
     // Optional: only used if OvertimeBasis uses Daily
-    public TimeSpan DailyNormalHours { get; set; } = TimeSpan.FromMinutes(444); // 7h 24m
+    public TimeSpan DailyNormalHours { get; set; } = TimeSpan.FromHours(7) + TimeSpan.FromMinutes(24); // 7h 24m
 
     // Rest rules
     public TimeSpan MinimumDailyRest { get; set; } = TimeSpan.FromHours(11);
