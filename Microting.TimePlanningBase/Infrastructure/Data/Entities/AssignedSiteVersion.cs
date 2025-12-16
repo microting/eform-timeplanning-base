@@ -191,4 +191,6 @@ public class AssignedSiteVersion: PnBase
     // GPS and snapshot settings
     public bool GpsEnabled { get; set; }
     public bool SnapshotEnabled { get; set; }
+    
+    public int? BreakPolicyId { get; set; }
 }

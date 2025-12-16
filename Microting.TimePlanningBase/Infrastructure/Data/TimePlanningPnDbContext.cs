@@ -63,6 +63,10 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<HolidayVersion> HolidayVersions { get; set; }
         public DbSet<WorkingTimeRuleSettings> WorkingTimeRuleSettings { get; set; }
         public DbSet<WorkingTimeRuleSettingsVersion> WorkingTimeRuleSettingsVersions { get; set; }
+        public DbSet<BreakPolicy> BreakPolicies { get; set; }
+        public DbSet<BreakPolicyVersion> BreakPolicyVersions { get; set; }
+        public DbSet<BreakPolicyRule> BreakPolicyRules { get; set; }
+        public DbSet<BreakPolicyRuleVersion> BreakPolicyRuleVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
