@@ -10,8 +10,9 @@ namespace Microting.TimePlanningBase.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Step 1: Handle existing duplicates by keeping only the most recent record per (SdkSitId, Date, WorkflowState)
-            // This SQL deletes duplicate records, keeping only the one with the highest Id (most recent)
+            // Step 1: Handle existing duplicates by keeping only the most recently updated record per (SdkSitId, Date, WorkflowState)
+            // This SQL deletes duplicate records, keeping only the one with the highest Id
+            // In this system, higher Id values correspond to more recent records as they are auto-incremented
             migrationBuilder.Sql(@"
                 DELETE p1 FROM PlanRegistrations p1
                 INNER JOIN (
