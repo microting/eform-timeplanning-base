@@ -72,6 +72,11 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Configure unique index for PlanRegistrations
+            modelBuilder.Entity<PlanRegistration>()
+                .HasIndex(p => new { p.SdkSitId, p.Date, p.WorkflowState })
+                .IsUnique();
+
             modelBuilder.SeedLatest();
         }
     }
