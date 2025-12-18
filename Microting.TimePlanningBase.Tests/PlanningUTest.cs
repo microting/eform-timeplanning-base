@@ -438,5 +438,178 @@ namespace Microting.TimePlanningBase.Tests
             Assert.That(planRegistrationVersionsList[1].PlanRegistrationId, Is.EqualTo(planRegistration.Id));
             Assert.That(planRegistrationVersionsList[1].Version, Is.EqualTo(2));
         }
+
+        [Test]
+        public async Task PlanRegistration_UniqueConstraint_PreventsDuplicates()
+        {
+            // Arrange
+            var testDate = new DateTime(2023, 12, 15, 0, 0, 0, DateTimeKind.Utc);
+            
+            var planRegistration1 = new PlanRegistration
+            {
+                SdkSitId = 1,
+                Date = testDate,
+                CommentOffice = "Test Comment 1",
+                Flex = 1.0,
+                UpdatedByUserId = 1,
+                CreatedByUserId = 1,
+                NettoHours = 8.0,
+                PlanText = "Plan 1",
+                PlanHours = 8.0,
+            };
+
+            await planRegistration1.Create(DbContext);
+
+            // Act & Assert - Attempting to create a duplicate should fail
+            var planRegistration2 = new PlanRegistration
+            {
+                SdkSitId = 1,  // Same SdkSitId
+                Date = testDate,  // Same Date
+                CommentOffice = "Test Comment 2",
+                Flex = 2.0,
+                UpdatedByUserId = 1,
+                CreatedByUserId = 1,
+                NettoHours = 7.0,
+                PlanText = "Plan 2",
+                PlanHours = 7.0,
+            };
+
+            // The unique constraint should prevent this from being saved
+            // Both records have the same SdkSitId, Date, and WorkflowState (Created)
+            Assert.ThrowsAsync<DbUpdateException>(async () => await planRegistration2.Create(DbContext));
+        }
+
+        [Test]
+        public async Task PlanRegistration_UniqueConstraint_AllowsDifferentDates()
+        {
+            // Arrange
+            var testDate1 = new DateTime(2023, 12, 15, 0, 0, 0, DateTimeKind.Utc);
+            var testDate2 = new DateTime(2023, 12, 16, 0, 0, 0, DateTimeKind.Utc);
+
+            var planRegistration1 = new PlanRegistration
+            {
+                SdkSitId = 1,
+                Date = testDate1,
+                CommentOffice = "Test Comment 1",
+                Flex = 1.0,
+                UpdatedByUserId = 1,
+                CreatedByUserId = 1,
+                NettoHours = 8.0,
+                PlanText = "Plan 1",
+                PlanHours = 8.0,
+            };
+
+            await planRegistration1.Create(DbContext);
+
+            var planRegistration2 = new PlanRegistration
+            {
+                SdkSitId = 1,  // Same SdkSitId
+                Date = testDate2,  // Different Date
+                CommentOffice = "Test Comment 2",
+                Flex = 2.0,
+                UpdatedByUserId = 1,
+                CreatedByUserId = 1,
+                NettoHours = 7.0,
+                PlanText = "Plan 2",
+                PlanHours = 7.0,
+            };
+
+            // Act
+            await planRegistration2.Create(DbContext);
+
+            // Assert
+            var planRegistrations = DbContext.PlanRegistrations.AsNoTracking().ToList();
+            Assert.That(planRegistrations.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public async Task PlanRegistration_UniqueConstraint_AllowsDifferentSites()
+        {
+            // Arrange
+            var testDate = new DateTime(2023, 12, 15, 0, 0, 0, DateTimeKind.Utc);
+
+            var planRegistration1 = new PlanRegistration
+            {
+                SdkSitId = 1,
+                Date = testDate,
+                CommentOffice = "Test Comment 1",
+                Flex = 1.0,
+                UpdatedByUserId = 1,
+                CreatedByUserId = 1,
+                NettoHours = 8.0,
+                PlanText = "Plan 1",
+                PlanHours = 8.0,
+            };
+
+            await planRegistration1.Create(DbContext);
+
+            var planRegistration2 = new PlanRegistration
+            {
+                SdkSitId = 2,  // Different SdkSitId
+                Date = testDate,  // Same Date
+                CommentOffice = "Test Comment 2",
+                Flex = 2.0,
+                UpdatedByUserId = 1,
+                CreatedByUserId = 1,
+                NettoHours = 7.0,
+                PlanText = "Plan 2",
+                PlanHours = 7.0,
+            };
+
+            // Act
+            await planRegistration2.Create(DbContext);
+
+            // Assert
+            var planRegistrations = DbContext.PlanRegistrations.AsNoTracking().ToList();
+            Assert.That(planRegistrations.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public async Task PlanRegistration_UniqueConstraint_AllowsDifferentWorkflowStates()
+        {
+            // Arrange
+            var testDate = new DateTime(2023, 12, 15, 0, 0, 0, DateTimeKind.Utc);
+
+            var planRegistration1 = new PlanRegistration
+            {
+                SdkSitId = 1,
+                Date = testDate,
+                CommentOffice = "Test Comment 1",
+                Flex = 1.0,
+                UpdatedByUserId = 1,
+                CreatedByUserId = 1,
+                NettoHours = 8.0,
+                PlanText = "Plan 1",
+                PlanHours = 8.0,
+            };
+
+            await planRegistration1.Create(DbContext);
+            
+            // Delete the first registration (changes WorkflowState to Removed)
+            await planRegistration1.Delete(DbContext);
+
+            // Act - Now create a new registration with the same SdkSitId and Date
+            // This should succeed because WorkflowState is different
+            var planRegistration2 = new PlanRegistration
+            {
+                SdkSitId = 1,  // Same SdkSitId
+                Date = testDate,  // Same Date
+                CommentOffice = "Test Comment 2",
+                Flex = 2.0,
+                UpdatedByUserId = 1,
+                CreatedByUserId = 1,
+                NettoHours = 7.0,
+                PlanText = "Plan 2",
+                PlanHours = 7.0,
+            };
+
+            await planRegistration2.Create(DbContext);
+
+            // Assert
+            var planRegistrations = DbContext.PlanRegistrations.AsNoTracking().ToList();
+            Assert.That(planRegistrations.Count, Is.EqualTo(2));
+            Assert.That(planRegistrations.Count(x => x.WorkflowState == Constants.WorkflowStates.Created), Is.EqualTo(1));
+            Assert.That(planRegistrations.Count(x => x.WorkflowState == Constants.WorkflowStates.Removed), Is.EqualTo(1));
+        }
     }
 }
