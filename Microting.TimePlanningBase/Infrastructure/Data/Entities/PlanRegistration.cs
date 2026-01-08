@@ -34,6 +34,7 @@ public class PlanRegistration : PnBase
     public DateTime Date { get; set; }
     public string PlanText { get; set; }
     public double PlanHours { get; set; }
+    public int PlanHoursInSeconds { get; set; }
     public int Start1Id { get; set; }
     public int Stop1Id { get; set; }
     public int Pause1Id { get; set; }
@@ -50,10 +51,15 @@ public class PlanRegistration : PnBase
     public int Stop5Id { get; set; }
     public int Pause5Id { get; set; }
     public double NettoHours { get; set; }
+    public int NettoHoursInSeconds { get; set; }
     public double Flex { get; set; }
+    public int FlexInSeconds { get; set; }
     public double SumFlexStart { get; set; }
+    public int SumFlexStartInSeconds { get; set; }
     public double SumFlexEnd { get; set; }
+    public int SumFlexEndInSeconds { get; set; }
     public double PaiedOutFlex { get; set; }
+    public int PaiedOutFlexInSeconds { get; set; }
     public int? MessageId { get; set; }
     public virtual Message Message { get; set; }
     public string CommentOffice { get; set; }
@@ -159,22 +165,30 @@ public class PlanRegistration : PnBase
     public int PlannedBreakOfShift5 { get; set; }
     public bool PlanChangedByAdmin { get; set; }
     public double NettoHoursOverride { get; set; }
+    public int NettoHoursOverrideInSeconds { get; set; }
     public bool NettoHoursOverrideActive { get; set; }
-    
+
     // Faster lookups in db
     public bool IsSaturday { get; set; }
     public bool IsSunday { get; set; }
 
     // Total net hours after override logic
     public double? EffectiveNetHours { get; set; }
+    public int? EffectiveNetHoursInSeconds { get; set; }
 
     // Hour category splits
     public double? NormalHours { get; set; }
+    public int? NormalHoursInSeconds { get; set; }
     public double? OvertimeHours { get; set; }
+    public int? OvertimeHoursInSeconds { get; set; }
     public double? WeekendHours { get; set; }
+    public int? WeekendHoursInSeconds { get; set; }
     public double? NightHours { get; set; }
+    public int? NightHoursInSeconds { get; set; }
     public double? HolidayHours { get; set; }
+    public int? HolidayHoursInSeconds { get; set; }
     public double? AbsenceHours { get; set; }
+    public int? AbsenceHoursInSeconds { get; set; }
 
     // First/last work interval timestamps for rest calculation
     public DateTime? FirstWorkStartUtc { get; set; }
