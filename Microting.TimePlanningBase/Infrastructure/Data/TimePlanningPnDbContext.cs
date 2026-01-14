@@ -67,6 +67,16 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<BreakPolicyVersion> BreakPolicyVersions { get; set; }
         public DbSet<BreakPolicyRule> BreakPolicyRules { get; set; }
         public DbSet<BreakPolicyRuleVersion> BreakPolicyRuleVersions { get; set; }
+        public DbSet<WorkingTimeRuleSet> WorkingTimeRuleSets { get; set; }
+        public DbSet<WorkingTimeRuleSetVersion> WorkingTimeRuleSetVersions { get; set; }
+        public DbSet<PayRuleSet> PayRuleSets { get; set; }
+        public DbSet<PayRuleSetVersion> PayRuleSetVersions { get; set; }
+        public DbSet<PayDayRule> PayDayRules { get; set; }
+        public DbSet<PayDayRuleVersion> PayDayRuleVersions { get; set; }
+        public DbSet<PayTierRule> PayTierRules { get; set; }
+        public DbSet<PayTierRuleVersion> PayTierRuleVersions { get; set; }
+        public DbSet<PlanRegistrationPayLine> PlanRegistrationPayLines { get; set; }
+        public DbSet<PlanRegistrationPayLineVersion> PlanRegistrationPayLineVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -75,6 +85,24 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
             // Configure unique index for PlanRegistrations
             modelBuilder.Entity<PlanRegistration>()
                 .HasIndex(p => new { p.SdkSitId, p.Date, p.WorkflowState })
+                .IsUnique();
+
+            // Configure unique index for PayDayRule (PayRuleSetId, DayCode)
+            modelBuilder.Entity<PayDayRule>()
+                .HasIndex(p => new { p.PayRuleSetId, p.DayCode })
+                .IsUnique();
+
+            // Configure index for PayTierRule (PayDayRuleId, Order)
+            modelBuilder.Entity<PayTierRule>()
+                .HasIndex(p => new { p.PayDayRuleId, p.Order });
+
+            // Configure index for PlanRegistrationPayLine (PlanRegistrationId)
+            modelBuilder.Entity<PlanRegistrationPayLine>()
+                .HasIndex(p => p.PlanRegistrationId);
+
+            // Configure unique index for PlanRegistrationPayLine (PlanRegistrationId, PayCode)
+            modelBuilder.Entity<PlanRegistrationPayLine>()
+                .HasIndex(p => new { p.PlanRegistrationId, p.PayCode })
                 .IsUnique();
 
             modelBuilder.SeedLatest();

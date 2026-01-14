@@ -193,4 +193,7 @@ public class AssignedSiteVersion: PnBase
     public bool SnapshotEnabled { get; set; }
     
     public int? BreakPolicyId { get; set; }
+    
+    public int? WorkingTimeRuleSetId { get; set; }
+    public int? PayRuleSetId { get; set; }
 }
