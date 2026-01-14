@@ -193,4 +193,10 @@ public class AssignedSite: PnBase
     
     public int? BreakPolicyId { get; set; }
     public virtual BreakPolicy BreakPolicy { get; set; }
+    
+    public int? WorkingTimeRuleSetId { get; set; }
+    public virtual WorkingTimeRuleSet WorkingTimeRuleSet { get; set; }
+    
+    public int? PayRuleSetId { get; set; }
+    public virtual PayRuleSet PayRuleSet { get; set; }
 }
