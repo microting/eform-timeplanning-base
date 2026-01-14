@@ -88,6 +88,16 @@ namespace Microting.TimePlanningBase.Tests
         {
             var modelNames = new List<string>
             {
+                "PlanRegistrationPayLineVersions",
+                "PlanRegistrationPayLines",
+                "PayTierRuleVersions",
+                "PayTierRules",
+                "PayDayRuleVersions",
+                "PayDayRules",
+                "PayRuleSetVersions",
+                "PayRuleSets",
+                "WorkingTimeRuleSetVersions",
+                "WorkingTimeRuleSets",
                 "GpsCoordinates",
                 "GpsCoordinateVersions",
                 "PictureSnapshots",
