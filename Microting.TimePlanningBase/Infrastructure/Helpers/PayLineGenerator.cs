@@ -41,7 +41,7 @@ public static class PayLineGenerator
         var result = new List<PlanRegistrationPayLine>();
 
         // Find PayDayRule by dayCode
-        var dayRule = payRuleSet?.DayRules?.FirstOrDefault(dr => dr.DayCode == dayCode);
+        var dayRule = payRuleSet?.DayRules?.SingleOrDefault(dr => dr.DayCode == dayCode);
 
         if (dayRule == null || dayRule.Tiers == null || !dayRule.Tiers.Any())
         {
