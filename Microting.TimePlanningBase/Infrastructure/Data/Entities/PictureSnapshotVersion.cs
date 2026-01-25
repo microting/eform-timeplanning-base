@@ -28,10 +28,12 @@ public class PictureSnapshotVersion : PnBase
 {
     public int PlanRegistrationId { get; set; }
     public int PictureSnapshotId { get; set; }
-    
+
     // Hash of the picture (e.g., SHA-256)
     public string PictureHash { get; set; }
-    
+
     // Type of registration (e.g., "Start1StartedAt", "Stop1StoppedAt")
     public string RegistrationType { get; set; }
+    public string FileName { get; set; }
+    public string FileExtension { get; set; }
 }
