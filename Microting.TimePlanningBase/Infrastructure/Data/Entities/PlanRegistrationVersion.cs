@@ -196,4 +196,10 @@ public class PlanRegistrationVersion : PnBase
     // Calculation metadata
     public bool RuleEngineCalculated { get; set; }
     public DateTime? RuleEngineCalculatedAt { get; set; }
+
+    public bool Reconciled { get; set; }
+    public DateTime? ReconciledAt { get; set; }
+
+    public bool TransferredToPayroll { get; set; }
+    public DateTime? TransferredToPayrollAt { get; set; }
 }

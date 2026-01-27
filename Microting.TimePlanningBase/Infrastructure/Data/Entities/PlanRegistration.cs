@@ -198,6 +198,12 @@ public class PlanRegistration : PnBase
     public bool RuleEngineCalculated { get; set; }
     public DateTime? RuleEngineCalculatedAt { get; set; }
 
+    public bool Reconciled { get; set; }
+    public DateTime? ReconciledAt { get; set; }
+
+    public bool TransferredToPayroll { get; set; }
+    public DateTime? TransferredToPayrollAt { get; set; }
+
     public PlanRegistration()
     {
         int minute = 0;
