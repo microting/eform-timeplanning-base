@@ -93,6 +93,10 @@ namespace Microting.TimePlanningBase.Tests
 
             var modelNames = new List<string>
             {
+                "AbsenceRequestDayVersions",
+                "AbsenceRequestDays",
+                "AbsenceRequestVersions",
+                "AbsenceRequests",
                 "PlanRegistrationContentHandoverRequestVersions",
                 "PlanRegistrationContentHandoverRequests",
                 "PlanRegistrationPayLineVersions",
