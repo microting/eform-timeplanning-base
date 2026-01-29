@@ -209,6 +209,11 @@ public class PlanRegistration : PnBase
     public int? ContentHandoverRequestId { get; set; }
     public DateTime? ContentHandedOverAtUtc { get; set; }
 
+    public int? AbsenceRequestId { get; set; }
+    public int? AbsenceMessageId { get; set; }
+    public DateTime? AbsenceApprovedAtUtc { get; set; }
+    public int? AbsenceApprovedBySdkSitId { get; set; }
+
     public PlanRegistration()
     {
         int minute = 0;
