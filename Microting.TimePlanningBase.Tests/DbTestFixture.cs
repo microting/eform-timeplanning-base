@@ -81,13 +81,20 @@ namespace Microting.TimePlanningBase.Tests
 
             ClearFile();
 
-            DbContext.Dispose();
+            DbContext?.Dispose();
         }
 
         private void ClearDb()
         {
+            if (DbContext == null)
+            {
+                return;
+            }
+
             var modelNames = new List<string>
             {
+                "PlanRegistrationContentHandoverRequestVersions",
+                "PlanRegistrationContentHandoverRequests",
                 "PlanRegistrationPayLineVersions",
                 "PlanRegistrationPayLines",
                 "PayTierRuleVersions",

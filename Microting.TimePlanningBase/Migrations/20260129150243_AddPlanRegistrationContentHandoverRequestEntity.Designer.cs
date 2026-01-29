@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microting.TimePlanningBase.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Microting.TimePlanningBase.Infrastructure.Data;
 namespace Microting.TimePlanningBase.Migrations
 {
     [DbContext(typeof(TimePlanningPnDbContext))]
-    partial class TimePlanningPnDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260129150243_AddPlanRegistrationContentHandoverRequestEntity")]
+    partial class AddPlanRegistrationContentHandoverRequestEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1868,18 +1871,6 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Property<string>("CommentOfficeAll")
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime?>("ContentHandedOverAtUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("ContentHandoverFromSdkSitId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ContentHandoverRequestId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ContentHandoverToSdkSitId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -2430,10 +2421,6 @@ namespace Microting.TimePlanningBase.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FromSdkSitId", "Status", "Date");
-
-                    b.HasIndex("ToSdkSitId", "Status", "Date");
-
                     b.ToTable("PlanRegistrationContentHandoverRequests");
                 });
 
@@ -2632,18 +2619,6 @@ namespace Microting.TimePlanningBase.Migrations
 
                     b.Property<string>("CommentOfficeAll")
                         .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("ContentHandedOverAtUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("ContentHandoverFromSdkSitId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ContentHandoverRequestId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ContentHandoverToSdkSitId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");

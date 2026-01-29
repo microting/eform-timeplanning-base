@@ -204,6 +204,11 @@ public class PlanRegistration : PnBase
     public bool TransferredToPayroll { get; set; }
     public DateTime? TransferredToPayrollAt { get; set; }
 
+    public int? ContentHandoverFromSdkSitId { get; set; }
+    public int? ContentHandoverToSdkSitId { get; set; }
+    public int? ContentHandoverRequestId { get; set; }
+    public DateTime? ContentHandedOverAtUtc { get; set; }
+
     public PlanRegistration()
     {
         int minute = 0;

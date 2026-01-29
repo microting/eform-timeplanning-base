@@ -77,6 +77,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<PayTierRuleVersion> PayTierRuleVersions { get; set; }
         public DbSet<PlanRegistrationPayLine> PlanRegistrationPayLines { get; set; }
         public DbSet<PlanRegistrationPayLineVersion> PlanRegistrationPayLineVersions { get; set; }
+        public DbSet<PlanRegistrationContentHandoverRequest> PlanRegistrationContentHandoverRequests { get; set; }
+        public DbSet<PlanRegistrationContentHandoverRequestVersion> PlanRegistrationContentHandoverRequestVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -104,6 +106,14 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
             modelBuilder.Entity<PlanRegistrationPayLine>()
                 .HasIndex(p => new { p.PlanRegistrationId, p.PayCode })
                 .IsUnique();
+
+            // Configure index for PlanRegistrationContentHandoverRequest (ToSdkSitId, Status, Date) - receiver inbox
+            modelBuilder.Entity<PlanRegistrationContentHandoverRequest>()
+                .HasIndex(p => new { p.ToSdkSitId, p.Status, p.Date });
+
+            // Configure index for PlanRegistrationContentHandoverRequest (FromSdkSitId, Status, Date) - sender overview
+            modelBuilder.Entity<PlanRegistrationContentHandoverRequest>()
+                .HasIndex(p => new { p.FromSdkSitId, p.Status, p.Date });
 
             modelBuilder.SeedLatest();
         }
