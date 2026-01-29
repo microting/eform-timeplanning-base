@@ -107,6 +107,14 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
                 .HasIndex(p => new { p.PlanRegistrationId, p.PayCode })
                 .IsUnique();
 
+            // Configure index for PlanRegistrationContentHandoverRequest (ToSdkSitId, Status, Date) - receiver inbox
+            modelBuilder.Entity<PlanRegistrationContentHandoverRequest>()
+                .HasIndex(p => new { p.ToSdkSitId, p.Status, p.Date });
+
+            // Configure index for PlanRegistrationContentHandoverRequest (FromSdkSitId, Status, Date) - sender overview
+            modelBuilder.Entity<PlanRegistrationContentHandoverRequest>()
+                .HasIndex(p => new { p.FromSdkSitId, p.Status, p.Date });
+
             modelBuilder.SeedLatest();
         }
     }
