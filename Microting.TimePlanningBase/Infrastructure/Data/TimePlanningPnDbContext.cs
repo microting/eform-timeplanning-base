@@ -79,6 +79,10 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<PlanRegistrationPayLineVersion> PlanRegistrationPayLineVersions { get; set; }
         public DbSet<PlanRegistrationContentHandoverRequest> PlanRegistrationContentHandoverRequests { get; set; }
         public DbSet<PlanRegistrationContentHandoverRequestVersion> PlanRegistrationContentHandoverRequestVersions { get; set; }
+        public DbSet<AbsenceRequest> AbsenceRequests { get; set; }
+        public DbSet<AbsenceRequestVersion> AbsenceRequestVersions { get; set; }
+        public DbSet<AbsenceRequestDay> AbsenceRequestDays { get; set; }
+        public DbSet<AbsenceRequestDayVersion> AbsenceRequestDayVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

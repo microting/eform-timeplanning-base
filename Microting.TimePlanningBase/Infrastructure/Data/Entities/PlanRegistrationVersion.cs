@@ -174,6 +174,7 @@ public class PlanRegistrationVersion : PnBase
 
     // Total net hours after override logic
     public double? EffectiveNetHours { get; set; }
+    public int? EffectiveNetHoursInSeconds { get; set; }
 
     // Hour category splits
     public double? NormalHours { get; set; }
@@ -207,4 +208,9 @@ public class PlanRegistrationVersion : PnBase
     public int? ContentHandoverToSdkSitId { get; set; }
     public int? ContentHandoverRequestId { get; set; }
     public DateTime? ContentHandedOverAtUtc { get; set; }
+
+    public int? AbsenceRequestId { get; set; }
+    public int? AbsenceMessageId { get; set; }
+    public DateTime? AbsenceApprovedAtUtc { get; set; }
+    public int? AbsenceApprovedBySdkSitId { get; set; }
 }
