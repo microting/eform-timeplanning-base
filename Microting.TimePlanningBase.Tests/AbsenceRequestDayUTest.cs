@@ -35,6 +35,18 @@ namespace Microting.TimePlanningBase.Tests;
 [TestFixture]
 public class AbsenceRequestDayUTest : DbTestFixture
 {
+    protected override void DoSetup()
+    {
+        // Ensure Messages are seeded in the database
+        if (!DbContext.Messages.Any())
+        {
+            DbContext.Messages.Add(new Message(1, "Day Off", "Fridag", "Day off", "Freitag"));
+            DbContext.Messages.Add(new Message(2, "Vacation", "Ferie", "Vacation", "Ferien"));
+            DbContext.Messages.Add(new Message(3, "Sick", "Sygdom", "Sick", "Krank"));
+            DbContext.SaveChanges();
+        }
+    }
+
     [Test]
     public async Task AbsenceRequestDay_Create_DoesCreate()
     {
