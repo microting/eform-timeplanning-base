@@ -31,6 +31,10 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Explicitly ignore bin/Debug directories with backslashes (Windows paths in git)
+**/bin\Debug/
+**/bin\\Debug/
+
 # Visual Studio 2015/2017 cache/options directory
 .vs/
 # Uncomment if you have tasks that create the project's static files in wwwroot
