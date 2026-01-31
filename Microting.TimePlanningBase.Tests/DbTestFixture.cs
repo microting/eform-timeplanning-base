@@ -113,6 +113,8 @@ namespace Microting.TimePlanningBase.Tests
                 "GpsCoordinateVersions",
                 "PictureSnapshots",
                 "PictureSnapshotVersions",
+                "AssignedSiteManagingTagVersions",
+                "AssignedSiteManagingTags",
                 "AssignedSites",
                 "AssignedSiteVersions",
                 "PlanRegistrations",
