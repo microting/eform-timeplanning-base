@@ -217,4 +217,62 @@ public class AssignedSiteRuleSetsUTest : DbTestFixture
         
         Assert.That(assignedSiteVersions[1].WorkingTimeRuleSetId, Is.EqualTo(workingTimeRuleSet.Id));
     }
+
+    [Test]
+    public async Task AssignedSite_WithIsManager_DoesCreate()
+    {
+        // Arrange
+        var assignedSite = new AssignedSite
+        {
+            SiteId = 1,
+            IsManager = true
+        };
+
+        // Act
+        await assignedSite.Create(DbContext).ConfigureAwait(false);
+
+        // Assert
+        var assignedSites = DbContext.AssignedSites.AsNoTracking().ToList();
+        var assignedSiteVersions = DbContext.AssignedSiteVersions.AsNoTracking().ToList();
+
+        Assert.That(assignedSites, Is.Not.Null);
+        Assert.That(assignedSiteVersions, Is.Not.Null);
+
+        Assert.That(assignedSites.Count, Is.EqualTo(1));
+        Assert.That(assignedSiteVersions.Count, Is.EqualTo(1));
+
+        Assert.That(assignedSites[0].IsManager, Is.EqualTo(true));
+        Assert.That(assignedSites[0].Version, Is.EqualTo(1));
+
+        Assert.That(assignedSiteVersions[0].IsManager, Is.EqualTo(true));
+    }
+
+    [Test]
+    public async Task AssignedSite_UpdateIsManager_DoesUpdate()
+    {
+        // Arrange
+        var assignedSite = new AssignedSite
+        {
+            SiteId = 1,
+            IsManager = false
+        };
+        await assignedSite.Create(DbContext).ConfigureAwait(false);
+
+        // Act
+        assignedSite.IsManager = true;
+        await assignedSite.Update(DbContext).ConfigureAwait(false);
+
+        // Assert
+        var assignedSites = DbContext.AssignedSites.AsNoTracking().ToList();
+        var assignedSiteVersions = DbContext.AssignedSiteVersions.AsNoTracking().ToList();
+
+        Assert.That(assignedSites.Count, Is.EqualTo(1));
+        Assert.That(assignedSiteVersions.Count, Is.EqualTo(2));
+
+        Assert.That(assignedSites[0].IsManager, Is.EqualTo(true));
+        Assert.That(assignedSites[0].Version, Is.EqualTo(2));
+
+        Assert.That(assignedSiteVersions[0].IsManager, Is.EqualTo(false));
+        Assert.That(assignedSiteVersions[1].IsManager, Is.EqualTo(true));
+    }
 }
