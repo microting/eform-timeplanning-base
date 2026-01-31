@@ -191,6 +191,9 @@ public class AssignedSite: PnBase
     public bool GpsEnabled { get; set; }
     public bool SnapshotEnabled { get; set; }
     
+    // Manager settings
+    public bool IsManager { get; set; }
+    
     public int? BreakPolicyId { get; set; }
     public virtual BreakPolicy BreakPolicy { get; set; }
     

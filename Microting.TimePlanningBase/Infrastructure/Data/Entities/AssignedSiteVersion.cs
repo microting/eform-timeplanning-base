@@ -192,6 +192,9 @@ public class AssignedSiteVersion: PnBase
     public bool GpsEnabled { get; set; }
     public bool SnapshotEnabled { get; set; }
     
+    // Manager settings
+    public bool IsManager { get; set; }
+    
     public int? BreakPolicyId { get; set; }
     
     public int? WorkingTimeRuleSetId { get; set; }

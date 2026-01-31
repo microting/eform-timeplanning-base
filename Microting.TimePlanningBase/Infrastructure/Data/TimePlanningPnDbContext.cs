@@ -41,6 +41,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
 
         public DbSet<AssignedSite> AssignedSites { get; set; }
         public DbSet<AssignedSiteVersion> AssignedSiteVersions { get; set; }
+        public DbSet<AssignedSiteManagingTag> AssignedSiteManagingTags { get; set; }
+        public DbSet<AssignedSiteManagingTagVersion> AssignedSiteManagingTagVersions { get; set; }
 
         public DbSet<PlanRegistration> PlanRegistrations { get; set; }
         public DbSet<PlanRegistrationVersion> PlanRegistrationVersions { get; set; }
@@ -118,6 +120,11 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
             // Configure index for PlanRegistrationContentHandoverRequest (FromSdkSitId, Status, Date) - sender overview
             modelBuilder.Entity<PlanRegistrationContentHandoverRequest>()
                 .HasIndex(p => new { p.FromSdkSitId, p.Status, p.Date });
+
+            // Configure unique index for AssignedSiteManagingTag (AssignedSiteId, TagId)
+            modelBuilder.Entity<AssignedSiteManagingTag>()
+                .HasIndex(p => new { p.AssignedSiteId, p.TagId })
+                .IsUnique();
 
             modelBuilder.SeedLatest();
         }
