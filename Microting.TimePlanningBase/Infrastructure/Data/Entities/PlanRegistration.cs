@@ -214,6 +214,9 @@ public class PlanRegistration : PnBase
     public DateTime? AbsenceApprovedAtUtc { get; set; }
     public int? AbsenceApprovedBySdkSitId { get; set; }
 
+    public double? ExtraOvertimeHours { get; set; }
+    public int? ExtraOvertimeHoursInSeconds { get; set; }
+
     public PlanRegistration()
     {
         int minute = 0;
