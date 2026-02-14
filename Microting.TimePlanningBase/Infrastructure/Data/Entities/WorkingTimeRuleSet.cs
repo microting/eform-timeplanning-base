@@ -24,6 +24,8 @@ SOFTWARE.
 
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
 
+using WorkingTime;
+
 public class WorkingTimeRuleSet : PnBase
 {
     public string Name { get; set; }
@@ -38,4 +40,11 @@ public class WorkingTimeRuleSet : PnBase
     public int NightEndSeconds { get; set; }
 
     public int OvertimeBasis { get; set; }
+
+    public int? OvertimePeriodLengthDays { get; set; }
+    public int? OvertimeAveragingWindowDays { get; set; }
+    public OvertimeMonthlyNormMode? MonthlyNormMode { get; set; }
+    public bool CountPaidAbsenceAsWork { get; set; }
+    public bool CountHolidayPaidOffAsWork { get; set; }
+    public OvertimeAllocationStrategy OvertimeAllocationStrategy { get; set; }
 }

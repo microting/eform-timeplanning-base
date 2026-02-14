@@ -30,4 +30,10 @@ public class PayRuleSet : PnBase
 {
     public string Name { get; set; }
     public virtual ICollection<PayDayRule> DayRules { get; set; } = new List<PayDayRule>();
+
+    public HolidayPaidOffMode HolidayPaidOffMode { get; set; }
+    public int? HolidayPaidOffFixedSeconds { get; set; }
+    public string HolidayPaidOffPayCode { get; set; }
+
+    public virtual ICollection<PayDayTypeRule> DayTypeRules { get; set; } = new List<PayDayTypeRule>();
 }

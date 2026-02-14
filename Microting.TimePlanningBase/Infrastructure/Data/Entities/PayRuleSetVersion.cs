@@ -28,4 +28,8 @@ public class PayRuleSetVersion : PnBase
 {
     public int PayRuleSetId { get; set; }
     public string Name { get; set; }
+
+    public HolidayPaidOffMode HolidayPaidOffMode { get; set; }
+    public int? HolidayPaidOffFixedSeconds { get; set; }
+    public string HolidayPaidOffPayCode { get; set; }
 }

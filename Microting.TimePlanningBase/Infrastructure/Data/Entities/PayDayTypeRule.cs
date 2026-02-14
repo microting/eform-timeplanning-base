@@ -22,30 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System.Collections.Generic;
+
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
 
-using WorkingTime;
-
-public class WorkingTimeRuleSetVersion : PnBase
+public class PayDayTypeRule : PnBase
 {
-    public int WorkingTimeRuleSetId { get; set; }
-    public string Name { get; set; }
+    public int PayRuleSetId { get; set; }
+    public virtual PayRuleSet PayRuleSet { get; set; }
 
-    public int WeeklyNormalSeconds { get; set; }
-    public int? DailyNormalSeconds { get; set; }
-    public int MinimumDailyRestSeconds { get; set; }
-    public int MinimumWeeklyRestSeconds { get; set; }
+    public DayType DayType { get; set; }
+    public string DefaultPayCode { get; set; }
+    public int Priority { get; set; }
 
-    public int WeekStartsOn { get; set; }
-    public int NightStartSeconds { get; set; }
-    public int NightEndSeconds { get; set; }
-
-    public int OvertimeBasis { get; set; }
-
-    public int? OvertimePeriodLengthDays { get; set; }
-    public int? OvertimeAveragingWindowDays { get; set; }
-    public OvertimeMonthlyNormMode? MonthlyNormMode { get; set; }
-    public bool CountPaidAbsenceAsWork { get; set; }
-    public bool CountHolidayPaidOffAsWork { get; set; }
-    public OvertimeAllocationStrategy OvertimeAllocationStrategy { get; set; }
+    public virtual ICollection<PayTimeBandRule> TimeBandRules { get; set; } = new List<PayTimeBandRule>();
 }
