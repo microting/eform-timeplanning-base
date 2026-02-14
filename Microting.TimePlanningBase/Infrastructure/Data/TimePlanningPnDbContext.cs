@@ -85,6 +85,12 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<AbsenceRequestVersion> AbsenceRequestVersions { get; set; }
         public DbSet<AbsenceRequestDay> AbsenceRequestDays { get; set; }
         public DbSet<AbsenceRequestDayVersion> AbsenceRequestDayVersions { get; set; }
+        public DbSet<PayDayTypeRule> PayDayTypeRules { get; set; }
+        public DbSet<PayDayTypeRuleVersion> PayDayTypeRuleVersions { get; set; }
+        public DbSet<PayTimeBandRule> PayTimeBandRules { get; set; }
+        public DbSet<PayTimeBandRuleVersion> PayTimeBandRuleVersions { get; set; }
+        public DbSet<AssignedSiteRuleSetAssignments> AssignedSiteRuleSetAssignments { get; set; }
+        public DbSet<AssignedSiteRuleSetAssignmentsVersion> AssignedSiteRuleSetAssignmentsVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -125,6 +131,18 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
             modelBuilder.Entity<AssignedSiteManagingTag>()
                 .HasIndex(p => new { p.AssignedSiteId, p.TagId })
                 .IsUnique();
+
+            // Configure index for PayDayTypeRule (PayRuleSetId, DayType, Priority)
+            modelBuilder.Entity<PayDayTypeRule>()
+                .HasIndex(p => new { p.PayRuleSetId, p.DayType, p.Priority });
+
+            // Configure index for PayTimeBandRule (PayDayTypeRuleId, Priority)
+            modelBuilder.Entity<PayTimeBandRule>()
+                .HasIndex(p => new { p.PayDayTypeRuleId, p.Priority });
+
+            // Configure index for AssignedSiteRuleSetAssignments (AssignedSiteId, ValidFromDate)
+            modelBuilder.Entity<AssignedSiteRuleSetAssignments>()
+                .HasIndex(p => new { p.AssignedSiteId, p.ValidFromDate });
 
             modelBuilder.SeedLatest();
         }

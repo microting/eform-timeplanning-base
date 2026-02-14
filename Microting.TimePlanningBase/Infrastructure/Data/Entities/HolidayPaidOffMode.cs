@@ -24,28 +24,9 @@ SOFTWARE.
 
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
 
-using WorkingTime;
-
-public class WorkingTimeRuleSetVersion : PnBase
+public enum HolidayPaidOffMode
 {
-    public int WorkingTimeRuleSetId { get; set; }
-    public string Name { get; set; }
-
-    public int WeeklyNormalSeconds { get; set; }
-    public int? DailyNormalSeconds { get; set; }
-    public int MinimumDailyRestSeconds { get; set; }
-    public int MinimumWeeklyRestSeconds { get; set; }
-
-    public int WeekStartsOn { get; set; }
-    public int NightStartSeconds { get; set; }
-    public int NightEndSeconds { get; set; }
-
-    public int OvertimeBasis { get; set; }
-
-    public int? OvertimePeriodLengthDays { get; set; }
-    public int? OvertimeAveragingWindowDays { get; set; }
-    public OvertimeMonthlyNormMode? MonthlyNormMode { get; set; }
-    public bool CountPaidAbsenceAsWork { get; set; }
-    public bool CountHolidayPaidOffAsWork { get; set; }
-    public OvertimeAllocationStrategy OvertimeAllocationStrategy { get; set; }
+    None,
+    FixedSeconds,
+    DailyNormalSeconds
 }

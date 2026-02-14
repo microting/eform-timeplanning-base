@@ -22,30 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
+
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
 
-using WorkingTime;
-
-public class WorkingTimeRuleSetVersion : PnBase
+public class AssignedSiteRuleSetAssignments : PnBase
 {
-    public int WorkingTimeRuleSetId { get; set; }
-    public string Name { get; set; }
+    public int AssignedSiteId { get; set; }
+    public virtual AssignedSite AssignedSite { get; set; }
 
-    public int WeeklyNormalSeconds { get; set; }
-    public int? DailyNormalSeconds { get; set; }
-    public int MinimumDailyRestSeconds { get; set; }
-    public int MinimumWeeklyRestSeconds { get; set; }
+    public DateTime ValidFromDate { get; set; }
+    public DateTime? ValidToDate { get; set; }
 
-    public int WeekStartsOn { get; set; }
-    public int NightStartSeconds { get; set; }
-    public int NightEndSeconds { get; set; }
+    public int? PayRuleSetId { get; set; }
+    public virtual PayRuleSet PayRuleSet { get; set; }
 
-    public int OvertimeBasis { get; set; }
+    public int? WorkingTimeRuleSetId { get; set; }
+    public virtual WorkingTimeRuleSet WorkingTimeRuleSet { get; set; }
 
-    public int? OvertimePeriodLengthDays { get; set; }
-    public int? OvertimeAveragingWindowDays { get; set; }
-    public OvertimeMonthlyNormMode? MonthlyNormMode { get; set; }
-    public bool CountPaidAbsenceAsWork { get; set; }
-    public bool CountHolidayPaidOffAsWork { get; set; }
-    public OvertimeAllocationStrategy OvertimeAllocationStrategy { get; set; }
+    public int? BreakPolicyId { get; set; }
+    public virtual BreakPolicy BreakPolicy { get; set; }
 }
