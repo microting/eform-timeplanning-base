@@ -31,5 +31,7 @@ namespace Microting.TimePlanningBase.Infrastructure.Const
         public const string GetPlanning = "time_planning_plannings_get";
         public const string GetWorkingHours = "time_planning_working_hours_get";
         public const string GetFlex = "time_planning_flex_get";
+        public const string IsManager = "time_planning_is_manager";
+        public const string IsPayRollManager = "time_planning_is_payroll_manager";
     }
 }
