@@ -26,7 +26,12 @@ namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
 
 public enum DayType
 {
-    Weekday,
-    Weekend,
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    Sunday,
     Holiday
 }
