@@ -50,7 +50,7 @@ public static class GlsAFixtureHelper
     public static PayRuleSet GlsA_Jordbrug_Standard() => new PayRuleSet
     {
         Id = 100,
-        Name = "GLS-A Jordbrug Standard",
+        Name = "GLS-A / 3F - Jordbrug Standard",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -155,7 +155,7 @@ public static class GlsAFixtureHelper
     public static PayRuleSet GlsA_Jordbrug_DyrePasning() => new PayRuleSet
     {
         Id = 101,
-        Name = "GLS-A Jordbrug DyrePasning",
+        Name = "GLS-A / 3F - Jordbrug Dyrehold",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -271,7 +271,7 @@ public static class GlsAFixtureHelper
     public static PayRuleSet GlsA_Jordbrug_Laerling_Under18() => new PayRuleSet
     {
         Id = 102,
-        Name = "GLS-A Jordbrug Laerling Under 18",
+        Name = "GLS-A / 3F - Jordbrug Elev u18",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -335,7 +335,7 @@ public static class GlsAFixtureHelper
     public static PayRuleSet GlsA_Jordbrug_Laerling_Over18() => new PayRuleSet
     {
         Id = 103,
-        Name = "GLS-A Jordbrug Laerling Over 18",
+        Name = "GLS-A / 3F - Jordbrug Elev o18",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -402,7 +402,7 @@ public static class GlsAFixtureHelper
     public static PayRuleSet GlsA_Jordbrug_Laerling_Under18_DyrePasning() => new PayRuleSet
     {
         Id = 104,
-        Name = "GLS-A Jordbrug Laerling Under 18 DyrePasning",
+        Name = "GLS-A / 3F - Jordbrug Elev u18 Dyrehold",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
