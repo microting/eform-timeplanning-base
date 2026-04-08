@@ -435,6 +435,57 @@ public class GlsAJordbrugPayLineTests
         Assert.That(satAfternoon.HoursInSeconds, Is.EqualTo(14400)); // 4h
     }
 
+    [Test]
+    public void TimeBand_Standard_Weekday_LeadingGap_0200_0800()
+    {
+        // 02:00 (7200) to 08:00 (28800) — work starts before first band (04:00=14400)
+        // Expected: DefaultPayCode("NORMAL") gap 7200-14400 (7200s),
+        //           SHIFTED_MORNING 14400-21600 (7200s), NORMAL 21600-28800 (7200s)
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Standard();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Monday, 7200, 28800, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(3));
+
+        Assert.That(result[0].PayCode, Is.EqualTo("NORMAL"));           // default gap
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(7200));
+        Assert.That(result[1].PayCode, Is.EqualTo("SHIFTED_MORNING"));
+        Assert.That(result[1].HoursInSeconds, Is.EqualTo(7200));
+        Assert.That(result[2].PayCode, Is.EqualTo("NORMAL"));
+        Assert.That(result[2].HoursInSeconds, Is.EqualTo(7200));
+    }
+
+    [Test]
+    public void TimeBand_Standard_Weekday_TrailingGap_1600_2200()
+    {
+        // 16:00 (57600) to 22:00 (79200) — work ends after last band (20:00=72000)
+        // Expected: NORMAL 57600-64800 (7200s), SHIFTED_EVENING 64800-72000 (7200s),
+        //           DefaultPayCode("NORMAL") trailing gap 72000-79200 (7200s)
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Standard();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Monday, 57600, 79200, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(3));
+
+        Assert.That(result[0].PayCode, Is.EqualTo("NORMAL"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(7200));
+        Assert.That(result[1].PayCode, Is.EqualTo("SHIFTED_EVENING"));
+        Assert.That(result[1].HoursInSeconds, Is.EqualTo(7200));
+        Assert.That(result[2].PayCode, Is.EqualTo("NORMAL"));           // default trailing
+        Assert.That(result[2].HoursInSeconds, Is.EqualTo(7200));
+    }
+
+    [Test]
+    public void TimeBand_ZeroLength_ReturnsEmpty()
+    {
+        // start == end => zero-length work period => empty result
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Standard();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Monday, 21600, 21600, ruleSet, CalculatedAt);
+
+        Assert.That(result, Is.Empty);
+    }
+
     // ───────────────────────────────────────────────────────────────
     // Time-Band Tests: DyrePasning (Animal Care) fixture
     // ───────────────────────────────────────────────────────────────

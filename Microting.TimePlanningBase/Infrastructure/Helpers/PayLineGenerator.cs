@@ -124,7 +124,7 @@ public static class PayLineGenerator
 
         // Find the PayDayTypeRule matching the dayType
         var dayTypeRule = payRuleSet?.DayTypeRules?
-            .FirstOrDefault(r => r.DayType == dayType);
+            .SingleOrDefault(r => r.DayType == dayType);
 
         if (dayTypeRule == null || dayTypeRule.TimeBandRules == null || !dayTypeRule.TimeBandRules.Any())
         {
@@ -136,7 +136,6 @@ public static class PayLineGenerator
         // Order bands by StartSecondOfDay
         var orderedBands = dayTypeRule.TimeBandRules.OrderBy(b => b.StartSecondOfDay).ToList();
 
-        int coveredSeconds = 0;
         int cursor = startSecondOfDay;
 
         foreach (var band in orderedBands)
@@ -157,7 +156,6 @@ public static class PayLineGenerator
                 if (gapSeconds > 0)
                 {
                     result.Add(CreatePayLine(planRegistrationId, dayTypeRule.DefaultPayCode, gapSeconds, payRuleSet?.Id, calculatedAtUtc));
-                    coveredSeconds += gapSeconds;
                     cursor = gapEnd;
                 }
             }
@@ -170,7 +168,6 @@ public static class PayLineGenerator
             if (overlapSeconds > 0)
             {
                 result.Add(CreatePayLine(planRegistrationId, band.PayCode, overlapSeconds, payRuleSet?.Id, calculatedAtUtc));
-                coveredSeconds += overlapSeconds;
                 cursor = overlapEnd;
             }
         }
