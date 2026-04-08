@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2025 Microting A/S
+Copyright (c) 2007 - 2026 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using Microting.TimePlanningBase.Infrastructure.Data.Entities;
 
 namespace Microting.TimePlanningBase.Tests.Helpers;
@@ -101,6 +102,43 @@ public static class GlsAFixtureHelper
                     new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "GRUNDLOVSDAG" }
                 }
             }
+        },
+        DayTypeRules = new List<PayDayTypeRule>
+        {
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 100, DayType = DayType.Monday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = StandardWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 100, DayType = DayType.Tuesday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = StandardWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 100, DayType = DayType.Wednesday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = StandardWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 100, DayType = DayType.Thursday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = StandardWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 100, DayType = DayType.Friday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = StandardWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 100, DayType = DayType.Saturday, DefaultPayCode = "SAT_NORMAL", Priority = 1,
+                TimeBandRules = new List<PayTimeBandRule>
+                {
+                    new PayTimeBandRule { StartSecondOfDay = 21600, EndSecondOfDay = 43200, PayCode = "SAT_NORMAL", Priority = 1 },
+                    new PayTimeBandRule { StartSecondOfDay = 43200, EndSecondOfDay = 64800, PayCode = "SAT_AFTERNOON", Priority = 1 }
+                }
+            }
         }
     };
 
@@ -168,6 +206,59 @@ public static class GlsAFixtureHelper
                     new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "GRUNDLOVSDAG" }
                 }
             }
+        },
+        DayTypeRules = new List<PayDayTypeRule>
+        {
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 101, DayType = DayType.Monday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = AnimalWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 101, DayType = DayType.Tuesday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = AnimalWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 101, DayType = DayType.Wednesday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = AnimalWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 101, DayType = DayType.Thursday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = AnimalWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 101, DayType = DayType.Friday, DefaultPayCode = "NORMAL", Priority = 1,
+                TimeBandRules = AnimalWeekdayTimeBands()
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 101, DayType = DayType.Saturday, DefaultPayCode = "SAT_NORMAL", Priority = 1,
+                TimeBandRules = new List<PayTimeBandRule>
+                {
+                    new PayTimeBandRule { StartSecondOfDay = 0, EndSecondOfDay = 43200, PayCode = "SAT_NORMAL", Priority = 1 },
+                    new PayTimeBandRule { StartSecondOfDay = 43200, EndSecondOfDay = 86400, PayCode = "SAT_ANIMAL_AFTERNOON", Priority = 1 }
+                }
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 101, DayType = DayType.Sunday, DefaultPayCode = "ANIMAL_SUN_HOLIDAY", Priority = 1,
+                TimeBandRules = new List<PayTimeBandRule>
+                {
+                    new PayTimeBandRule { StartSecondOfDay = 0, EndSecondOfDay = 86400, PayCode = "ANIMAL_SUN_HOLIDAY", Priority = 1 }
+                }
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 101, DayType = DayType.Holiday, DefaultPayCode = "ANIMAL_SUN_HOLIDAY", Priority = 1,
+                TimeBandRules = new List<PayTimeBandRule>
+                {
+                    new PayTimeBandRule { StartSecondOfDay = 0, EndSecondOfDay = 86400, PayCode = "ANIMAL_SUN_HOLIDAY", Priority = 1 }
+                }
+            }
         }
     };
 
@@ -221,6 +312,15 @@ public static class GlsAFixtureHelper
                 {
                     new PayTierRule { Order = 1, UpToSeconds = 7200, PayCode = "ELEV_HOL_OT_50" },    // 2h
                     new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "ELEV_HOL_OT_80" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 102,
+                DayCode = "GRUNDLOVSDAG",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "GRUNDLOVSDAG" }
                 }
             }
         }
@@ -277,6 +377,15 @@ public static class GlsAFixtureHelper
                 {
                     new PayTierRule { Order = 1, UpToSeconds = 7200, PayCode = "ELEV_HOL_OT_50" },     // 2h
                     new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "ELEV_HOL_OT_80" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 103,
+                DayCode = "GRUNDLOVSDAG",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "GRUNDLOVSDAG" }
                 }
             }
         }
@@ -335,7 +444,35 @@ public static class GlsAFixtureHelper
                     new PayTierRule { Order = 1, UpToSeconds = 7200, PayCode = "ELEV_HOL_OT_50" },
                     new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "ELEV_HOL_OT_80" }
                 }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 104,
+                DayCode = "GRUNDLOVSDAG",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "GRUNDLOVSDAG" }
+                }
             }
         }
+    };
+
+    // ───────────────────────────────────────────────────────────────
+    // Shared TimeBand helpers
+    // ───────────────────────────────────────────────────────────────
+
+    private static List<PayTimeBandRule> StandardWeekdayTimeBands() => new List<PayTimeBandRule>
+    {
+        new PayTimeBandRule { StartSecondOfDay = 14400, EndSecondOfDay = 21600, PayCode = "SHIFTED_MORNING", Priority = 1 },  // 04:00-06:00
+        new PayTimeBandRule { StartSecondOfDay = 21600, EndSecondOfDay = 64800, PayCode = "NORMAL", Priority = 1 },            // 06:00-18:00
+        new PayTimeBandRule { StartSecondOfDay = 64800, EndSecondOfDay = 72000, PayCode = "SHIFTED_EVENING", Priority = 1 }    // 18:00-20:00
+    };
+
+    private static List<PayTimeBandRule> AnimalWeekdayTimeBands() => new List<PayTimeBandRule>
+    {
+        new PayTimeBandRule { StartSecondOfDay = 0, EndSecondOfDay = 18000, PayCode = "ANIMAL_NIGHT", Priority = 1 },          // 00:00-05:00
+        new PayTimeBandRule { StartSecondOfDay = 18000, EndSecondOfDay = 21600, PayCode = "SHIFTED_MORNING", Priority = 1 },   // 05:00-06:00
+        new PayTimeBandRule { StartSecondOfDay = 21600, EndSecondOfDay = 64800, PayCode = "NORMAL", Priority = 1 },            // 06:00-18:00
+        new PayTimeBandRule { StartSecondOfDay = 64800, EndSecondOfDay = 86400, PayCode = "SHIFTED_EVENING", Priority = 1 }    // 18:00-24:00
     };
 }

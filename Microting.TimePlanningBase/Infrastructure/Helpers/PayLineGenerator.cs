@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2025 Microting A/S
+Copyright (c) 2007 - 2026 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -100,5 +100,102 @@ public static class PayLineGenerator
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Splits a work period defined by clock-time boundaries (seconds of day)
+    /// into pay lines based on PayDayTypeRule + PayTimeBandRule configuration.
+    /// Unlike <see cref="GeneratePayLines"/> which uses tier-based splitting,
+    /// this method splits by actual time-of-day bands.
+    /// </summary>
+    public static List<PlanRegistrationPayLine> GenerateTimeBandPayLines(
+        int planRegistrationId,
+        DayType dayType,
+        int startSecondOfDay,
+        int endSecondOfDay,
+        PayRuleSet payRuleSet,
+        DateTime calculatedAtUtc)
+    {
+        var result = new List<PlanRegistrationPayLine>();
+        int totalSeconds = endSecondOfDay - startSecondOfDay;
+
+        if (totalSeconds <= 0)
+            return result;
+
+        // Find the PayDayTypeRule matching the dayType
+        var dayTypeRule = payRuleSet?.DayTypeRules?
+            .FirstOrDefault(r => r.DayType == dayType);
+
+        if (dayTypeRule == null || dayTypeRule.TimeBandRules == null || !dayTypeRule.TimeBandRules.Any())
+        {
+            // Fallback: single DEFAULT pay line with all seconds
+            result.Add(CreatePayLine(planRegistrationId, "DEFAULT", totalSeconds, payRuleSet?.Id, calculatedAtUtc));
+            return result;
+        }
+
+        // Order bands by StartSecondOfDay
+        var orderedBands = dayTypeRule.TimeBandRules.OrderBy(b => b.StartSecondOfDay).ToList();
+
+        int coveredSeconds = 0;
+        int cursor = startSecondOfDay;
+
+        foreach (var band in orderedBands)
+        {
+            // Skip bands that end before our work period starts
+            if (band.EndSecondOfDay <= startSecondOfDay)
+                continue;
+
+            // Stop if we've passed our work period
+            if (band.StartSecondOfDay >= endSecondOfDay)
+                break;
+
+            // If there is a gap between cursor and this band's start, fill with DefaultPayCode
+            if (band.StartSecondOfDay > cursor)
+            {
+                int gapEnd = Math.Min(band.StartSecondOfDay, endSecondOfDay);
+                int gapSeconds = gapEnd - cursor;
+                if (gapSeconds > 0)
+                {
+                    result.Add(CreatePayLine(planRegistrationId, dayTypeRule.DefaultPayCode, gapSeconds, payRuleSet?.Id, calculatedAtUtc));
+                    coveredSeconds += gapSeconds;
+                    cursor = gapEnd;
+                }
+            }
+
+            // Calculate overlap between work period and this band
+            int overlapStart = Math.Max(startSecondOfDay, band.StartSecondOfDay);
+            int overlapEnd = Math.Min(endSecondOfDay, band.EndSecondOfDay);
+            int overlapSeconds = overlapEnd - overlapStart;
+
+            if (overlapSeconds > 0)
+            {
+                result.Add(CreatePayLine(planRegistrationId, band.PayCode, overlapSeconds, payRuleSet?.Id, calculatedAtUtc));
+                coveredSeconds += overlapSeconds;
+                cursor = overlapEnd;
+            }
+        }
+
+        // If any trailing time falls outside all bands, use DefaultPayCode
+        if (cursor < endSecondOfDay)
+        {
+            int remainingSeconds = endSecondOfDay - cursor;
+            result.Add(CreatePayLine(planRegistrationId, dayTypeRule.DefaultPayCode, remainingSeconds, payRuleSet?.Id, calculatedAtUtc));
+        }
+
+        return result;
+    }
+
+    private static PlanRegistrationPayLine CreatePayLine(
+        int planRegistrationId, string payCode, int seconds, int? payRuleSetId, DateTime calculatedAtUtc)
+    {
+        return new PlanRegistrationPayLine
+        {
+            PlanRegistrationId = planRegistrationId,
+            PayCode = payCode,
+            HoursInSeconds = seconds,
+            Hours = seconds / 3600.0,
+            PayRuleSetId = payRuleSetId,
+            CalculatedAt = calculatedAtUtc
+        };
     }
 }

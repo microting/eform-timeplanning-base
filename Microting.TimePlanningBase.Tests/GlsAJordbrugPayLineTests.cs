@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2025 Microting A/S
+Copyright (c) 2007 - 2026 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -335,6 +335,175 @@ public class GlsAJordbrugPayLineTests
 
         Assert.That(ot50.HoursInSeconds, Is.EqualTo(7200));   // 2h
         Assert.That(ot80.HoursInSeconds, Is.EqualTo(10800));  // 3h
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Apprentice Under-18 DyrePasning Tests
+    // ───────────────────────────────────────────────────────────────
+
+    [Test]
+    public void ElevU18Animal_Saturday_10h()
+    {
+        // 10h = 36000s => 8h ELEV_SAT_NORMAL + 2h ELEV_SAT_ANIMAL_AFTERNOON
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Laerling_Under18_DyrePasning();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", 36000, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+
+        var satNormal = result.First(l => l.PayCode == "ELEV_SAT_NORMAL");
+        var satAnimal = result.First(l => l.PayCode == "ELEV_SAT_ANIMAL_AFTERNOON");
+
+        Assert.That(satNormal.HoursInSeconds, Is.EqualTo(28800));   // 8h
+        Assert.That(satAnimal.HoursInSeconds, Is.EqualTo(7200));    // 2h
+    }
+
+    [Test]
+    public void ElevU18_Holiday_4h()
+    {
+        // 4h = 14400s => 2h ELEV_HOL_OT_50 + 2h ELEV_HOL_OT_80
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Laerling_Under18();
+        var result = PayLineGenerator.GeneratePayLines(1, "HOLIDAY", 14400, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+
+        var ot50 = result.First(l => l.PayCode == "ELEV_HOL_OT_50");
+        var ot80 = result.First(l => l.PayCode == "ELEV_HOL_OT_80");
+
+        Assert.That(ot50.HoursInSeconds, Is.EqualTo(7200));   // 2h
+        Assert.That(ot80.HoursInSeconds, Is.EqualTo(7200));   // 2h
+    }
+
+    [Test]
+    public void ElevU18_Grundlovsdag_4h()
+    {
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Laerling_Under18();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", 14400, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("GRUNDLOVSDAG"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(14400));
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Time-Band Tests: Standard fixture
+    // ───────────────────────────────────────────────────────────────
+
+    [Test]
+    public void TimeBand_Standard_Weekday_Normal_0600_1800()
+    {
+        // 06:00 (21600) to 18:00 (64800) = 12h all within NORMAL band
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Standard();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Monday, 21600, 64800, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("NORMAL"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(43200));
+    }
+
+    [Test]
+    public void TimeBand_Standard_Weekday_ShiftedMorning_0400_0800()
+    {
+        // 04:00 (14400) to 08:00 (28800) spans SHIFTED_MORNING (04:00-06:00) + NORMAL (06:00-08:00)
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Standard();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Monday, 14400, 28800, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+
+        var shifted = result.First(l => l.PayCode == "SHIFTED_MORNING");
+        var normal = result.First(l => l.PayCode == "NORMAL");
+
+        Assert.That(shifted.HoursInSeconds, Is.EqualTo(7200));  // 2h
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(7200));   // 2h
+    }
+
+    [Test]
+    public void TimeBand_Standard_Saturday_SpanNoon_0600_1600()
+    {
+        // 06:00 (21600) to 16:00 (57600) => SAT_NORMAL 06:00-12:00 (21600s) + SAT_AFTERNOON 12:00-16:00 (14400s)
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Standard();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Saturday, 21600, 57600, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+
+        var satNormal = result.First(l => l.PayCode == "SAT_NORMAL");
+        var satAfternoon = result.First(l => l.PayCode == "SAT_AFTERNOON");
+
+        Assert.That(satNormal.HoursInSeconds, Is.EqualTo(21600));    // 6h
+        Assert.That(satAfternoon.HoursInSeconds, Is.EqualTo(14400)); // 4h
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Time-Band Tests: DyrePasning (Animal Care) fixture
+    // ───────────────────────────────────────────────────────────────
+
+    [Test]
+    public void TimeBand_Animal_Weekday_Night_0000_0500()
+    {
+        // 00:00 (0) to 05:00 (18000) = 5h ANIMAL_NIGHT
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_DyrePasning();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Monday, 0, 18000, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("ANIMAL_NIGHT"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(18000));
+    }
+
+    [Test]
+    public void TimeBand_Animal_Weekday_NightAndDay_0300_1200()
+    {
+        // 03:00 (10800) to 12:00 (43200) spans:
+        //   ANIMAL_NIGHT 03:00-05:00 (7200s)
+        //   SHIFTED_MORNING 05:00-06:00 (3600s)
+        //   NORMAL 06:00-12:00 (21600s)
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_DyrePasning();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Monday, 10800, 43200, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(3));
+
+        var night = result.First(l => l.PayCode == "ANIMAL_NIGHT");
+        var shifted = result.First(l => l.PayCode == "SHIFTED_MORNING");
+        var normal = result.First(l => l.PayCode == "NORMAL");
+
+        Assert.That(night.HoursInSeconds, Is.EqualTo(7200));    // 2h
+        Assert.That(shifted.HoursInSeconds, Is.EqualTo(3600));  // 1h
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(21600));  // 6h
+    }
+
+    [Test]
+    public void TimeBand_Animal_Saturday_SpanNoon_0800_1800()
+    {
+        // 08:00 (28800) to 18:00 (64800) =>
+        //   SAT_NORMAL 08:00-12:00 (14400s)
+        //   SAT_ANIMAL_AFTERNOON 12:00-18:00 (21600s)
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_DyrePasning();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Saturday, 28800, 64800, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+
+        var satNormal = result.First(l => l.PayCode == "SAT_NORMAL");
+        var satAnimal = result.First(l => l.PayCode == "SAT_ANIMAL_AFTERNOON");
+
+        Assert.That(satNormal.HoursInSeconds, Is.EqualTo(14400));   // 4h
+        Assert.That(satAnimal.HoursInSeconds, Is.EqualTo(21600));   // 6h
+    }
+
+    [Test]
+    public void TimeBand_Animal_Sunday_Full_0600_1400()
+    {
+        // 06:00 (21600) to 14:00 (50400) = 8h ANIMAL_SUN_HOLIDAY
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_DyrePasning();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Sunday, 21600, 50400, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("ANIMAL_SUN_HOLIDAY"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(28800));
     }
 
     // ───────────────────────────────────────────────────────────────
