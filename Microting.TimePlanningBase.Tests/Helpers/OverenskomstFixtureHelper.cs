@@ -48,7 +48,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet GlsA_Gartneri_Standard() => new PayRuleSet
     {
         Id = 200,
-        Name = "GLS-A / 3F - Gartneri Standard",
+        Name = "GLS-A / 3F - Gartneri Standard 2024-2026",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -111,7 +111,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet GlsA_Gartneri_Elev_Under18() => new PayRuleSet
     {
         Id = 201,
-        Name = "GLS-A / 3F - Gartneri Elev u18",
+        Name = "GLS-A / 3F - Gartneri Elev u18 2024-2026",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -175,7 +175,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet GlsA_Gartneri_Elev_Over18() => new PayRuleSet
     {
         Id = 202,
-        Name = "GLS-A / 3F - Gartneri Elev o18",
+        Name = "GLS-A / 3F - Gartneri Elev o18 2024-2026",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -244,7 +244,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet GlsA_Skovbrug_Standard() => new PayRuleSet
     {
         Id = 203,
-        Name = "GLS-A / 3F - Skovbrug Standard",
+        Name = "GLS-A / 3F - Skovbrug Standard 2024-2026",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -307,7 +307,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet GlsA_Skovbrug_Elev_Under18() => new PayRuleSet
     {
         Id = 204,
-        Name = "GLS-A / 3F - Skovbrug Elev u18",
+        Name = "GLS-A / 3F - Skovbrug Elev u18 2024-2026",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -371,7 +371,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet GlsA_Skovbrug_Elev_Over18() => new PayRuleSet
     {
         Id = 205,
-        Name = "GLS-A / 3F - Skovbrug Elev o18",
+        Name = "GLS-A / 3F - Skovbrug Elev o18 2024-2026",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -440,7 +440,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet KA_Landbrug_Svine_Standard() => new PayRuleSet
     {
         Id = 206,
-        Name = "KA - Landbrug Svinebrug Standard",
+        Name = "KA / Krifa - Landbrug Svine/Kvaeg Standard 2025-2028",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -502,7 +502,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet KA_Landbrug_Svine_Elev() => new PayRuleSet
     {
         Id = 207,
-        Name = "KA - Landbrug Svinebrug Elev",
+        Name = "KA / Krifa - Landbrug Svine/Kvaeg Elev 2025-2028",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -570,7 +570,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet KA_Landbrug_Plante_Standard() => new PayRuleSet
     {
         Id = 208,
-        Name = "KA - Landbrug Plantebrug Standard",
+        Name = "KA / Krifa - Landbrug Plantebrug Standard 2025-2028",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -632,7 +632,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet KA_Landbrug_Plante_Elev() => new PayRuleSet
     {
         Id = 209,
-        Name = "KA - Landbrug Plantebrug Elev",
+        Name = "KA / Krifa - Landbrug Plantebrug Elev 2025-2028",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -700,7 +700,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet KA_Landbrug_Maskin_Standard() => new PayRuleSet
     {
         Id = 210,
-        Name = "KA - Landbrug Maskinstation Standard",
+        Name = "KA / Krifa - Landbrug Maskinstation Standard 2025-2028",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -762,7 +762,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet KA_Landbrug_Maskin_Elev() => new PayRuleSet
     {
         Id = 211,
-        Name = "KA - Landbrug Maskinstation Elev",
+        Name = "KA / Krifa - Landbrug Maskinstation Elev 2025-2028",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -830,7 +830,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet KA_Gron_Standard() => new PayRuleSet
     {
         Id = 212,
-        Name = "KA - Gron Standard",
+        Name = "KA / Krifa - Gron Standard 2025-2028",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
@@ -893,7 +893,7 @@ public static class OverenskomstFixtureHelper
     public static PayRuleSet KA_Gron_Elev() => new PayRuleSet
     {
         Id = 213,
-        Name = "KA - Gron Elev",
+        Name = "KA / Krifa - Gron Elev 2025-2028",
         DayRules = new List<PayDayRule>
         {
             new PayDayRule
