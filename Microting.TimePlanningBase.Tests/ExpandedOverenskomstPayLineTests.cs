@@ -34,9 +34,9 @@ namespace Microting.TimePlanningBase.Tests;
 
 /// <summary>
 /// Unit tests for expanded overenskomst pay rule sets (Gartneri, Skovbrug,
-/// KA Landbrug, KA Gron). All tests are pure in-memory -- no database required.
-/// Tests validate tier-based pay-line splitting via PayLineGenerator for each
-/// distinct OT pattern across the 14 new presets.
+/// KA Landbrug, KA Gron, Golf, Agroindustri). All tests are pure in-memory
+/// -- no database required. Tests validate tier-based pay-line splitting via
+/// PayLineGenerator for each distinct OT pattern across the 32 presets.
 /// </summary>
 [TestFixture]
 public class ExpandedOverenskomstPayLineTests
@@ -374,5 +374,170 @@ public class ExpandedOverenskomstPayLineTests
         Assert.That(result.Count, Is.EqualTo(1));
         Assert.That(result[0].PayCode, Is.EqualTo("GRUNDLOVSDAG"));
         Assert.That(result[0].HoursInSeconds, Is.EqualTo(14400));
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Flat 100% OT (Golf Standard)
+    // ───────────────────────────────────────────────────────────────
+
+    [Test]
+    public void Golf_Standard_Weekday_OT_4h()
+    {
+        // 11.4h = 41040s => 7.4h NORMAL + 4h OVERTIME_100
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Golf_Standard();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 41040, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+
+        var normal = result.First(l => l.PayCode == "NORMAL");
+        var ot100 = result.First(l => l.PayCode == "OVERTIME_100");
+
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(26640));  // 7.4h
+        Assert.That(ot100.HoursInSeconds, Is.EqualTo(14400));   // 4h
+    }
+
+    [Test]
+    public void Golf_Standard_Sunday_8h()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Golf_Standard();
+        var result = PayLineGenerator.GeneratePayLines(1, "SUNDAY", 28800, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("SUN_HOLIDAY"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(28800));
+    }
+
+    [Test]
+    public void Golf_Elev_Weekday_Over_10h()
+    {
+        // 10h = 36000s => 8h ELEV_NORMAL + 2h ELEV_OVERTIME_100
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Golf_Elev();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 36000, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+
+        var normal = result.First(l => l.PayCode == "ELEV_NORMAL");
+        var ot100 = result.First(l => l.PayCode == "ELEV_OVERTIME_100");
+
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(28800));  // 8h
+        Assert.That(ot100.HoursInSeconds, Is.EqualTo(7200));    // 2h
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // 30%/50%/100% 4-tier (Agroindustri Fjerkrae)
+    // ───────────────────────────────────────────────────────────────
+
+    [Test]
+    public void Agro_Fjerkrae_Weekday_OT_2h()
+    {
+        // 9.4h = 33840s => 7.4h NORMAL + 2h OVERTIME_30
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Agro_Fjerkrae_Standard();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 33840, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+
+        var normal = result.First(l => l.PayCode == "NORMAL");
+        var ot30 = result.First(l => l.PayCode == "OVERTIME_30");
+
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(26640));  // 7.4h
+        Assert.That(ot30.HoursInSeconds, Is.EqualTo(7200));     // 2h
+    }
+
+    [Test]
+    public void Agro_Fjerkrae_Weekday_OT_3h()
+    {
+        // 10.4h = 37440s => 7.4h NORMAL + 2h OVERTIME_30 + 1h OVERTIME_50
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Agro_Fjerkrae_Standard();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 37440, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(3));
+
+        var normal = result.First(l => l.PayCode == "NORMAL");
+        var ot30 = result.First(l => l.PayCode == "OVERTIME_30");
+        var ot50 = result.First(l => l.PayCode == "OVERTIME_50");
+
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(26640));  // 7.4h
+        Assert.That(ot30.HoursInSeconds, Is.EqualTo(7200));     // 2h
+        Assert.That(ot50.HoursInSeconds, Is.EqualTo(3600));     // 1h
+    }
+
+    [Test]
+    public void Agro_Fjerkrae_Weekday_OT_5h()
+    {
+        // 12.4h = 44640s => 7.4h NORMAL + 2h OVERTIME_30 + 1h OVERTIME_50 + 2h OVERTIME_100
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Agro_Fjerkrae_Standard();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 44640, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(4));
+
+        var normal = result.First(l => l.PayCode == "NORMAL");
+        var ot30 = result.First(l => l.PayCode == "OVERTIME_30");
+        var ot50 = result.First(l => l.PayCode == "OVERTIME_50");
+        var ot100 = result.First(l => l.PayCode == "OVERTIME_100");
+
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(26640));  // 7.4h
+        Assert.That(ot30.HoursInSeconds, Is.EqualTo(7200));     // 2h
+        Assert.That(ot50.HoursInSeconds, Is.EqualTo(3600));     // 1h
+        Assert.That(ot100.HoursInSeconds, Is.EqualTo(7200));    // 2h
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // 40%/100% (Agroindustri Grovvare)
+    // ───────────────────────────────────────────────────────────────
+
+    [Test]
+    public void Agro_Grovvare_Weekday_OT_3h()
+    {
+        // 10.4h = 37440s => 7.4h NORMAL + 3h OVERTIME_40
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Agro_Grovvare_Standard();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 37440, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+
+        var normal = result.First(l => l.PayCode == "NORMAL");
+        var ot40 = result.First(l => l.PayCode == "OVERTIME_40");
+
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(26640));  // 7.4h
+        Assert.That(ot40.HoursInSeconds, Is.EqualTo(10800));    // 3h
+    }
+
+    [Test]
+    public void Agro_Grovvare_Weekday_OT_5h()
+    {
+        // 12.4h = 44640s => 7.4h NORMAL + 3h OVERTIME_40 + 2h OVERTIME_100
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Agro_Grovvare_Standard();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 44640, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(3));
+
+        var normal = result.First(l => l.PayCode == "NORMAL");
+        var ot40 = result.First(l => l.PayCode == "OVERTIME_40");
+        var ot100 = result.First(l => l.PayCode == "OVERTIME_100");
+
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(26640));  // 7.4h
+        Assert.That(ot40.HoursInSeconds, Is.EqualTo(10800));    // 3h
+        Assert.That(ot100.HoursInSeconds, Is.EqualTo(7200));    // 2h
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // 30%/80% with Agroindustri fixture (Ovrige)
+    // ───────────────────────────────────────────────────────────────
+
+    [Test]
+    public void Agro_Ovrige_Weekday_OT_4h()
+    {
+        // 11.4h = 41040s => 7.4h NORMAL + 2h OVERTIME_30 + 2h OVERTIME_80
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Agro_Ovrige_Standard();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 41040, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(3));
+
+        var normal = result.First(l => l.PayCode == "NORMAL");
+        var ot30 = result.First(l => l.PayCode == "OVERTIME_30");
+        var ot80 = result.First(l => l.PayCode == "OVERTIME_80");
+
+        Assert.That(normal.HoursInSeconds, Is.EqualTo(26640));  // 7.4h
+        Assert.That(ot30.HoursInSeconds, Is.EqualTo(7200));     // 2h
+        Assert.That(ot80.HoursInSeconds, Is.EqualTo(7200));     // 2h
     }
 }
