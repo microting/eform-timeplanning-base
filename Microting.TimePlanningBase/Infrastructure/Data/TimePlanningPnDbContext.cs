@@ -93,6 +93,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<AssignedSiteRuleSetAssignmentsVersion> AssignedSiteRuleSetAssignmentsVersions { get; set; }
         public DbSet<PayrollIntegrationSettings> PayrollIntegrationSettings { get; set; }
         public DbSet<PayrollIntegrationSettingsVersion> PayrollIntegrationSettingsVersions { get; set; }
+        public DbSet<DeviceToken> DeviceTokens { get; set; }
+        public DbSet<DeviceTokenVersion> DeviceTokenVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -145,6 +147,13 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
             // Configure index for AssignedSiteRuleSetAssignments (AssignedSiteId, ValidFromDate)
             modelBuilder.Entity<AssignedSiteRuleSetAssignments>()
                 .HasIndex(p => new { p.AssignedSiteId, p.ValidFromDate });
+
+            modelBuilder.Entity<DeviceToken>()
+                .HasIndex(e => e.Token)
+                .IsUnique();
+
+            modelBuilder.Entity<DeviceToken>()
+                .HasIndex(e => e.SdkSiteId);
 
             modelBuilder.SeedLatest();
         }
