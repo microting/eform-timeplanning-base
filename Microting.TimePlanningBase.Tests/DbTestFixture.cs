@@ -47,6 +47,7 @@ namespace Microting.TimePlanningBase.Tests
             var contextFactory = new TimePlanningPnContextFactory();
             DbContext = contextFactory.CreateDbContext(new[] { connectionStr });
 
+            DbContext.Database.EnsureDeleted();
             DbContext.Database.Migrate();
         }
 
