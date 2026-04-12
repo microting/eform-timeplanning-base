@@ -48,7 +48,6 @@ namespace Microting.TimePlanningBase.Tests
             DbContext = contextFactory.CreateDbContext(new[] { connectionStr });
 
             DbContext.Database.Migrate();
-            DbContext.Database.EnsureCreated();
         }
 
         [SetUp]
@@ -129,6 +128,16 @@ namespace Microting.TimePlanningBase.Tests
                 "BreakPolicyRules",
                 "BreakPolicyVersions",
                 "BreakPolicies",
+                "DeviceTokens",
+                "DeviceTokenVersions",
+                "PayDayTypeRuleVersions",
+                "PayDayTypeRules",
+                "PayTimeBandRuleVersions",
+                "PayTimeBandRules",
+                "AssignedSiteRuleSetAssignmentsVersions",
+                "AssignedSiteRuleSetAssignments",
+                "PayrollIntegrationSettings",
+                "PayrollIntegrationSettingsVersions",
             };
 
             var firstRunNotDone = true;
