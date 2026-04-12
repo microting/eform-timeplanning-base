@@ -12,7 +12,7 @@ using Microting.TimePlanningBase.Infrastructure.Data;
 namespace Microting.TimePlanningBase.Migrations
 {
     [DbContext(typeof(TimePlanningPnDbContext))]
-    [Migration("20260412162907_AddDeviceTokenTable")]
+    [Migration("20260412173003_AddDeviceTokenTable")]
     partial class AddDeviceTokenTable
     {
         /// <inheritdoc />
