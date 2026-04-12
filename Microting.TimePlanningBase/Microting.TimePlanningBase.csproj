@@ -14,6 +14,8 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microting.eForm" Version="10.0.17" />
+      <PackageReference Include="Microting.eFormApi.BasePn" Version="10.0.17" />
     </ItemGroup>
 
     <ItemGroup>
@@ -27,9 +29,5 @@
       <Folder Include="Migrations" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\..\eform-sdk\eFormCore\Microting.eForm.csproj" />
-      <ProjectReference Include="..\..\eFormApi.BasePn\eFormApi.BasePn\eFormApi.BasePn.csproj" />
-    </ItemGroup>
 
 </Project>
