@@ -91,6 +91,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<PayTimeBandRuleVersion> PayTimeBandRuleVersions { get; set; }
         public DbSet<AssignedSiteRuleSetAssignments> AssignedSiteRuleSetAssignments { get; set; }
         public DbSet<AssignedSiteRuleSetAssignmentsVersion> AssignedSiteRuleSetAssignmentsVersions { get; set; }
+        public DbSet<PayrollIntegrationSettings> PayrollIntegrationSettings { get; set; }
+        public DbSet<PayrollIntegrationSettingsVersion> PayrollIntegrationSettingsVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

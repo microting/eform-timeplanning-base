@@ -31,5 +31,6 @@ public class PayTimeBandRuleVersion : PnBase
     public int StartSecondOfDay { get; set; }
     public int EndSecondOfDay { get; set; }
     public string PayCode { get; set; }
+    public string? PayrollCode { get; set; }
     public int Priority { get; set; }
 }

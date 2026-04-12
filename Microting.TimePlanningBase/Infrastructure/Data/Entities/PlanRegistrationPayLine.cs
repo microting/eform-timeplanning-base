@@ -32,6 +32,7 @@ public class PlanRegistrationPayLine : PnBase
     public virtual PlanRegistration PlanRegistration { get; set; }
 
     public string PayCode { get; set; }
+    public string? PayrollCode { get; set; }
 
     public double Hours { get; set; }
     public int HoursInSeconds { get; set; }

@@ -30,5 +30,6 @@ public class PayTierRuleVersion : PnBase
     public int PayDayRuleId { get; set; }
     public int? UpToSeconds { get; set; }
     public string PayCode { get; set; }
+    public string? PayrollCode { get; set; }
     public int Order { get; set; }
 }

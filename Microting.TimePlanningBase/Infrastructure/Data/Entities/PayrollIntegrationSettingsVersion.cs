@@ -24,14 +24,12 @@ SOFTWARE.
 
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
 
-public class PayTimeBandRule : PnBase
+public class PayrollIntegrationSettingsVersion : PnBase
 {
-    public int PayDayTypeRuleId { get; set; }
-    public virtual PayDayTypeRule PayDayTypeRule { get; set; }
-
-    public int StartSecondOfDay { get; set; }
-    public int EndSecondOfDay { get; set; }
-    public string PayCode { get; set; }
-    public string? PayrollCode { get; set; }
-    public int Priority { get; set; }
+    public int PayrollIntegrationSettingsId { get; set; }
+    public int PayrollSystem { get; set; }
+    public int CutoffDay { get; set; }
+    public string? ApiBaseUrl { get; set; }
+    public string? ApiKey { get; set; }
+    public string? ApiSecret { get; set; }
 }

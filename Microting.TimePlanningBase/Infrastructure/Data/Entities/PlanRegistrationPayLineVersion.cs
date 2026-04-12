@@ -31,6 +31,7 @@ public class PlanRegistrationPayLineVersion : PnBase
     public int PlanRegistrationPayLineId { get; set; }
     public int PlanRegistrationId { get; set; }
     public string PayCode { get; set; }
+    public string? PayrollCode { get; set; }
     public double Hours { get; set; }
     public int HoursInSeconds { get; set; }
     public int? PayRuleSetId { get; set; }

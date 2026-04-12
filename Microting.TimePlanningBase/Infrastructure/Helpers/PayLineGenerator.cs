@@ -88,6 +88,7 @@ public static class PayLineGenerator
                 {
                     PlanRegistrationId = planRegistrationId,
                     PayCode = tier.PayCode,
+                    PayrollCode = tier.PayrollCode,
                     HoursInSeconds = tierSeconds,
                     Hours = tierSeconds / 3600.0,
                     PayRuleSetId = payRuleSet.Id,
@@ -129,7 +130,7 @@ public static class PayLineGenerator
         if (dayTypeRule == null || dayTypeRule.TimeBandRules == null || !dayTypeRule.TimeBandRules.Any())
         {
             // Fallback: single DEFAULT pay line with all seconds
-            result.Add(CreatePayLine(planRegistrationId, "DEFAULT", totalSeconds, payRuleSet?.Id, calculatedAtUtc));
+            result.Add(CreatePayLine(planRegistrationId, "DEFAULT", null, totalSeconds, payRuleSet?.Id, calculatedAtUtc));
             return result;
         }
 
@@ -155,7 +156,7 @@ public static class PayLineGenerator
                 int gapSeconds = gapEnd - cursor;
                 if (gapSeconds > 0)
                 {
-                    result.Add(CreatePayLine(planRegistrationId, dayTypeRule.DefaultPayCode, gapSeconds, payRuleSet?.Id, calculatedAtUtc));
+                    result.Add(CreatePayLine(planRegistrationId, dayTypeRule.DefaultPayCode, null, gapSeconds, payRuleSet?.Id, calculatedAtUtc));
                     cursor = gapEnd;
                 }
             }
@@ -167,7 +168,7 @@ public static class PayLineGenerator
 
             if (overlapSeconds > 0)
             {
-                result.Add(CreatePayLine(planRegistrationId, band.PayCode, overlapSeconds, payRuleSet?.Id, calculatedAtUtc));
+                result.Add(CreatePayLine(planRegistrationId, band.PayCode, band.PayrollCode, overlapSeconds, payRuleSet?.Id, calculatedAtUtc));
                 cursor = overlapEnd;
             }
         }
@@ -176,19 +177,20 @@ public static class PayLineGenerator
         if (cursor < endSecondOfDay)
         {
             int remainingSeconds = endSecondOfDay - cursor;
-            result.Add(CreatePayLine(planRegistrationId, dayTypeRule.DefaultPayCode, remainingSeconds, payRuleSet?.Id, calculatedAtUtc));
+            result.Add(CreatePayLine(planRegistrationId, dayTypeRule.DefaultPayCode, null, remainingSeconds, payRuleSet?.Id, calculatedAtUtc));
         }
 
         return result;
     }
 
     private static PlanRegistrationPayLine CreatePayLine(
-        int planRegistrationId, string payCode, int seconds, int? payRuleSetId, DateTime calculatedAtUtc)
+        int planRegistrationId, string payCode, string? payrollCode, int seconds, int? payRuleSetId, DateTime calculatedAtUtc)
     {
         return new PlanRegistrationPayLine
         {
             PlanRegistrationId = planRegistrationId,
             PayCode = payCode,
+            PayrollCode = payrollCode,
             HoursInSeconds = seconds,
             Hours = seconds / 3600.0,
             PayRuleSetId = payRuleSetId,

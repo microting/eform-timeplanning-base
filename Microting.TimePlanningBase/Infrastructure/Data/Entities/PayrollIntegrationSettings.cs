@@ -24,14 +24,30 @@ SOFTWARE.
 
 namespace Microting.TimePlanningBase.Infrastructure.Data.Entities;
 
-public class PayTimeBandRule : PnBase
+public class PayrollIntegrationSettings : PnBase
 {
-    public int PayDayTypeRuleId { get; set; }
-    public virtual PayDayTypeRule PayDayTypeRule { get; set; }
+    /// <summary>
+    /// 0 = None, 1 = DanLon, 2 = DataLon
+    /// </summary>
+    public int PayrollSystem { get; set; }
 
-    public int StartSecondOfDay { get; set; }
-    public int EndSecondOfDay { get; set; }
-    public string PayCode { get; set; }
-    public string? PayrollCode { get; set; }
-    public int Priority { get; set; }
+    /// <summary>
+    /// Day of month for payroll cutoff lock (default 19).
+    /// </summary>
+    public int CutoffDay { get; set; } = 19;
+
+    /// <summary>
+    /// For future DataLon REST API integration.
+    /// </summary>
+    public string? ApiBaseUrl { get; set; }
+
+    /// <summary>
+    /// For future API authentication.
+    /// </summary>
+    public string? ApiKey { get; set; }
+
+    /// <summary>
+    /// For future API authentication (encrypted at rest).
+    /// </summary>
+    public string? ApiSecret { get; set; }
 }
