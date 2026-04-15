@@ -45,4 +45,6 @@ public class PlanRegistrationContentHandoverRequestVersion : PnBase
 
     public DateTime RequestedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? RespondedAtUtc { get; set; }
+
+    public int? ShiftIndex { get; set; }
 }
