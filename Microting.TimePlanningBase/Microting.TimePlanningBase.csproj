@@ -29,5 +29,10 @@
       <Folder Include="Migrations" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\eform-sdk\eFormCore\Microting.eForm.csproj" />
+      <ProjectReference Include="..\..\eFormApi.BasePn\eFormApi.BasePn\eFormApi.BasePn.csproj" />
+    </ItemGroup>
+
 
 </Project>
