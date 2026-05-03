@@ -790,4 +790,87 @@ public class PayLineTimeBandEdgeCaseTests
         // 5h SAT_NORMAL (full shift, no pause subtraction in v1)
         Assert.That(SecondsByCode(result, "SAT_NORMAL"), Is.EqualTo(18000));
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Matrix G — u18 Dyrehold Saturday tier verification
+    //
+    // Locks down the verified behavior for "GLS-A / 3F - Jordbrug Elev u18
+    // Dyrehold 2024-2026" Saturday: a tier rule with 8h cutoff. Because the
+    // preset has empty payDayTypeRules, the export's CalculatePayLinesForDay
+    // helper is expected to fall through to the tier path and apply this
+    // rule. Documented in /home/rene/.claude/plans/golden-petting-turtle.md.
+    //
+    // SATURDAY tier: 0..28800 ELEV_SAT_NORMAL, then ELEV_SAT_ANIMAL_AFTERNOON.
+    // ─────────────────────────────────────────────────────────────
+
+    [Test]
+    public void G_1_U18Dyrehold_Saturday_Under8h_AllNormal()
+    {
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Laerling_Under18_DyrePasning();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", 21600, ruleSet, CalculatedAt);
+
+        Assert.That(SecondsByCode(result, "ELEV_SAT_NORMAL"), Is.EqualTo(21600));
+        Assert.That(SecondsByCode(result, "ELEV_SAT_ANIMAL_AFTERNOON"), Is.EqualTo(0));
+        Assert.That(TotalSeconds(result), Is.EqualTo(21600));
+    }
+
+    [Test]
+    public void G_2_U18Dyrehold_Saturday_ExactlyAt8h_AllNormalNoAfternoon()
+    {
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Laerling_Under18_DyrePasning();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", 28800, ruleSet, CalculatedAt);
+
+        Assert.That(SecondsByCode(result, "ELEV_SAT_NORMAL"), Is.EqualTo(28800));
+        Assert.That(SecondsByCode(result, "ELEV_SAT_ANIMAL_AFTERNOON"), Is.EqualTo(0));
+        Assert.That(TotalSeconds(result), Is.EqualTo(28800));
+    }
+
+    [Test]
+    public void G_3_U18Dyrehold_Saturday_OneSecondPast8h_OneSecondAfternoon()
+    {
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Laerling_Under18_DyrePasning();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", 28801, ruleSet, CalculatedAt);
+
+        Assert.That(SecondsByCode(result, "ELEV_SAT_NORMAL"), Is.EqualTo(28800));
+        Assert.That(SecondsByCode(result, "ELEV_SAT_ANIMAL_AFTERNOON"), Is.EqualTo(1));
+        Assert.That(TotalSeconds(result), Is.EqualTo(28801));
+    }
+
+    [Test]
+    public void G_4_U18Dyrehold_Saturday_12h_8hNormalPlus4hAnimalAfternoon()
+    {
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Laerling_Under18_DyrePasning();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", 43200, ruleSet, CalculatedAt);
+
+        Assert.That(SecondsByCode(result, "ELEV_SAT_NORMAL"), Is.EqualTo(28800));
+        Assert.That(SecondsByCode(result, "ELEV_SAT_ANIMAL_AFTERNOON"), Is.EqualTo(14400));
+        Assert.That(TotalSeconds(result), Is.EqualTo(43200));
+    }
+
+    [Test]
+    public void G_5_U18Dyrehold_PresetHasNoTimeBandRules()
+    {
+        // Documents the structural assumption that drives Matrix G: empty
+        // payDayTypeRules is what causes the export's CalculatePayLinesForDay
+        // helper to skip the time-band path and apply the tier rule. If a
+        // future change adds DayTypeRules for u18 Dyrehold, callers should
+        // re-verify the export still produces 8h ELEV_SAT_NORMAL + remainder
+        // ELEV_SAT_ANIMAL_AFTERNOON for Saturday shifts.
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Laerling_Under18_DyrePasning();
+
+        Assert.That(ruleSet.DayTypeRules, Is.Null.Or.Empty);
+    }
+
+    [Test]
+    public void G_6_U18Dyrehold_Weekday_8h_AllElevNormal()
+    {
+        // Sanity check that weekday tier is independent of Saturday: 8h on a
+        // weekday should be 8h ELEV_NORMAL with no overtime (tier 1 cap = 8h).
+        var ruleSet = GlsAFixtureHelper.GlsA_Jordbrug_Laerling_Under18_DyrePasning();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 28800, ruleSet, CalculatedAt);
+
+        Assert.That(SecondsByCode(result, "ELEV_NORMAL"), Is.EqualTo(28800));
+        Assert.That(SecondsByCode(result, "ELEV_OVERTIME_50"), Is.EqualTo(0));
+        Assert.That(TotalSeconds(result), Is.EqualTo(28800));
+    }
 }
