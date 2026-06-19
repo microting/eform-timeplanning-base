@@ -184,6 +184,7 @@ public class AssignedSiteVersion: PnBase
     public int DaysBackInTimeAllowedEditing { get; set; } = 2;
     public DateTime ResignedAtDate { get; set; }
     public bool UseOneMinuteIntervals { get; set; }
+    public bool OverMidnight { get; set; }
     public bool AllowAcceptOfPlannedHours { get; set; }
     public bool AllowEditOfRegistrations { get; set; }
     public bool AllowPersonalTimeRegistration { get; set; }
