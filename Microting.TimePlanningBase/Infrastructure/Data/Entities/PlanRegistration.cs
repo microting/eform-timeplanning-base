@@ -168,6 +168,14 @@ public class PlanRegistration : PnBase
     public int NettoHoursOverrideInSeconds { get; set; }
     public bool NettoHoursOverrideActive { get; set; }
 
+    // Per-shift authoritative total pause in MINUTES set by an admin/editor.
+    // null = no override (compute from recorded pause slots); non-null = authoritative total for that shift.
+    public int? Pause1OverrideMinutes { get; set; }
+    public int? Pause2OverrideMinutes { get; set; }
+    public int? Pause3OverrideMinutes { get; set; }
+    public int? Pause4OverrideMinutes { get; set; }
+    public int? Pause5OverrideMinutes { get; set; }
+
     // Faster lookups in db
     public bool IsSaturday { get; set; }
     public bool IsSunday { get; set; }
