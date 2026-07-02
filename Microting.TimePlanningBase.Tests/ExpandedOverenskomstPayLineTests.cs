@@ -622,6 +622,32 @@ public class ExpandedOverenskomstPayLineTests
         Assert.That(result.First(l => l.PayCode == "OVERTIME_80").HoursInSeconds, Is.EqualTo(7200));
     }
 
+    [Test]
+    public void PraktikantUdlAndet_Holiday_AllOvertime_SameAsSunday()
+    {
+        // Structurally identical to Sunday - the preset has its own HOLIDAY
+        // PayDayRule that must be exercised so a future divergence is caught.
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "HOLIDAY", 14400, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(7200));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_80").HoursInSeconds, Is.EqualTo(7200));
+    }
+
+    [Test]
+    public void PraktikantUdlAndet_Grundlovsdag_AllOvertime_SameAsSunday()
+    {
+        // Loenoversigt is silent on Grundlovsdag; we treat it as Holiday.
+        // 12h = 43200s → 2h OVERTIME_50 + 10h OVERTIME_80.
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", 43200, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(7200));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_80").HoursInSeconds, Is.EqualTo(36000));
+    }
+
     // ─────────────────────────────────────────────────────────────
     // GLS-A / 3F - Udenlandske praktikanter Landbrug (Staldarbejde)
     //
