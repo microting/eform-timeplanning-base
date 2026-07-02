@@ -540,4 +540,164 @@ public class ExpandedOverenskomstPayLineTests
         Assert.That(ot30.HoursInSeconds, Is.EqualTo(7200));     // 2h
         Assert.That(ot80.HoursInSeconds, Is.EqualTo(7200));     // 2h
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // GLS-A / 3F - Udenlandske praktikanter Landbrug (Andet arbejde)
+    //
+    // Field-work variant. Same 7.4h + 2h + rest split as standard, but
+    // the middle tier is +50% (not +30%). Sundays/holidays default to
+    // all-overtime (first 2h @ 50%, remainder @ 80%).
+    // ─────────────────────────────────────────────────────────────
+
+    [Test]
+    public void PraktikantUdlAndet_Weekday_UnderTier1_AllNormal()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 14400, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("NORMAL"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(14400));
+    }
+
+    [Test]
+    public void PraktikantUdlAndet_Weekday_ExactlyAt7h24m_AllNormal()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 26640, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("NORMAL"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(26640));
+    }
+
+    [Test]
+    public void PraktikantUdlAndet_Weekday_9h24m_NormalPlusOvertime50()
+    {
+        // 9h24m = 33840s → 7h24m NORMAL + 2h OVERTIME_50
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 33840, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.First(l => l.PayCode == "NORMAL").HoursInSeconds, Is.EqualTo(26640));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(7200));
+    }
+
+    [Test]
+    public void PraktikantUdlAndet_Weekday_12h_AllThreeTiers()
+    {
+        // 12h = 43200s → 7h24m NORMAL + 2h OVERTIME_50 + 2h36m OVERTIME_80
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 43200, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(3));
+        Assert.That(result.First(l => l.PayCode == "NORMAL").HoursInSeconds, Is.EqualTo(26640));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(7200));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_80").HoursInSeconds, Is.EqualTo(9360));
+    }
+
+    [Test]
+    public void PraktikantUdlAndet_Saturday_SameAsWeekday()
+    {
+        // Field work is allowed Mon-Sat, so Saturday uses the same tier
+        // structure as weekdays (unlike Standard which has a Saturday split).
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", 33840, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.First(l => l.PayCode == "NORMAL").HoursInSeconds, Is.EqualTo(26640));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(7200));
+    }
+
+    [Test]
+    public void PraktikantUdlAndet_Sunday_AllOvertime()
+    {
+        // Field work is not permitted on Sundays; if worked, all hours OT.
+        // 4h = 14400s → 2h OVERTIME_50 + 2h OVERTIME_80.
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "SUNDAY", 14400, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(7200));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_80").HoursInSeconds, Is.EqualTo(7200));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // GLS-A / 3F - Udenlandske praktikanter Landbrug (Staldarbejde)
+    //
+    // Animal-care variant. Weekday tiers match Andet arbejde. Saturday
+    // splits at 6h (tier) or 12:00 (time band) into
+    // SAT_NORMAL / SAT_ANIMAL_AFTERNOON. Sunday/Holiday: single
+    // ANIMAL_SUN_HOLIDAY band.
+    // ─────────────────────────────────────────────────────────────
+
+    [Test]
+    public void PraktikantUdlStald_Weekday_9h24m_NormalPlusOvertime50()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "WEEKDAY", 33840, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.First(l => l.PayCode == "NORMAL").HoursInSeconds, Is.EqualTo(26640));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(7200));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Saturday_TierPath_6hNormal_Then_AnimalAfternoon()
+    {
+        // Tier-only path (GeneratePayLines): 6h SAT_NORMAL then rest
+        // SAT_ANIMAL_AFTERNOON. 8h shift = 6h SAT_NORMAL + 2h afternoon.
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", 28800, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.First(l => l.PayCode == "SAT_NORMAL").HoursInSeconds, Is.EqualTo(21600));
+        Assert.That(result.First(l => l.PayCode == "SAT_ANIMAL_AFTERNOON").HoursInSeconds, Is.EqualTo(7200));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Saturday_TimeBand_09to18_Split_At_Noon()
+    {
+        // Time-band path (GenerateTimeBandPayLines) for a 09:00-18:00 shift:
+        // 3h SAT_NORMAL (09-12) + 6h SAT_ANIMAL_AFTERNOON (12-18).
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GenerateTimeBandPayLines(
+            1, DayType.Saturday, 32400, 64800, ruleSet, CalculatedAt);
+
+        Assert.That(result.Where(l => l.PayCode == "SAT_NORMAL").Sum(l => l.HoursInSeconds), Is.EqualTo(10800));
+        Assert.That(result.Where(l => l.PayCode == "SAT_ANIMAL_AFTERNOON").Sum(l => l.HoursInSeconds), Is.EqualTo(21600));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Sunday_AllAnimalSunHoliday()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SUNDAY", 28800, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("ANIMAL_SUN_HOLIDAY"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(28800));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Holiday_AllAnimalSunHoliday()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "HOLIDAY", 28800, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("ANIMAL_SUN_HOLIDAY"));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Grundlovsdag_TreatedAsHoliday()
+    {
+        // Trainee agreement does not distinguish Grundlovsdag; we treat it
+        // as HOLIDAY, matching the loenoversigt's silence on the topic.
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", 14400, ruleSet, CalculatedAt);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].PayCode, Is.EqualTo("ANIMAL_SUN_HOLIDAY"));
+    }
 }

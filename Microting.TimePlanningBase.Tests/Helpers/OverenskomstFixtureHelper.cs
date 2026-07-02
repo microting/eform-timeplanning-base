@@ -2081,4 +2081,171 @@ public static class OverenskomstFixtureHelper
             }
         }
     };
+
+    /// <summary>
+    /// GLS-A Udenlandske praktikanter - Landbrug (Andet arbejde) 2024-2026.
+    /// Field-work variant of the foreign-trainee agreement (Jordbrug §48).
+    /// Weekday + Saturday: 7.4h NORMAL, then 2h OVERTIME_50, then OVERTIME_80.
+    /// Sunday/Holiday/Grundlovsdag: not normally worked - all hours OT
+    /// (first 2h OVERTIME_50, remainder OVERTIME_80).
+    /// Note: overtime tier is 50% (not 30% like standard Jordbrug).
+    /// The loenoversigt splits base kr/time for u25 vs 25+ during months
+    /// 7-18 of the praktik; that's a rate difference, not a structural one,
+    /// so a single fixture models both age groups.
+    /// </summary>
+    public static PayRuleSet GlsA_Jordbrug_Praktikant_Udenlandsk_Andet() => new PayRuleSet
+    {
+        Id = 232,
+        Name = "GLS-A / 3F - Udenlandske praktikanter Landbrug Andet arbejde 2024-2026",
+        DayRules = new List<PayDayRule>
+        {
+            new PayDayRule
+            {
+                PayRuleSetId = 232,
+                DayCode = "WEEKDAY",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = 26640, PayCode = "NORMAL" },       // 7.4h
+                    new PayTierRule { Order = 2, UpToSeconds = 33840, PayCode = "OVERTIME_50" },   // +2h
+                    new PayTierRule { Order = 3, UpToSeconds = null, PayCode = "OVERTIME_80" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 232,
+                DayCode = "SATURDAY",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = 26640, PayCode = "NORMAL" },
+                    new PayTierRule { Order = 2, UpToSeconds = 33840, PayCode = "OVERTIME_50" },
+                    new PayTierRule { Order = 3, UpToSeconds = null, PayCode = "OVERTIME_80" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 232,
+                DayCode = "SUNDAY",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = 7200, PayCode = "OVERTIME_50" },
+                    new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "OVERTIME_80" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 232,
+                DayCode = "HOLIDAY",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = 7200, PayCode = "OVERTIME_50" },
+                    new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "OVERTIME_80" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 232,
+                DayCode = "GRUNDLOVSDAG",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = 7200, PayCode = "OVERTIME_50" },
+                    new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "OVERTIME_80" }
+                }
+            }
+        }
+    };
+
+    /// <summary>
+    /// GLS-A Udenlandske praktikanter - Landbrug (Staldarbejde) 2024-2026.
+    /// Animal-care variant of the foreign-trainee agreement (Jordbrug §48).
+    /// Weekday: same 7.4h + OT50 + OT80 tiers as Andet arbejde.
+    /// Saturday: 6h SAT_NORMAL then SAT_ANIMAL_AFTERNOON (12:00 supplement).
+    /// Sunday/Holiday/Grundlovsdag: all hours ANIMAL_SUN_HOLIDAY.
+    /// DayTypeRules mirror Standard Dyrehold's Saturday-noon time-band split,
+    /// which drives the calculation when consumers use GenerateTimeBandPayLines;
+    /// tier rules above are the fallback.
+    /// </summary>
+    public static PayRuleSet GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde() => new PayRuleSet
+    {
+        Id = 233,
+        Name = "GLS-A / 3F - Udenlandske praktikanter Landbrug Staldarbejde 2024-2026",
+        DayRules = new List<PayDayRule>
+        {
+            new PayDayRule
+            {
+                PayRuleSetId = 233,
+                DayCode = "WEEKDAY",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = 26640, PayCode = "NORMAL" },
+                    new PayTierRule { Order = 2, UpToSeconds = 33840, PayCode = "OVERTIME_50" },
+                    new PayTierRule { Order = 3, UpToSeconds = null, PayCode = "OVERTIME_80" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 233,
+                DayCode = "SATURDAY",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = 21600, PayCode = "SAT_NORMAL" },        // 6h
+                    new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "SAT_ANIMAL_AFTERNOON" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 233,
+                DayCode = "SUNDAY",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "ANIMAL_SUN_HOLIDAY" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 233,
+                DayCode = "HOLIDAY",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "ANIMAL_SUN_HOLIDAY" }
+                }
+            },
+            new PayDayRule
+            {
+                PayRuleSetId = 233,
+                DayCode = "GRUNDLOVSDAG",
+                Tiers = new List<PayTierRule>
+                {
+                    new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "ANIMAL_SUN_HOLIDAY" }
+                }
+            }
+        },
+        DayTypeRules = new List<PayDayTypeRule>
+        {
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 233, DayType = DayType.Saturday, DefaultPayCode = "SAT_NORMAL", Priority = 1,
+                TimeBandRules = new List<PayTimeBandRule>
+                {
+                    new PayTimeBandRule { StartSecondOfDay = 0, EndSecondOfDay = 43200, PayCode = "SAT_NORMAL", Priority = 1 },
+                    new PayTimeBandRule { StartSecondOfDay = 43200, EndSecondOfDay = 86400, PayCode = "SAT_ANIMAL_AFTERNOON", Priority = 1 }
+                }
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 233, DayType = DayType.Sunday, DefaultPayCode = "ANIMAL_SUN_HOLIDAY", Priority = 1,
+                TimeBandRules = new List<PayTimeBandRule>
+                {
+                    new PayTimeBandRule { StartSecondOfDay = 0, EndSecondOfDay = 86400, PayCode = "ANIMAL_SUN_HOLIDAY", Priority = 1 }
+                }
+            },
+            new PayDayTypeRule
+            {
+                PayRuleSetId = 233, DayType = DayType.Holiday, DefaultPayCode = "ANIMAL_SUN_HOLIDAY", Priority = 1,
+                TimeBandRules = new List<PayTimeBandRule>
+                {
+                    new PayTimeBandRule { StartSecondOfDay = 0, EndSecondOfDay = 86400, PayCode = "ANIMAL_SUN_HOLIDAY", Priority = 1 }
+                }
+            }
+        }
+    };
 }
