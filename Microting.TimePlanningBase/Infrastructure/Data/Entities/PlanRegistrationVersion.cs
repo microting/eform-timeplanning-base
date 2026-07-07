@@ -224,4 +224,13 @@ public class PlanRegistrationVersion : PnBase
 
     public double? ExtraOvertimeHours { get; set; }
     public int? ExtraOvertimeHoursInSeconds { get; set; }
+
+    /// <summary>
+    /// Write-time mode marker stamped by every plugin write path from the site's
+    /// then-current <c>AssignedSite.UseOneMinuteIntervals</c>. Governs how this row's
+    /// registrations are displayed and calculated (exact stamps vs 5-minute ticks).
+    /// null = legacy row written before the marker existed; mode is unknown and must
+    /// be resolved via the version-timeline fallback.
+    /// </summary>
+    public bool? RegisteredUnderOneMinuteIntervals { get; set; }
 }
