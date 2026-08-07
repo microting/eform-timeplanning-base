@@ -541,12 +541,34 @@ public class ExpandedOverenskomstPayLineTests
         Assert.That(ot80.HoursInSeconds, Is.EqualTo(7200));     // 2h
     }
 
+    // ═════════════════════════════════════════════════════════════
+    // GENERATOR-LEVEL TESTS - Udenlandske praktikanter (both presets)
+    //
+    // Everything from here to the end of the file calls PayLineGenerator
+    // directly. That proves the TIER ARITHMETIC of the corrected presets and
+    // nothing more - it says nothing about which code path production takes
+    // for a given day. In production CalculatePayLinesForDay does the routing:
+    // it decides, per day, whether the clock-time bands run, whether the tiers
+    // run, or - for the stald preset's Saturday/Sunday/Holiday - both, with the
+    // bands attributing normal time up to the first tier's boundary and the
+    // tiers attributing every minute past it. That end-to-end routing behaviour
+    // is covered by PraktikantPayLineRoutingTests in
+    // eform-angular-timeplanning-plugin, not here.
+    //
+    // The distinction is load-bearing. Before the § 50 preset corrections the
+    // Saturday/Sunday/Holiday tests below asserted a tier path the router could
+    // never reach: they passed happily while describing a calculation that never
+    // ran in production. Assert tier arithmetic here; assert routing there.
+    // ═════════════════════════════════════════════════════════════
+
     // ─────────────────────────────────────────────────────────────
     // GLS-A / 3F - Udenlandske praktikanter Landbrug (Andet arbejde)
     //
     // Field-work variant. Same 7.4h + 2h + rest split as standard, but
-    // the middle tier is +50% (not +30%). Sundays/holidays default to
-    // all-overtime (first 2h @ 50%, remainder @ 80%).
+    // the middle tier is +50% (not +30%). Sundays and holidays fall outside
+    // the permitted Mon-Sat work window, so every minute worked is overtime
+    // (first 2h @ 50%, remainder @ 80%). Grundlovsdag, by contrast, is
+    // ordinary working time and follows the weekday progression.
     // ─────────────────────────────────────────────────────────────
 
     [Test]
@@ -636,25 +658,38 @@ public class ExpandedOverenskomstPayLineTests
     }
 
     [Test]
-    public void PraktikantUdlAndet_Grundlovsdag_AllOvertime_SameAsSunday()
+    public void PraktikantUdlAndet_Grundlovsdag_OrdinaryWorkingTime_ThenOvertimeSteps()
     {
-        // Loenoversigt is silent on Grundlovsdag; we treat it as Holiday.
-        // 12h = 43200s → 2h OVERTIME_50 + 10h OVERTIME_80.
+        // Grundlovsdag is a working day (a half day per Jordbrug § 29), not a
+        // søgnehelligdag, so it is NOT all-overtime the way Sunday and Holiday
+        // are. The tiers therefore read as: ordinary working time up to the
+        // daily norm, then the two overtime steps - the same shape as a weekday.
         var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
         var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", 43200, ruleSet, CalculatedAt);
 
-        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.Count, Is.EqualTo(3));
+        Assert.That(result.First(l => l.PayCode == "NORMAL").HoursInSeconds, Is.EqualTo(26640));
         Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(7200));
-        Assert.That(result.First(l => l.PayCode == "OVERTIME_80").HoursInSeconds, Is.EqualTo(36000));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_80").HoursInSeconds, Is.EqualTo(9360));
+        Assert.That(result.Sum(l => l.HoursInSeconds), Is.EqualTo(43200));
     }
 
     // ─────────────────────────────────────────────────────────────
     // GLS-A / 3F - Udenlandske praktikanter Landbrug (Staldarbejde)
     //
-    // Animal-care variant. Weekday tiers match Andet arbejde. Saturday
-    // splits at 6h (tier) or 12:00 (time band) into
-    // SAT_NORMAL / SAT_ANIMAL_AFTERNOON. Sunday/Holiday: single
-    // ANIMAL_SUN_HOLIDAY band.
+    // Animal-care variant. Weekday tiers match Andet arbejde.
+    //
+    // On Saturday, Sunday and Holiday the tiers are not a duplicate of the
+    // time bands: the first tier marks where normal time ends (7h24m), and the
+    // tiers past it are the overtime steps. The stald supplements are payable
+    // per § 50 stk. 4 d only "for arbejde i normal arbejdstid", so overtime
+    // minutes carry OVERTIME_50 / OVERTIME_80 and no supplement code. Which
+    // supplement code the normal-time portion gets is decided by clock time -
+    // Saturday splits at 12:00 into SAT_NORMAL / SAT_ANIMAL_AFTERNOON, Sunday
+    // and Holiday are ANIMAL_SUN_HOLIDAY all day - and that split is the time
+    // bands' job, exercised by GenerateTimeBandPayLines below and by the
+    // plugin's routing tests. The first tier here carries the code the bands
+    // would have produced anyway, so the tier path stays coherent on its own.
     // ─────────────────────────────────────────────────────────────
 
     [Test]
@@ -669,16 +704,20 @@ public class ExpandedOverenskomstPayLineTests
     }
 
     [Test]
-    public void PraktikantUdlStald_Saturday_TierPath_6hNormal_Then_AnimalAfternoon()
+    public void PraktikantUdlStald_Saturday_NormalTime_ThenOvertimeSteps()
     {
-        // Tier-only path (GeneratePayLines): 6h SAT_NORMAL then rest
-        // SAT_ANIMAL_AFTERNOON. 8h shift = 6h SAT_NORMAL + 2h afternoon.
+        // The Saturday tiers express "normal time, then overtime", not a repeat
+        // of the 12:00 band split: everything up to the daily norm is normal
+        // Saturday time, and the excess is overtime carrying no stald
+        // supplement. An 8h Saturday is therefore mostly normal time with a
+        // short tail in the first overtime step.
         var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
         var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", 28800, ruleSet, CalculatedAt);
 
         Assert.That(result.Count, Is.EqualTo(2));
-        Assert.That(result.First(l => l.PayCode == "SAT_NORMAL").HoursInSeconds, Is.EqualTo(21600));
-        Assert.That(result.First(l => l.PayCode == "SAT_ANIMAL_AFTERNOON").HoursInSeconds, Is.EqualTo(7200));
+        Assert.That(result.First(l => l.PayCode == "SAT_NORMAL").HoursInSeconds, Is.EqualTo(26640));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(2160));
+        Assert.That(result.Sum(l => l.HoursInSeconds), Is.EqualTo(28800));
     }
 
     [Test]
@@ -695,35 +734,285 @@ public class ExpandedOverenskomstPayLineTests
     }
 
     [Test]
-    public void PraktikantUdlStald_Sunday_AllAnimalSunHoliday()
+    public void PraktikantUdlStald_Sunday_NormalTime_ThenOvertimeSteps()
     {
+        // Animal care is genuine Sunday work, so the normal-time portion keeps
+        // the Sunday/holiday supplement - but only up to the daily norm. Past
+        // that boundary the supplement stops (§ 50 stk. 4 d: "i normal
+        // arbejdstid") and the minutes are plain overtime.
         var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
         var result = PayLineGenerator.GeneratePayLines(1, "SUNDAY", 28800, ruleSet, CalculatedAt);
 
-        Assert.That(result.Count, Is.EqualTo(1));
-        Assert.That(result[0].PayCode, Is.EqualTo("ANIMAL_SUN_HOLIDAY"));
-        Assert.That(result[0].HoursInSeconds, Is.EqualTo(28800));
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.First(l => l.PayCode == "ANIMAL_SUN_HOLIDAY").HoursInSeconds, Is.EqualTo(26640));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(2160));
+        Assert.That(result.Sum(l => l.HoursInSeconds), Is.EqualTo(28800));
     }
 
     [Test]
-    public void PraktikantUdlStald_Holiday_AllAnimalSunHoliday()
+    public void PraktikantUdlStald_Holiday_NormalTime_ThenOvertimeSteps()
     {
+        // Holiday has its own PayDayRule and is structurally identical to
+        // Sunday; exercised separately so a future divergence is caught.
         var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
         var result = PayLineGenerator.GeneratePayLines(1, "HOLIDAY", 28800, ruleSet, CalculatedAt);
 
-        Assert.That(result.Count, Is.EqualTo(1));
-        Assert.That(result[0].PayCode, Is.EqualTo("ANIMAL_SUN_HOLIDAY"));
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result.First(l => l.PayCode == "ANIMAL_SUN_HOLIDAY").HoursInSeconds, Is.EqualTo(26640));
+        Assert.That(result.First(l => l.PayCode == "OVERTIME_50").HoursInSeconds, Is.EqualTo(2160));
+        Assert.That(result.Sum(l => l.HoursInSeconds), Is.EqualTo(28800));
     }
 
     [Test]
-    public void PraktikantUdlStald_Grundlovsdag_TreatedAsHoliday()
+    public void PraktikantUdlStald_Grundlovsdag_OrdinaryWorkingTime()
     {
-        // Trainee agreement does not distinguish Grundlovsdag; we treat it
-        // as HOLIDAY, matching the loenoversigt's silence on the topic.
+        // Grundlovsdag is a working day (a half day per Jordbrug § 29), not a
+        // søgnehelligdag, so it does not carry the Sunday/holiday animal
+        // supplement. A short day stays entirely within ordinary working time
+        // and produces a single NORMAL line - no overtime step is reached.
         var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
         var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", 14400, ruleSet, CalculatedAt);
 
         Assert.That(result.Count, Is.EqualTo(1));
-        Assert.That(result[0].PayCode, Is.EqualTo("ANIMAL_SUN_HOLIDAY"));
+        Assert.That(result[0].PayCode, Is.EqualTo("NORMAL"));
+        Assert.That(result[0].HoursInSeconds, Is.EqualTo(14400));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Boundary matrix for the day rules corrected by the § 50 preset fix
+    //
+    // Every corrected day rule has the same three-tier shape: normal time up
+    // to the daily norm, then a first overtime step of two hours, then an
+    // uncapped second step. Only the first tier's pay code differs per day.
+    // Each rule is walked across the four points where the tier arithmetic can
+    // go wrong: exactly at the normal-time boundary, one second past it,
+    // exactly at the ceiling of the first overtime step, and past that ceiling.
+    //
+    // Still generator-level: this is tier arithmetic, not routing. See the
+    // header block above.
+    // ─────────────────────────────────────────────────────────────
+
+    private const int DailyNormSeconds = 26640;          // 7h24m - end of normal time
+    private const int FirstOvertimeStepEnd = 33840;      // +2h    - end of OVERTIME_50
+
+    /// <summary>
+    /// Asserts that the generated lines carry exactly the expected pay codes with
+    /// exactly the expected seconds, and that the per-code seconds add back up to
+    /// the seconds worked - no minute lost, invented or double-counted.
+    /// </summary>
+    private static void AssertTierSplit(
+        List<PlanRegistrationPayLine> lines,
+        int workedSeconds,
+        params (string PayCode, int Seconds)[] expected)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(lines.Select(l => l.PayCode), Is.EquivalentTo(expected.Select(e => e.PayCode)),
+                "pay codes emitted");
+
+            foreach (var (payCode, seconds) in expected)
+            {
+                Assert.That(lines.Where(l => l.PayCode == payCode).Sum(l => l.HoursInSeconds),
+                    Is.EqualTo(seconds), $"seconds attributed to {payCode}");
+            }
+
+            Assert.That(lines.Sum(l => l.HoursInSeconds), Is.EqualTo(workedSeconds),
+                "per-code seconds must sum to the seconds worked");
+        });
+    }
+
+    // --- Staldarbejde SATURDAY: SAT_NORMAL -> OVERTIME_50 -> OVERTIME_80 ---
+
+    [Test]
+    public void PraktikantUdlStald_Saturday_AtDailyNorm_NoOvertime()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", DailyNormSeconds, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds, ("SAT_NORMAL", 26640));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Saturday_OneSecondOverDailyNorm_OneSecondOvertime50()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", DailyNormSeconds + 1, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds + 1, ("SAT_NORMAL", 26640), ("OVERTIME_50", 1));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Saturday_AtFirstOvertimeStepCeiling_NoOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", FirstOvertimeStepEnd, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, FirstOvertimeStepEnd, ("SAT_NORMAL", 26640), ("OVERTIME_50", 7200));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Saturday_PastFirstOvertimeStep_RemainderOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SATURDAY", 43200, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, 43200,
+            ("SAT_NORMAL", 26640), ("OVERTIME_50", 7200), ("OVERTIME_80", 9360));
+    }
+
+    // --- Staldarbejde SUNDAY: ANIMAL_SUN_HOLIDAY -> OVERTIME_50 -> OVERTIME_80 ---
+
+    [Test]
+    public void PraktikantUdlStald_Sunday_AtDailyNorm_NoOvertime()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SUNDAY", DailyNormSeconds, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds, ("ANIMAL_SUN_HOLIDAY", 26640));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Sunday_OneSecondOverDailyNorm_OneSecondOvertime50()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SUNDAY", DailyNormSeconds + 1, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds + 1, ("ANIMAL_SUN_HOLIDAY", 26640), ("OVERTIME_50", 1));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Sunday_AtFirstOvertimeStepCeiling_NoOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SUNDAY", FirstOvertimeStepEnd, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, FirstOvertimeStepEnd, ("ANIMAL_SUN_HOLIDAY", 26640), ("OVERTIME_50", 7200));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Sunday_PastFirstOvertimeStep_RemainderOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "SUNDAY", 43200, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, 43200,
+            ("ANIMAL_SUN_HOLIDAY", 26640), ("OVERTIME_50", 7200), ("OVERTIME_80", 9360));
+    }
+
+    // --- Staldarbejde HOLIDAY: ANIMAL_SUN_HOLIDAY -> OVERTIME_50 -> OVERTIME_80 ---
+
+    [Test]
+    public void PraktikantUdlStald_Holiday_AtDailyNorm_NoOvertime()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "HOLIDAY", DailyNormSeconds, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds, ("ANIMAL_SUN_HOLIDAY", 26640));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Holiday_OneSecondOverDailyNorm_OneSecondOvertime50()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "HOLIDAY", DailyNormSeconds + 1, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds + 1, ("ANIMAL_SUN_HOLIDAY", 26640), ("OVERTIME_50", 1));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Holiday_AtFirstOvertimeStepCeiling_NoOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "HOLIDAY", FirstOvertimeStepEnd, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, FirstOvertimeStepEnd, ("ANIMAL_SUN_HOLIDAY", 26640), ("OVERTIME_50", 7200));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Holiday_PastFirstOvertimeStep_RemainderOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "HOLIDAY", 43200, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, 43200,
+            ("ANIMAL_SUN_HOLIDAY", 26640), ("OVERTIME_50", 7200), ("OVERTIME_80", 9360));
+    }
+
+    // --- Staldarbejde GRUNDLOVSDAG: NORMAL -> OVERTIME_50 -> OVERTIME_80 ---
+
+    [Test]
+    public void PraktikantUdlStald_Grundlovsdag_AtDailyNorm_NoOvertime()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", DailyNormSeconds, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds, ("NORMAL", 26640));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Grundlovsdag_OneSecondOverDailyNorm_OneSecondOvertime50()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", DailyNormSeconds + 1, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds + 1, ("NORMAL", 26640), ("OVERTIME_50", 1));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Grundlovsdag_AtFirstOvertimeStepCeiling_NoOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", FirstOvertimeStepEnd, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, FirstOvertimeStepEnd, ("NORMAL", 26640), ("OVERTIME_50", 7200));
+    }
+
+    [Test]
+    public void PraktikantUdlStald_Grundlovsdag_PastFirstOvertimeStep_RemainderOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", 43200, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, 43200,
+            ("NORMAL", 26640), ("OVERTIME_50", 7200), ("OVERTIME_80", 9360));
+    }
+
+    // --- Andet arbejde GRUNDLOVSDAG: NORMAL -> OVERTIME_50 -> OVERTIME_80 ---
+
+    [Test]
+    public void PraktikantUdlAndet_Grundlovsdag_AtDailyNorm_NoOvertime()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", DailyNormSeconds, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds, ("NORMAL", 26640));
+    }
+
+    [Test]
+    public void PraktikantUdlAndet_Grundlovsdag_OneSecondOverDailyNorm_OneSecondOvertime50()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", DailyNormSeconds + 1, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, DailyNormSeconds + 1, ("NORMAL", 26640), ("OVERTIME_50", 1));
+    }
+
+    [Test]
+    public void PraktikantUdlAndet_Grundlovsdag_AtFirstOvertimeStepCeiling_NoOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", FirstOvertimeStepEnd, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, FirstOvertimeStepEnd, ("NORMAL", 26640), ("OVERTIME_50", 7200));
+    }
+
+    [Test]
+    public void PraktikantUdlAndet_Grundlovsdag_PastFirstOvertimeStep_RemainderOvertime80()
+    {
+        var ruleSet = OverenskomstFixtureHelper.GlsA_Jordbrug_Praktikant_Udenlandsk_Andet();
+        var result = PayLineGenerator.GeneratePayLines(1, "GRUNDLOVSDAG", 43200, ruleSet, CalculatedAt);
+
+        AssertTierSplit(result, 43200,
+            ("NORMAL", 26640), ("OVERTIME_50", 7200), ("OVERTIME_80", 9360));
     }
 }

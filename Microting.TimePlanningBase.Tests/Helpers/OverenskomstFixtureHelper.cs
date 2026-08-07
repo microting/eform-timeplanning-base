@@ -2086,8 +2086,11 @@ public static class OverenskomstFixtureHelper
     /// GLS-A Udenlandske praktikanter - Landbrug (Andet arbejde) 2024-2026.
     /// Field-work variant of the foreign-trainee agreement (Jordbrug §48).
     /// Weekday + Saturday: 7.4h NORMAL, then 2h OVERTIME_50, then OVERTIME_80.
-    /// Sunday/Holiday/Grundlovsdag: not normally worked - all hours OT
+    /// Sunday/Holiday: not normally worked - all hours OT
     /// (first 2h OVERTIME_50, remainder OVERTIME_80).
+    /// Grundlovsdag: ordinary working time with the normal progression - the
+    /// § 29 half-day (fridag from 12:00) cannot be modelled, see the DayCode
+    /// comment below.
     /// Note: overtime tier is 50% (not 30% like standard Jordbrug).
     /// The loenoversigt splits base kr/time for u25 vs 25+ during months
     /// 7-18 of the praktik; that's a rate difference, not a structural one,
@@ -2141,14 +2144,20 @@ public static class OverenskomstFixtureHelper
                     new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "OVERTIME_80" }
                 }
             },
+            // Grundlovsdag (5 June) is a half day per Jordbrug § 29: ordinary working
+            // time until 12:00, søgnehelligdag from 12:00. The engine has no DayType
+            // for Grundlovsdag (TryGetDayType returns false for it), so the noon split
+            // cannot be expressed with time bands and the day is modelled as ordinary
+            // working time with the normal overtime progression.
             new PayDayRule
             {
                 PayRuleSetId = 232,
                 DayCode = "GRUNDLOVSDAG",
                 Tiers = new List<PayTierRule>
                 {
-                    new PayTierRule { Order = 1, UpToSeconds = 7200, PayCode = "OVERTIME_50" },
-                    new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "OVERTIME_80" }
+                    new PayTierRule { Order = 1, UpToSeconds = 26640, PayCode = "NORMAL" },
+                    new PayTierRule { Order = 2, UpToSeconds = 33840, PayCode = "OVERTIME_50" },
+                    new PayTierRule { Order = 3, UpToSeconds = null, PayCode = "OVERTIME_80" }
                 }
             }
         }
@@ -2157,12 +2166,18 @@ public static class OverenskomstFixtureHelper
     /// <summary>
     /// GLS-A Udenlandske praktikanter - Landbrug (Staldarbejde) 2024-2026.
     /// Animal-care variant of the foreign-trainee agreement (Jordbrug §48).
-    /// Weekday: same 7.4h + OT50 + OT80 tiers as Andet arbejde.
-    /// Saturday: 6h SAT_NORMAL then SAT_ANIMAL_AFTERNOON (12:00 supplement).
-    /// Sunday/Holiday/Grundlovsdag: all hours ANIMAL_SUN_HOLIDAY.
-    /// DayTypeRules mirror Standard Dyrehold's Saturday-noon time-band split,
-    /// which drives the calculation when consumers use GenerateTimeBandPayLines;
-    /// tier rules above are the fallback.
+    /// Weekday: 7.4h NORMAL + OT50 + OT80 tiers, same as Andet arbejde.
+    /// Saturday/Sunday/Holiday: normal time (up to 7.4h) is attributed by the
+    /// DayTypeRules time bands - Saturday splits at 12:00 into SAT_NORMAL /
+    /// SAT_ANIMAL_AFTERNOON, Sunday and Holiday are ANIMAL_SUN_HOLIDAY all day.
+    /// Beyond 7.4h the tiers take over with OVERTIME_50 then OVERTIME_80: the
+    /// stald supplements are payable per § 50 stk. 4 d only "for arbejde i
+    /// normal arbejdstid", so overtime minutes carry no supplement code.
+    /// The tier rules are therefore NOT a fallback - the first tier defines the
+    /// normal-time boundary the bands are truncated at.
+    /// Grundlovsdag: ordinary working time with the normal progression - the
+    /// § 29 half-day (fridag from 12:00) cannot be modelled, see the DayCode
+    /// comment below.
     /// </summary>
     public static PayRuleSet GlsA_Jordbrug_Praktikant_Udenlandsk_Staldarbejde() => new PayRuleSet
     {
@@ -2181,14 +2196,23 @@ public static class OverenskomstFixtureHelper
                     new PayTierRule { Order = 3, UpToSeconds = null, PayCode = "OVERTIME_80" }
                 }
             },
+            // Saturday / Sunday / Holiday tiers below are NOT a fallback - they set
+            // the normal-time boundary and the overtime steps beyond it. The stald
+            // supplements are payable per § 50 stk. 4 d only "for arbejde i normal
+            // arbejdstid", so the first 7h24m are attributed by the clock-time bands
+            // (DayTypeRules further down) and every minute past that boundary goes to
+            // the overtime steps here instead of carrying a supplement code. The first
+            // tier's pay code is the one the bands would have produced anyway; it is
+            // what defines where normal time ends.
             new PayDayRule
             {
                 PayRuleSetId = 233,
                 DayCode = "SATURDAY",
                 Tiers = new List<PayTierRule>
                 {
-                    new PayTierRule { Order = 1, UpToSeconds = 21600, PayCode = "SAT_NORMAL" },        // 6h
-                    new PayTierRule { Order = 2, UpToSeconds = null, PayCode = "SAT_ANIMAL_AFTERNOON" }
+                    new PayTierRule { Order = 1, UpToSeconds = 26640, PayCode = "SAT_NORMAL" },   // 7.4h
+                    new PayTierRule { Order = 2, UpToSeconds = 33840, PayCode = "OVERTIME_50" },  // +2h
+                    new PayTierRule { Order = 3, UpToSeconds = null, PayCode = "OVERTIME_80" }
                 }
             },
             new PayDayRule
@@ -2197,7 +2221,9 @@ public static class OverenskomstFixtureHelper
                 DayCode = "SUNDAY",
                 Tiers = new List<PayTierRule>
                 {
-                    new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "ANIMAL_SUN_HOLIDAY" }
+                    new PayTierRule { Order = 1, UpToSeconds = 26640, PayCode = "ANIMAL_SUN_HOLIDAY" },
+                    new PayTierRule { Order = 2, UpToSeconds = 33840, PayCode = "OVERTIME_50" },
+                    new PayTierRule { Order = 3, UpToSeconds = null, PayCode = "OVERTIME_80" }
                 }
             },
             new PayDayRule
@@ -2206,16 +2232,25 @@ public static class OverenskomstFixtureHelper
                 DayCode = "HOLIDAY",
                 Tiers = new List<PayTierRule>
                 {
-                    new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "ANIMAL_SUN_HOLIDAY" }
+                    new PayTierRule { Order = 1, UpToSeconds = 26640, PayCode = "ANIMAL_SUN_HOLIDAY" },
+                    new PayTierRule { Order = 2, UpToSeconds = 33840, PayCode = "OVERTIME_50" },
+                    new PayTierRule { Order = 3, UpToSeconds = null, PayCode = "OVERTIME_80" }
                 }
             },
+            // Grundlovsdag (5 June) is a half day per Jordbrug § 29: ordinary working
+            // time until 12:00, søgnehelligdag from 12:00. The engine has no DayType
+            // for Grundlovsdag (TryGetDayType returns false for it), so the noon split
+            // cannot be expressed with time bands and the day is modelled as ordinary
+            // working time with the normal overtime progression.
             new PayDayRule
             {
                 PayRuleSetId = 233,
                 DayCode = "GRUNDLOVSDAG",
                 Tiers = new List<PayTierRule>
                 {
-                    new PayTierRule { Order = 1, UpToSeconds = null, PayCode = "ANIMAL_SUN_HOLIDAY" }
+                    new PayTierRule { Order = 1, UpToSeconds = 26640, PayCode = "NORMAL" },
+                    new PayTierRule { Order = 2, UpToSeconds = 33840, PayCode = "OVERTIME_50" },
+                    new PayTierRule { Order = 3, UpToSeconds = null, PayCode = "OVERTIME_80" }
                 }
             }
         },
