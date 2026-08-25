@@ -8,4 +8,5 @@ public class DeviceTokenVersion : BaseEntity
     public string Token { get; set; }
     public string Platform { get; set; }
     public int DeviceTokenId { get; set; }
+    public int AppBuildNumber { get; set; }
 }
