@@ -5,4 +5,5 @@ public class DeviceToken : PnBase
     public int SdkSiteId { get; set; }
     public string Token { get; set; }
     public string Platform { get; set; }
+    public int AppBuildNumber { get; set; }
 }
