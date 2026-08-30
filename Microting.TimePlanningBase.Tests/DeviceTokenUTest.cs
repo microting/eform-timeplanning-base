@@ -35,10 +35,10 @@ namespace Microting.TimePlanningBase.Tests;
 public class DeviceTokenUTest : DbTestFixture
 {
     [Test]
-    public async Task DeviceToken_Create_PersistsAllColumns()
+    public async Task DeviceToken_Create_DoesCreate()
     {
         // Arrange
-        var token = new DeviceToken
+        var deviceToken = new DeviceToken
         {
             AppId = "time",
             InstallationId = "install-1",
@@ -49,28 +49,38 @@ public class DeviceTokenUTest : DbTestFixture
         };
 
         // Act
-        await token.Create(DbContext).ConfigureAwait(false);
+        await deviceToken.Create(DbContext).ConfigureAwait(false);
 
         // Assert
-        var row = DbContext.DeviceTokens.AsNoTracking().Single();
+        var deviceTokens = DbContext.DeviceTokens.AsNoTracking().ToList();
+        var deviceTokenVersions = DbContext.DeviceTokenVersions.AsNoTracking().ToList();
+
+        Assert.That(deviceTokens, Has.Count.EqualTo(1));
+        Assert.That(deviceTokenVersions, Has.Count.EqualTo(1));
 
         Assert.Multiple(() =>
         {
-            Assert.That(row.AppId, Is.EqualTo("time"));
-            Assert.That(row.InstallationId, Is.EqualTo("install-1"));
-            Assert.That(row.FcmToken, Is.EqualTo("tok-1"));
-            Assert.That(row.SdkSiteId, Is.EqualTo(200));
-            Assert.That(row.Platform, Is.EqualTo("android"));
-            Assert.That(row.AppBuildNumber, Is.EqualTo(31221));
-            Assert.That(row.WorkflowState, Is.EqualTo(Constants.WorkflowStates.Created));
+            Assert.That(deviceTokens[0].AppId, Is.EqualTo("time"));
+            Assert.That(deviceTokens[0].InstallationId, Is.EqualTo("install-1"));
+            Assert.That(deviceTokens[0].FcmToken, Is.EqualTo("tok-1"));
+            Assert.That(deviceTokens[0].SdkSiteId, Is.EqualTo(200));
+            Assert.That(deviceTokens[0].Platform, Is.EqualTo("android"));
+            Assert.That(deviceTokens[0].AppBuildNumber, Is.EqualTo(31221));
+            Assert.That(deviceTokens[0].WorkflowState, Is.EqualTo(Constants.WorkflowStates.Created));
+
+            Assert.That(deviceTokenVersions[0].DeviceTokenId, Is.EqualTo(deviceTokens[0].Id));
+            Assert.That(deviceTokenVersions[0].AppId, Is.EqualTo("time"));
+            Assert.That(deviceTokenVersions[0].InstallationId, Is.EqualTo("install-1"));
+            Assert.That(deviceTokenVersions[0].FcmToken, Is.EqualTo("tok-1"));
+            Assert.That(deviceTokenVersions[0].SdkSiteId, Is.EqualTo(200));
         });
     }
 
     [Test]
-    public async Task DeviceToken_SameInstall_NewToken_UpdatesInPlace()
+    public async Task DeviceToken_UpdateWithRotatedFcmToken_DoesUpdateInPlace()
     {
         // Arrange
-        var token = new DeviceToken
+        var deviceToken = new DeviceToken
         {
             AppId = "time",
             InstallationId = "install-rot",
@@ -78,55 +88,28 @@ public class DeviceTokenUTest : DbTestFixture
             SdkSiteId = 201,
             Platform = "android"
         };
-        await token.Create(DbContext).ConfigureAwait(false);
+        await deviceToken.Create(DbContext).ConfigureAwait(false);
 
         // Act
-        token.FcmToken = "new";
-        await token.Update(DbContext).ConfigureAwait(false);
+        deviceToken.FcmToken = "new";
+        await deviceToken.Update(DbContext).ConfigureAwait(false);
 
         // Assert
-        var rows = DbContext.DeviceTokens.AsNoTracking().ToList();
+        var deviceTokens = DbContext.DeviceTokens.AsNoTracking().ToList();
 
-        Assert.That(rows, Has.Count.EqualTo(1));
+        Assert.That(deviceTokens, Has.Count.EqualTo(1));
         Assert.Multiple(() =>
         {
-            Assert.That(rows[0].FcmToken, Is.EqualTo("new"));
-            Assert.That(rows[0].InstallationId, Is.EqualTo("install-rot"));
+            Assert.That(deviceTokens[0].FcmToken, Is.EqualTo("new"));
+            Assert.That(deviceTokens[0].InstallationId, Is.EqualTo("install-rot"));
         });
     }
 
     [Test]
-    public async Task DeviceToken_VersionRow_CarriesNewColumns()
-    {
-        // Arrange & Act
-        var token = new DeviceToken
-        {
-            AppId = "time",
-            InstallationId = "install-v",
-            FcmToken = "tok-v",
-            SdkSiteId = 202,
-            Platform = "ios"
-        };
-        await token.Create(DbContext).ConfigureAwait(false);
-
-        // Assert
-        var version = DbContext.DeviceTokenVersions.AsNoTracking().Single();
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(version.AppId, Is.EqualTo("time"));
-            Assert.That(version.InstallationId, Is.EqualTo("install-v"));
-            Assert.That(version.FcmToken, Is.EqualTo("tok-v"));
-            Assert.That(version.SdkSiteId, Is.EqualTo(202));
-            Assert.That(version.DeviceTokenId, Is.EqualTo(token.Id));
-        });
-    }
-
-    [Test]
-    public async Task DeviceToken_Delete_SoftDeletesOnly()
+    public async Task DeviceToken_Delete_DoesSetWorkflowStateToRemoved()
     {
         // Arrange
-        var token = new DeviceToken
+        var deviceToken = new DeviceToken
         {
             AppId = "time",
             InstallationId = "install-d",
@@ -134,14 +117,83 @@ public class DeviceTokenUTest : DbTestFixture
             SdkSiteId = 203,
             Platform = "android"
         };
-        await token.Create(DbContext).ConfigureAwait(false);
+        await deviceToken.Create(DbContext).ConfigureAwait(false);
 
         // Act
-        await token.Delete(DbContext).ConfigureAwait(false);
+        await deviceToken.Delete(DbContext).ConfigureAwait(false);
 
         // Assert
-        var row = DbContext.DeviceTokens.AsNoTracking().Single();
+        var deviceTokens = DbContext.DeviceTokens.AsNoTracking().ToList();
 
-        Assert.That(row.WorkflowState, Is.EqualTo(Constants.WorkflowStates.Removed));
+        Assert.That(deviceTokens, Has.Count.EqualTo(1));
+        Assert.That(deviceTokens[0].WorkflowState, Is.EqualTo(Constants.WorkflowStates.Removed));
     }
+
+    [Test]
+    public async Task DeviceToken_SecondRowForSameAppIdAndInstallationId_DoesThrow()
+    {
+        // Arrange
+        await NewDeviceToken("install-dup", "tok-first", 210).Create(DbContext).ConfigureAwait(false);
+
+        // Act & Assert
+        // This is the whole point of the re-key: one row per app install.
+        Assert.ThrowsAsync<DbUpdateException>(async () =>
+            await NewDeviceToken("install-dup", "tok-second", 211).Create(DbContext).ConfigureAwait(false));
+    }
+
+    [Test]
+    public async Task DeviceToken_SameFcmTokenOnTwoInstalls_DoesCreateBothRows()
+    {
+        // Arrange & Act
+        // Newly permitted. The old schema had a unique index on the token alone
+        // and rejected this outright.
+        await NewDeviceToken("install-a", "shared-tok", 220).Create(DbContext).ConfigureAwait(false);
+        await NewDeviceToken("install-b", "shared-tok", 221).Create(DbContext).ConfigureAwait(false);
+
+        // Assert
+        var deviceTokens = DbContext.DeviceTokens.AsNoTracking().ToList();
+
+        Assert.That(deviceTokens, Has.Count.EqualTo(2));
+        Assert.That(deviceTokens.Select(x => x.InstallationId),
+            Is.EquivalentTo(new[] { "install-a", "install-b" }));
+    }
+
+    [Test]
+    public async Task DeviceToken_SameInstallationIdUnderDifferentAppId_DoesCreateBothRows()
+    {
+        // Arrange & Act
+        // AppId is half the key, so a second app on the same install is its own
+        // row rather than a collision.
+        await NewDeviceToken("shared-install", "tok-time", 230).Create(DbContext).ConfigureAwait(false);
+
+        var otherApp = NewDeviceToken("shared-install", "tok-eform", 230);
+        otherApp.AppId = "eform";
+        await otherApp.Create(DbContext).ConfigureAwait(false);
+
+        // Assert
+        Assert.That(DbContext.DeviceTokens.AsNoTracking().ToList(), Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    public void DeviceToken_WithoutInstallationId_DoesThrow()
+    {
+        // Act & Assert
+        // AppId and InstallationId are [Required]. Nullable reference types are
+        // off in this project, so only the database constraint enforces this -
+        // which is exactly why it is worth pinning.
+        var deviceToken = NewDeviceToken(null, "tok-null", 240);
+
+        Assert.ThrowsAsync<DbUpdateException>(async () =>
+            await deviceToken.Create(DbContext).ConfigureAwait(false));
+    }
+
+    private static DeviceToken NewDeviceToken(string installationId, string fcmToken, int sdkSiteId) =>
+        new()
+        {
+            AppId = "time",
+            InstallationId = installationId,
+            FcmToken = fcmToken,
+            SdkSiteId = sdkSiteId,
+            Platform = "android"
+        };
 }

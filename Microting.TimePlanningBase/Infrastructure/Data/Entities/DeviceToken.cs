@@ -11,9 +11,10 @@ using System.ComponentModel.DataAnnotations;
 // including soft-deleted rows and flip WorkflowState back to Created.
 public class DeviceToken : PnBase
 {
-    // [Required] is load-bearing: nullable reference types are disabled in this
-    // project, so without it EF maps these as NULL-able and MySQL's unique index
-    // would stop collapsing duplicate installs (NULLs never collide).
+    // [Required] on AppId and InstallationId is load-bearing: nullable reference
+    // types are disabled in this project, so without it EF maps both as NULL-able
+    // and MySQL's unique index stops collapsing duplicate installs (NULLs never
+    // collide).
     [Required]
     [StringLength(32)]
     public string AppId { get; set; }
