@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -159,6 +161,89 @@ public class DeviceTokenMigrationUTest
             Assert.That(deviceTokens.Select(x => x.FcmToken),
                 Is.EqualTo(new[] { "tok-a", "tok-b", null, null }));
         });
+    }
+
+    [Test]
+    public async Task DeviceTokenIdentityModel_Down_DoesRestoreTheOldSchema()
+    {
+        // Arrange
+        await MigrateToAsync(_dbContext, PreviousMigration).ConfigureAwait(false);
+        await SeedOldSchemaRowsAsync(_dbContext).ConfigureAwait(false);
+        await MigrateToAsync(_dbContext, MigrationUnderTest).ConfigureAwait(false);
+
+        // Act
+        await MigrateToAsync(_dbContext, PreviousMigration).ConfigureAwait(false);
+
+        // Assert
+        var tokenColumn = await ColumnCountAsync(_dbContext, "DeviceTokens", "Token").ConfigureAwait(false);
+        var fcmTokenColumn = await ColumnCountAsync(_dbContext, "DeviceTokens", "FcmToken").ConfigureAwait(false);
+        var appIdColumn = await ColumnCountAsync(_dbContext, "DeviceTokens", "AppId").ConfigureAwait(false);
+        var versionTokenColumn = await ColumnCountAsync(_dbContext, "DeviceTokenVersions", "Token").ConfigureAwait(false);
+
+        // The rename carried the values back rather than dropping them.
+        var preservedTokens = await ScalarAsync(_dbContext,
+            "SELECT COUNT(*) FROM `DeviceTokens` WHERE `Token` IN ('tok-a', 'tok-b');").ConfigureAwait(false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(tokenColumn, Is.EqualTo(1), "Token should be restored");
+            Assert.That(fcmTokenColumn, Is.Zero, "FcmToken should be gone");
+            Assert.That(appIdColumn, Is.Zero, "AppId should be gone");
+            Assert.That(versionTokenColumn, Is.EqualTo(1), "version Token should be restored");
+            Assert.That(preservedTokens, Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public async Task DeviceTokenIdentityModel_DownWithDuplicateFcmTokens_DoesThrowBeforeDroppingColumns()
+    {
+        // Arrange
+        await MigrateToAsync(_dbContext, PreviousMigration).ConfigureAwait(false);
+        await SeedOldSchemaRowsAsync(_dbContext).ConfigureAwait(false);
+        await MigrateToAsync(_dbContext, MigrationUnderTest).ConfigureAwait(false);
+
+        // Two installs sharing one FCM token: legal under the new key, and
+        // impossible to represent under the old one.
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            "UPDATE `DeviceTokens` SET `FcmToken` = 'tok-a' WHERE `SdkSiteId` = 8;")
+            .ConfigureAwait(false);
+
+        // Act & Assert
+        Assert.ThrowsAsync<MySqlConnector.MySqlException>(async () =>
+            await MigrateToAsync(_dbContext, PreviousMigration).ConfigureAwait(false));
+
+        // The probe runs before anything is destroyed, so the columns needed to
+        // work out which install to keep are still there.
+        var appIdColumn = await ColumnCountAsync(_dbContext, "DeviceTokens", "AppId").ConfigureAwait(false);
+        var installationIdColumn =
+            await ColumnCountAsync(_dbContext, "DeviceTokens", "InstallationId").ConfigureAwait(false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(appIdColumn, Is.EqualTo(1));
+            Assert.That(installationIdColumn, Is.EqualTo(1));
+        });
+    }
+
+    private static Task<long> ColumnCountAsync(
+        TimePlanningPnDbContext dbContext, string tableName, string columnName) =>
+        ScalarAsync(dbContext,
+            "SELECT COUNT(*) FROM information_schema.COLUMNS " +
+            $"WHERE table_schema = DATABASE() AND table_name = '{tableName}' " +
+            $"AND column_name = '{columnName}';");
+
+    private static async Task<long> ScalarAsync(TimePlanningPnDbContext dbContext, string sql)
+    {
+        var connection = dbContext.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync().ConfigureAwait(false);
+        }
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+
+        return Convert.ToInt64(await command.ExecuteScalarAsync().ConfigureAwait(false));
     }
 
     private static TimePlanningPnDbContext NewDbContext() =>

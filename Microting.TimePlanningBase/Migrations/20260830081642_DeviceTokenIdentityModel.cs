@@ -111,6 +111,12 @@ namespace Microting.TimePlanningBase.Migrations
                 oldNullable: true)
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            // The MODIFY above restates the column definition and so drops the
+            // temporary default as a side effect. Stated explicitly so the
+            // default's removal is deterministic rather than incidental.
+            migrationBuilder.Sql(
+                "ALTER TABLE `DeviceTokens` ALTER COLUMN IF EXISTS `AppId` DROP DEFAULT;");
+
             migrationBuilder.Sql(
                 "CREATE UNIQUE INDEX IF NOT EXISTS `IX_DeviceTokens_AppId_InstallationId` " +
                 "ON `DeviceTokens` (`AppId`, `InstallationId`);");
@@ -168,6 +174,19 @@ namespace Microting.TimePlanningBase.Migrations
             // populated, so an operator hitting it can inspect the offending
             // installs and decide which to keep. Dropping the columns before it
             // would destroy exactly the evidence needed to recover.
+            // Probe before destroying anything, so the operator gets a sentence
+            // rather than an ERROR 1062 several statements later. NULL tokens
+            // are excluded: a unique index never collides on them, but GROUP BY
+            // would still group them together and report a false positive.
+            migrationBuilder.Sql(
+                "BEGIN NOT ATOMIC " +
+                "IF EXISTS (SELECT 1 FROM `DeviceTokens` WHERE `FcmToken` IS NOT NULL " +
+                "GROUP BY `FcmToken` HAVING COUNT(*) > 1) THEN " +
+                "SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = " +
+                "'Rollback blocked: duplicate FcmToken rows. Merge or remove them, then retry.'; " +
+                "END IF; " +
+                "END");
+
             migrationBuilder.Sql(
                 "DROP INDEX IF EXISTS `IX_DeviceTokens_FcmToken` ON `DeviceTokens`;");
             migrationBuilder.Sql(
