@@ -126,6 +126,102 @@ public class DeviceTokenMigrationUTest
             Assert.That(versions.Select(x => x.FcmToken),
                 Is.EqualTo(new[] { "tok-a", "tok-b", null, null }));
         });
+
+        // The identity constraint actually landed as a 2-column UNIQUE index.
+        // Asserted explicitly because `CREATE UNIQUE INDEX IF NOT EXISTS`
+        // matches on index NAME alone, so a same-named index of the wrong shape
+        // would be skipped silently - the case the migration's own probe
+        // guards against.
+        var uniqueIndexColumns = await UniqueIndexColumnCountAsync(
+            _dbContext, "DeviceTokens", "IX_DeviceTokens_AppId_InstallationId").ConfigureAwait(false);
+
+        Assert.That(uniqueIndexColumns, Is.EqualTo(2));
+    }
+
+    // The boundary no other test reaches: a pod that died one statement PAST
+    // the AppId tightening, with InstallationId still nullable. That is the
+    // only window in which a row can exist carrying a real AppId and a NULL
+    // InstallationId, and it is what the backfill's per-COLUMN `IS NULL` guard
+    // exists for - a per-row guard would skip such a row entirely and the
+    // InstallationId tightening would then fail.
+    [Test]
+    public async Task DeviceTokenIdentityModel_ResumesAfterAppIdTightening_DoesSweepNullInstallationId()
+    {
+        // Arrange
+        await MigrateToAsync(_dbContext, PreviousMigration).ConfigureAwait(false);
+        await SeedOldSchemaRowsAsync(_dbContext).ConfigureAwait(false);
+
+        // Hand-apply Up as far as the AppId `MODIFY ... NOT NULL`, then stop:
+        // the state a pod is left in when it dies there. The statements mirror
+        // the migration's own, minus the IF [NOT] EXISTS guards, because here
+        // they are known to be needed.
+        foreach (var sql in new[]
+                 {
+                     "DROP INDEX `IX_DeviceTokens_Token` ON `DeviceTokens`;",
+                     "DROP INDEX `IX_DeviceTokens_SdkSiteId` ON `DeviceTokens`;",
+                     "ALTER TABLE `DeviceTokens` CHANGE COLUMN " +
+                     "`Token` `FcmToken` varchar(512) CHARACTER SET utf8mb4 NULL;",
+                     "ALTER TABLE `DeviceTokenVersions` CHANGE COLUMN " +
+                     "`Token` `FcmToken` longtext CHARACTER SET utf8mb4 NULL;",
+                     "ALTER TABLE `DeviceTokens` ADD COLUMN " +
+                     "`AppId` varchar(32) CHARACTER SET utf8mb4 NULL DEFAULT 'time';",
+                     "ALTER TABLE `DeviceTokens` ADD COLUMN " +
+                     "`InstallationId` varchar(128) CHARACTER SET utf8mb4 NULL;",
+                     "ALTER TABLE `DeviceTokenVersions` ADD COLUMN " +
+                     "`AppId` longtext CHARACTER SET utf8mb4 NULL;",
+                     "ALTER TABLE `DeviceTokenVersions` ADD COLUMN " +
+                     "`InstallationId` longtext CHARACTER SET utf8mb4 NULL;",
+                     "UPDATE `DeviceTokens` SET " +
+                     "`AppId` = COALESCE(`AppId`, 'time'), " +
+                     "`InstallationId` = COALESCE(`InstallationId`, CONCAT('legacy:', `Id`)) " +
+                     "WHERE `AppId` IS NULL OR `InstallationId` IS NULL;",
+                     "UPDATE `DeviceTokenVersions` SET " +
+                     "`AppId` = COALESCE(`AppId`, 'time'), " +
+                     "`InstallationId` = COALESCE(`InstallationId`, CONCAT('legacy:', `DeviceTokenId`)) " +
+                     "WHERE `AppId` IS NULL OR `InstallationId` IS NULL;",
+                     "ALTER TABLE `DeviceTokens` " +
+                     "MODIFY COLUMN `AppId` varchar(32) CHARACTER SET utf8mb4 NOT NULL;"
+                 })
+        {
+            await _dbContext.Database.ExecuteSqlRawAsync(sql).ConfigureAwait(false);
+        }
+
+        // An old pod's registration landing in that window. The AppId MUST be
+        // named explicitly here, and that necessity IS the finding: `MODIFY
+        // COLUMN` restates the whole column definition, so the tightening above
+        // has already dropped `DEFAULT 'time'`. From here on an insert that
+        // omits AppId fails with ERROR 1364, and re-running Up will NOT bring
+        // the default back, because `ADD COLUMN IF NOT EXISTS` matches on name
+        // alone. Loud and client-retryable, but the default protects the first
+        // pass only.
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            "INSERT INTO `DeviceTokens` " +
+            "(`AppId`, `SdkSiteId`, `FcmToken`, `Platform`, `CreatedAt`, `UpdatedAt`, " +
+            " `WorkflowState`, `CreatedByUserId`, `UpdatedByUserId`, `Version`, `AppBuildNumber`) VALUES " +
+            "('time', 14, 'window-token', 'android', UTC_TIMESTAMP(), UTC_TIMESTAMP(), " +
+            " 'created', 0, 0, 1, 31221);")
+            .ConfigureAwait(false);
+
+        // Act
+        Assert.DoesNotThrowAsync(async () =>
+            await MigrateToAsync(_dbContext, MigrationUnderTest).ConfigureAwait(false));
+
+        // Assert
+        var deviceTokens = _dbContext.DeviceTokens.AsNoTracking().OrderBy(x => x.Id).ToList();
+
+        Assert.That(deviceTokens, Has.Count.EqualTo(5));
+
+        var uniqueIndexColumns = await UniqueIndexColumnCountAsync(
+            _dbContext, "DeviceTokens", "IX_DeviceTokens_AppId_InstallationId").ConfigureAwait(false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(deviceTokens.Select(x => x.AppId), Is.All.EqualTo("time"));
+            Assert.That(deviceTokens.Select(x => x.InstallationId),
+                Is.EqualTo(deviceTokens.Select(x => $"legacy:{x.Id}")),
+                "the row left with AppId set and InstallationId NULL must be swept");
+            Assert.That(uniqueIndexColumns, Is.EqualTo(2));
+        });
     }
 
     [Test]
@@ -225,6 +321,16 @@ public class DeviceTokenMigrationUTest
         });
     }
 
+    // Number of columns the index spans - one STATISTICS row per column -
+    // counted only while the index is actually UNIQUE, so a non-unique index of
+    // the right width cannot pass.
+    private static Task<long> UniqueIndexColumnCountAsync(
+        TimePlanningPnDbContext dbContext, string tableName, string indexName) =>
+        ScalarAsync(dbContext,
+            "SELECT COUNT(*) FROM information_schema.STATISTICS " +
+            $"WHERE table_schema = DATABASE() AND table_name = '{tableName}' " +
+            $"AND index_name = '{indexName}' AND NON_UNIQUE = 0;");
+
     private static Task<long> ColumnCountAsync(
         TimePlanningPnDbContext dbContext, string tableName, string columnName) =>
         ScalarAsync(dbContext,
@@ -249,6 +355,9 @@ public class DeviceTokenMigrationUTest
     private static TimePlanningPnDbContext NewDbContext() =>
         new TimePlanningPnContextFactory().CreateDbContext(new[] { ConnectionString });
 
+    // Always an explicit target, never Migrate() with no argument: the day a
+    // migration is added after this one, Migrate() would silently start
+    // applying that one too, and a failure here would point at the wrong file.
     private static Task MigrateToAsync(TimePlanningPnDbContext dbContext, string targetMigration) =>
         dbContext.GetService<IMigrator>().MigrateAsync(targetMigration);
 
