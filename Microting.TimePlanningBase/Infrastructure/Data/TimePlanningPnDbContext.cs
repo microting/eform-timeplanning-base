@@ -148,12 +148,19 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
             modelBuilder.Entity<AssignedSiteRuleSetAssignments>()
                 .HasIndex(p => new { p.AssignedSiteId, p.ValidFromDate });
 
+            // Identity: one row per app install.
+            // No WorkflowState filter (see DeviceToken's doc comment) - consumers upsert.
             modelBuilder.Entity<DeviceToken>()
-                .HasIndex(e => e.Token)
+                .HasIndex(e => new { e.AppId, e.InstallationId })
                 .IsUnique();
 
+            // Send-path query: tokens for one app and one site, still live.
             modelBuilder.Entity<DeviceToken>()
-                .HasIndex(e => e.SdkSiteId);
+                .HasIndex(e => new { e.AppId, e.SdkSiteId, e.WorkflowState });
+
+            // Prune-by-token after an FCM permanent failure.
+            modelBuilder.Entity<DeviceToken>()
+                .HasIndex(e => e.FcmToken);
 
             modelBuilder.SeedLatest();
         }
