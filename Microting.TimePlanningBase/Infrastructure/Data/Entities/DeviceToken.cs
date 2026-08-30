@@ -9,12 +9,14 @@ using System.ComponentModel.DataAnnotations;
 // The unique index has no WorkflowState filter and PnBase.Delete() only
 // soft-deletes, so consumers MUST upsert on (AppId, InstallationId)
 // including soft-deleted rows and flip WorkflowState back to Created.
+// Create()ing over a soft-deleted install throws DbUpdateException instead -
+// which is exactly the re-register-after-logout path.
 public class DeviceToken : PnBase
 {
     // [Required] on AppId and InstallationId is load-bearing: nullable reference
     // types are disabled in this project, so without it EF maps both as NULL-able
-    // and MySQL's unique index stops collapsing duplicate installs (NULLs never
-    // collide).
+    // and a MariaDB unique index stops collapsing duplicate installs (NULLs
+    // never collide).
     [Required]
     [StringLength(32)]
     public string AppId { get; set; }

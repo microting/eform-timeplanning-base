@@ -40,8 +40,18 @@ namespace Microting.TimePlanningBase.Migrations
         // parsed as parameter placeholders by MySqlConnector unless
         // AllowUserVariables=true, which is not set on the connection strings
         // this library is used through. These clauses have been in MariaDB
-        // since 10.0/10.1; this stack is MariaDB-only (CI pins mariadb:10.8,
-        // production is MariaDB Galera).
+        // since 10.0/10.1; this stack is MariaDB-only - CI and production both
+        // run MariaDB, production on Galera.
+        //
+        // VERIFYING A GALERA ROLLOUT. The probe at the end of Up is a
+        // NODE-LOCAL information_schema read. It proves only that the node this
+        // migration happened to connect to carries the unique index, and says
+        // nothing whatever about the other nodes in the cluster. Confirming a
+        // tenant is really migrated therefore means querying
+        // information_schema.STATISTICS for
+        // IX_DeviceTokens_AppId_InstallationId against EACH node directly - NOT
+        // through the service VIP, which answers from whichever node it happened
+        // to pick and can report success while another node still lags.
 
         // Stamps every row that predates the identity model.
         //
@@ -50,7 +60,7 @@ namespace Microting.TimePlanningBase.Migrations
         //
         // The synthetic InstallationId derives from the primary key, not from a
         // hash of the token. The column is about to gain a unique index
-        // together with AppId, and only the PK is guaranteed distinct -- two
+        // together with AppId, and only the PK is guaranteed distinct - two
         // rows may legitimately carry the same token value, and a NULL token
         // would hash to a single shared value.
         //
@@ -76,6 +86,7 @@ namespace Microting.TimePlanningBase.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Step roadmap: drop indexes -> rename -> add nullable -> backfill -> tighten -> re-index -> verify.
             migrationBuilder.Sql(
                 "DROP INDEX IF EXISTS `IX_DeviceTokens_Token` ON `DeviceTokens`;");
             migrationBuilder.Sql(
@@ -117,7 +128,7 @@ namespace Microting.TimePlanningBase.Migrations
             // default keeps old pods writing" would suggest on its own.
             //
             // InstallationId gets no default because every constant value
-            // collides under the new unique index -- for that column the
+            // collides under the new unique index - for that column the
             // re-runnability of this migration is the mitigation, not a default.
             migrationBuilder.Sql(
                 "ALTER TABLE `DeviceTokens` ADD COLUMN IF NOT EXISTS " +
@@ -219,10 +230,19 @@ namespace Microting.TimePlanningBase.Migrations
             // probability is low; the failure mode is silent, which is what
             // makes it worth a statement.
             //
-            // Counting information_schema.STATISTICS rows restricted to the two
-            // expected column names with NON_UNIQUE = 0 catches all three ways
-            // it can be wrong: not unique, too few columns, wrong columns. Same
-            // BEGIN NOT ATOMIC form as the probe in Down.
+            // TWO counts, because one is not enough. The first restricts
+            // information_schema.STATISTICS to the two expected column names
+            // with NON_UNIQUE = 0, which catches not-unique, too few columns,
+            // and wrong columns. On its own it would still PASS for a UNIQUE
+            // index of this name on (AppId, InstallationId, SdkSiteId): three
+            // columns, two of them matching, and a strictly WEAKER constraint
+            // than the one this migration exists to add. The second count is
+            // unfiltered by column name and pins the index's total width at 2,
+            // which closes that hole. Together they are exhaustive - two rows
+            // in total, both of them AppId/InstallationId, leaves no other
+            // shape, and an index cannot repeat a column. Column ORDER is not
+            // checked because it does not change what a unique index enforces.
+            // Same BEGIN NOT ATOMIC form as the probes in Down.
             migrationBuilder.Sql(@"
 BEGIN NOT ATOMIC
     IF (SELECT COUNT(*) FROM information_schema.STATISTICS
@@ -230,7 +250,11 @@ BEGIN NOT ATOMIC
           AND `TABLE_NAME` = 'DeviceTokens'
           AND `INDEX_NAME` = 'IX_DeviceTokens_AppId_InstallationId'
           AND `NON_UNIQUE` = 0
-          AND `COLUMN_NAME` IN ('AppId', 'InstallationId')) <> 2 THEN
+          AND `COLUMN_NAME` IN ('AppId', 'InstallationId')) <> 2
+       OR (SELECT COUNT(*) FROM information_schema.STATISTICS
+        WHERE `TABLE_SCHEMA` = DATABASE()
+          AND `TABLE_NAME` = 'DeviceTokens'
+          AND `INDEX_NAME` = 'IX_DeviceTokens_AppId_InstallationId') <> 2 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
             'IX_DeviceTokens_AppId_InstallationId is not the expected 2-column UNIQUE index.';
     END IF;
@@ -242,7 +266,30 @@ END");
         {
             // Lossy by nature: the old table had no notion of an app or an
             // install, so rolling back merges every app's tokens back into one
-            // undifferentiated set.
+            // undifferentiated set. It is lossy for the audit trail too, which
+            // is easy to miss: the DROP COLUMNs at the end take AppId and
+            // InstallationId off `DeviceTokenVersions` as well, so every
+            // snapshot ever taken loses the identity of the install it was a
+            // snapshot OF. Re-running Up afterwards can only re-derive
+            // 'legacy:<DeviceTokenId>'; any real install id a client had written
+            // into a version row is gone for good.
+            //
+            // RE-ENTRANCY. Unlike the BackendConfiguration twin - whose Down is
+            // unguarded and deliberately not re-entrant - every DDL statement
+            // below carries an IF [NOT] EXISTS guard, so the destructive half of
+            // this Down survives being re-run after a partial failure. That is
+            // what buys the rebuild-before-drop ordering further down: the old
+            // index can be recreated on a later pass without the new columns
+            // having had to survive in some half-state.
+            //
+            // One caveat, so that is not read as unconditional: the duplicate
+            // probe immediately below names `FcmToken`, so a re-run that begins
+            // after the CHANGE COLUMN has already renamed it back to `Token`
+            // dies with ERROR 1054 on the probe instead of reaching the guarded
+            // statements. The TOCTOU failure described below lands in exactly
+            // that window, so recovering from THAT one means de-duplicating and
+            // then finishing Down's remaining statements by hand rather than
+            // replaying it.
             //
             // Probe before destroying anything, so the operator gets a sentence
             // rather than an ERROR 1062 several statements later. NULL tokens
@@ -253,14 +300,14 @@ END");
             // pair between this check and the CREATE UNIQUE INDEX below, and the
             // rollback then fails in exactly the way the probe exists to
             // prevent. Stop writers before rolling back.
-            migrationBuilder.Sql(
-                "BEGIN NOT ATOMIC " +
-                "IF EXISTS (SELECT 1 FROM `DeviceTokens` WHERE `FcmToken` IS NOT NULL " +
-                "GROUP BY `FcmToken` HAVING COUNT(*) > 1) THEN " +
-                "SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = " +
-                "'Rollback blocked: duplicate FcmToken rows. Merge or remove them, then retry.'; " +
-                "END IF; " +
-                "END");
+            migrationBuilder.Sql(@"
+BEGIN NOT ATOMIC
+    IF EXISTS (SELECT 1 FROM `DeviceTokens` WHERE `FcmToken` IS NOT NULL
+               GROUP BY `FcmToken` HAVING COUNT(*) > 1) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
+            'Rollback aborted: rows share FcmToken. De-duplicate DeviceTokens first. Nothing was dropped.';
+    END IF;
+END");
 
             migrationBuilder.Sql(
                 "DROP INDEX IF EXISTS `IX_DeviceTokens_FcmToken` ON `DeviceTokens`;");
@@ -269,9 +316,15 @@ END");
             migrationBuilder.Sql(
                 "DROP INDEX IF EXISTS `IX_DeviceTokens_AppId_InstallationId` ON `DeviceTokens`;");
 
-            // Narrowing truncates any token longer than 255 chars. FCM tokens
-            // are ~163 chars today, so this is safe in practice, but it is a
-            // real rollback caveat.
+            // Narrowing back to 255 does NOT truncate. STRICT_TRANS_TABLES has
+            // been the MariaDB default since 10.2.4, so CI and production both
+            // run strict, and a CHANGE COLUMN to varchar(255) that meets an
+            // over-length value raises ERROR 1406 and ABORTS. The rollback then
+            // stops right here - loudly, with the three new indexes already
+            // dropped and every column still intact - and is resumed by
+            // shortening or clearing the offending tokens and re-running.
+            // FCM tokens are ~163 chars today, so this is a caveat rather than
+            // an expectation.
             migrationBuilder.Sql(
                 "ALTER TABLE `DeviceTokens` CHANGE COLUMN IF EXISTS " +
                 "`FcmToken` `Token` varchar(255) CHARACTER SET utf8mb4 NULL;");
@@ -293,6 +346,37 @@ END");
             migrationBuilder.Sql(
                 "CREATE INDEX IF NOT EXISTS `IX_DeviceTokens_SdkSiteId` " +
                 "ON `DeviceTokens` (`SdkSiteId`);");
+
+            // The same hazard Up's probe exists for, and NEW on this side:
+            // guarding Down's rebuild with IF NOT EXISTS bought the re-entrancy
+            // described at the top, at the cost of the loud failure an unguarded
+            // CreateIndex would have given. `CREATE UNIQUE INDEX IF NOT EXISTS`
+            // matches on index NAME alone, so a `DeviceTokens` that carries a
+            // same-named NON-unique IX_DeviceTokens_Token gets Note 1061, the
+            // statement above is skipped, and Down goes on to drop the columns
+            // and return WITHOUT the old unique constraint on Token - not the
+            // pre-migration schema, and reported as a clean rollback. Verify it
+            // before any COLUMN is dropped, on the same two counts as Up: exactly
+            // one UNIQUE row on Token, and a total width of exactly one column.
+            // The three new indexes are already gone by this point - that is
+            // why the message says columns rather than nothing at all - but
+            // they are rebuildable from the data, which the columns are not.
+            migrationBuilder.Sql(@"
+BEGIN NOT ATOMIC
+    IF (SELECT COUNT(*) FROM information_schema.STATISTICS
+        WHERE `TABLE_SCHEMA` = DATABASE()
+          AND `TABLE_NAME` = 'DeviceTokens'
+          AND `INDEX_NAME` = 'IX_DeviceTokens_Token'
+          AND `NON_UNIQUE` = 0
+          AND `COLUMN_NAME` = 'Token') <> 1
+       OR (SELECT COUNT(*) FROM information_schema.STATISTICS
+        WHERE `TABLE_SCHEMA` = DATABASE()
+          AND `TABLE_NAME` = 'DeviceTokens'
+          AND `INDEX_NAME` = 'IX_DeviceTokens_Token') <> 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
+            'IX_DeviceTokens_Token is not the expected 1-column UNIQUE index. No columns were dropped.';
+    END IF;
+END");
 
             // Only now, with the old key proven reconstructible.
             migrationBuilder.Sql(

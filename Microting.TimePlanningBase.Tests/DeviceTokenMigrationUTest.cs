@@ -136,6 +136,18 @@ public class DeviceTokenMigrationUTest
             _dbContext, "DeviceTokens", "IX_DeviceTokens_AppId_InstallationId").ConfigureAwait(false);
 
         Assert.That(uniqueIndexColumns, Is.EqualTo(2));
+
+        // The rename also WIDENED the column, 255 -> 512, and until this
+        // assertion nothing pinned it: the only other 512 in this file sits
+        // inside another test's setup SQL, which is arrangement, not assertion.
+        // Without this, changing the migration back to varchar(255) leaves all
+        // five tests green while the model snapshot still claims 512.
+        var fcmTokenLength = await ScalarAsync(_dbContext,
+            "SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS " +
+            "WHERE table_schema = DATABASE() AND table_name = 'DeviceTokens' " +
+            "AND column_name = 'FcmToken';").ConfigureAwait(false);
+
+        Assert.That(fcmTokenLength, Is.EqualTo(512));
     }
 
     // The boundary no other test reaches: a pod that died one statement PAST
@@ -152,9 +164,14 @@ public class DeviceTokenMigrationUTest
         await SeedOldSchemaRowsAsync(_dbContext).ConfigureAwait(false);
 
         // Hand-apply Up as far as the AppId `MODIFY ... NOT NULL`, then stop:
-        // the state a pod is left in when it dies there. The statements mirror
-        // the migration's own, minus the IF [NOT] EXISTS guards, because here
-        // they are known to be needed.
+        // the state a pod is left in when it dies there.
+        //
+        // These are COPIES of the migration's own statements and MUST BE KEPT
+        // IN SYNC BY HAND - they are not a reference to them. They differ
+        // deliberately only in dropping the IF [NOT] EXISTS guards, which are
+        // unnecessary here because each statement is known to apply. Nothing
+        // detects drift: change 'time' in the migration's backfill and this
+        // test goes on asserting the old SQL, still green.
         foreach (var sql in new[]
                  {
                      "DROP INDEX `IX_DeviceTokens_Token` ON `DeviceTokens`;",
@@ -178,13 +195,22 @@ public class DeviceTokenMigrationUTest
                      "UPDATE `DeviceTokenVersions` SET " +
                      "`AppId` = COALESCE(`AppId`, 'time'), " +
                      "`InstallationId` = COALESCE(`InstallationId`, CONCAT('legacy:', `DeviceTokenId`)) " +
-                     "WHERE `AppId` IS NULL OR `InstallationId` IS NULL;",
-                     "ALTER TABLE `DeviceTokens` " +
-                     "MODIFY COLUMN `AppId` varchar(32) CHARACTER SET utf8mb4 NOT NULL;"
+                     "WHERE `AppId` IS NULL OR `InstallationId` IS NULL;"
                  })
         {
             await _dbContext.Database.ExecuteSqlRawAsync(sql).ConfigureAwait(false);
         }
+
+        // THE crux of this test, and one statement further than a plain partial
+        // application: AppId tightened, InstallationId not. That asymmetric
+        // state is the only window in which the row inserted below can exist,
+        // and it is where the pod dies. Lifted out of the loop above so it is
+        // visible as the boundary rather than unannotated element 11 of an
+        // eleven-string array - and so a failure here gets its own stack frame.
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE `DeviceTokens` " +
+            "MODIFY COLUMN `AppId` varchar(32) CHARACTER SET utf8mb4 NOT NULL;")
+            .ConfigureAwait(false);
 
         // An old pod's registration landing in that window. The AppId MUST be
         // named explicitly here, and that necessity IS the finding: `MODIFY
@@ -202,6 +228,29 @@ public class DeviceTokenMigrationUTest
             " 'created', 0, 0, 1, 31221);")
             .ConfigureAwait(false);
 
+        // The version snapshot of that same registration, with both identity
+        // columns still NULL. DeviceTokenVersions.AppId/InstallationId stay
+        // nullable longtext forever - nothing ever tightens them - so unlike its
+        // parent row above this one can sit here unstamped indefinitely and only
+        // a backfill sweep rescues it.
+        //
+        // What this pins, and what it does NOT: it pins that Up's version
+        // backfill runs on the RESUME path, which no other test covered. It does
+        // not uniquely pin the SECOND sweep that follows the tightenings -
+        // delete that one, keep the first, and this stays green, because the two
+        // sweeps are the same statement and the first reaches any row that
+        // already exists when Up starts. The second sweep is live only for a row
+        // inserted BETWEEN them, i.e. concurrently with the tightenings, which
+        // no deterministic test can arrange.
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            "INSERT INTO `DeviceTokenVersions` " +
+            "(`SdkSiteId`, `FcmToken`, `Platform`, `DeviceTokenId`, `CreatedAt`, `UpdatedAt`, " +
+            " `WorkflowState`, `CreatedByUserId`, `UpdatedByUserId`, `Version`, `AppBuildNumber`) " +
+            "SELECT `SdkSiteId`, `FcmToken`, `Platform`, `Id`, UTC_TIMESTAMP(), UTC_TIMESTAMP(), " +
+            "       'created', 0, 0, 1, `AppBuildNumber` " +
+            "FROM `DeviceTokens` WHERE `FcmToken` = 'window-token';")
+            .ConfigureAwait(false);
+
         // Act
         Assert.DoesNotThrowAsync(async () =>
             await MigrateToAsync(_dbContext, MigrationUnderTest).ConfigureAwait(false));
@@ -214,6 +263,11 @@ public class DeviceTokenMigrationUTest
         var uniqueIndexColumns = await UniqueIndexColumnCountAsync(
             _dbContext, "DeviceTokens", "IX_DeviceTokens_AppId_InstallationId").ConfigureAwait(false);
 
+        var stampedWindowVersion = await ScalarAsync(_dbContext,
+            "SELECT COUNT(*) FROM `DeviceTokenVersions` WHERE `FcmToken` = 'window-token' " +
+            "AND `AppId` = 'time' AND `InstallationId` = CONCAT('legacy:', `DeviceTokenId`);")
+            .ConfigureAwait(false);
+
         Assert.Multiple(() =>
         {
             Assert.That(deviceTokens.Select(x => x.AppId), Is.All.EqualTo("time"));
@@ -221,6 +275,8 @@ public class DeviceTokenMigrationUTest
                 Is.EqualTo(deviceTokens.Select(x => $"legacy:{x.Id}")),
                 "the row left with AppId set and InstallationId NULL must be swept");
             Assert.That(uniqueIndexColumns, Is.EqualTo(2));
+            Assert.That(stampedWindowVersion, Is.EqualTo(1),
+                "the version row left with NULL identity columns must be swept too");
         });
     }
 
@@ -280,6 +336,20 @@ public class DeviceTokenMigrationUTest
         var preservedTokens = await ScalarAsync(_dbContext,
             "SELECT COUNT(*) FROM `DeviceTokens` WHERE `Token` IN ('tok-a', 'tok-b');").ConfigureAwait(false);
 
+        // The INDEXES have to come back too, not just the columns. Down rebuilds
+        // them with `CREATE [UNIQUE] INDEX IF NOT EXISTS`, which matches on index
+        // NAME alone, so a same-named index of the wrong shape would be skipped
+        // silently and Down would return without the old unique constraint on
+        // Token - the pre-migration schema not actually restored, reported as a
+        // clean rollback. Counting UNIQUE STATISTICS rows pins both the
+        // uniqueness and the one-column width, matching Down's own probe.
+        var tokenUniqueIndexColumns = await UniqueIndexColumnCountAsync(
+            _dbContext, "DeviceTokens", "IX_DeviceTokens_Token").ConfigureAwait(false);
+        var sdkSiteIdIndexColumns = await ScalarAsync(_dbContext,
+            "SELECT COUNT(*) FROM information_schema.STATISTICS " +
+            "WHERE table_schema = DATABASE() AND table_name = 'DeviceTokens' " +
+            "AND index_name = 'IX_DeviceTokens_SdkSiteId';").ConfigureAwait(false);
+
         Assert.Multiple(() =>
         {
             Assert.That(tokenColumn, Is.EqualTo(1), "Token should be restored");
@@ -287,6 +357,10 @@ public class DeviceTokenMigrationUTest
             Assert.That(appIdColumn, Is.Zero, "AppId should be gone");
             Assert.That(versionTokenColumn, Is.EqualTo(1), "version Token should be restored");
             Assert.That(preservedTokens, Is.EqualTo(2));
+            Assert.That(tokenUniqueIndexColumns, Is.EqualTo(1),
+                "the old 1-column UNIQUE index on Token should be rebuilt");
+            Assert.That(sdkSiteIdIndexColumns, Is.EqualTo(1),
+                "IX_DeviceTokens_SdkSiteId should be rebuilt");
         });
     }
 
