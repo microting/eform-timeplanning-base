@@ -184,6 +184,15 @@ public class AssignedSiteVersion: PnBase
     public int DaysBackInTimeAllowedEditing { get; set; } = 2;
     public DateTime ResignedAtDate { get; set; }
     public bool UseOneMinuteIntervals { get; set; }
+
+    /// <summary>
+    /// The date from which <see cref="UseOneMinuteIntervals"/> takes effect for calculations.
+    /// Registrations dated before this are calculated with five-minute semantics, so enabling
+    /// the flag does not retroactively change already-closed periods.
+    /// <c>null</c> means no transition date is recorded and the flag applies to all dates.
+    /// </summary>
+    public DateTime? UseOneMinuteIntervalsFrom { get; set; }
+
     public bool OverMidnight { get; set; }
     public bool AllowAcceptOfPlannedHours { get; set; }
     public bool AllowEditOfRegistrations { get; set; }
