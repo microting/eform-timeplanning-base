@@ -193,6 +193,15 @@ public class AssignedSiteVersion: PnBase
     /// </summary>
     public DateTime? UseOneMinuteIntervalsFrom { get; set; }
 
+    /// <summary>
+    /// The date through which this site's flex chain is known to be computed.
+    /// Every registration dated at or before this has a real SumFlexStart /
+    /// SumFlexEnd; anything after it may be a row created ahead of time and
+    /// never filled in. Null means nothing is known to be computed.
+    /// Maintained by the service's daily catch-up pass.
+    /// </summary>
+    public DateTime? FlexChainComputedThrough { get; set; }
+
     public bool OverMidnight { get; set; }
     public bool AllowAcceptOfPlannedHours { get; set; }
     public bool AllowEditOfRegistrations { get; set; }
