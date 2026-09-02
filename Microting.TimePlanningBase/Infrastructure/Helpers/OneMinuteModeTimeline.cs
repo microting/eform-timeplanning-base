@@ -198,7 +198,7 @@ public sealed class OneMinuteModeTimeline
     /// Records WHEN one-minute intervals took effect, on the false→true
     /// transition only. Must be called BEFORE the caller ORs the incoming value
     /// into the stored flag: <c>UseOneMinuteIntervals</c> is deliberately
-    /// one-way (commit 994c9cd4), so after the OR a real transition is
+    /// one-way (eform-angular-timeplanning-plugin commit 994c9cd4), so after the OR a real transition is
     /// indistinguishable from "was already true".
     ///
     /// The <c>UseOneMinuteIntervalsFrom == null</c> guard is required: an ops

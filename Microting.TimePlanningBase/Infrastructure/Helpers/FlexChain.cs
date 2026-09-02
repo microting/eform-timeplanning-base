@@ -268,11 +268,24 @@ public static class FlexChain
     }
 
     /// <summary>
-    /// Computes the second-precision netto seconds for a PlanRegistration from
-    /// its DateTime shift stamps (Start/StopNStartedAt/StoppedAt), falling
-    /// back per-shift to the legacy 5-minute tick math when a shift's exact
-    /// stamps are not both populated:
+    /// Phase 2 — second-precision NettoHours computation.
+    ///
+    /// When <see cref="AssignedSite.UseOneMinuteIntervals"/> is on, this helper
+    /// computes NettoHours from DateTime deltas (precise to the second) instead
+    /// of the legacy <c>(StopId - StartId - (PauseId-1)) * 5</c> minute-tick math
+    /// in the per-call sites. Mirrors the flag-off formula in seconds:
+    ///
     /// <code>
+    /// nettoSeconds = 0
+    /// for each shift n in 1..5:
+    ///     if (Start_n_StartedAt and Stop_n_StoppedAt are populated):
+    ///         nettoSeconds += (Stop_n_StoppedAt - Start_n_StartedAt).TotalSeconds
+    ///         if (Pause_n_StartedAt and Pause_n_StoppedAt are populated):
+    ///             nettoSeconds -= (Pause_n_StoppedAt - Pause_n_StartedAt).TotalSeconds
+    ///         else if (Pause_n_Id > 0):
+    ///             nettoSeconds -= (Pause_n_Id - 1) * 5 * 60
+    ///     else if (Stop_n_Id &gt;= Start_n_Id and Stop_n_Id != 0):
+    ///         // legacy fallback for shifts that don't have DateTime stamps
     ///         nettoSeconds += (Stop_n_Id - Start_n_Id) * 5 * 60
     ///         nettoSeconds -= (Pause_n_Id &gt; 0 ? Pause_n_Id - 1 : 0) * 5 * 60
     /// </code>
@@ -402,7 +415,7 @@ public static class FlexChain
     /// registration. null = no override (compute pause from recorded slots);
     /// non-null = authoritative total pause minutes for that shift.
     /// </summary>
-    private static int? GetShiftPauseOverrideMinutes(PlanRegistration r, int shift)
+    public static int? GetShiftPauseOverrideMinutes(PlanRegistration r, int shift)
     {
         return shift switch
         {
