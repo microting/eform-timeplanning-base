@@ -106,7 +106,7 @@ public sealed class OneMinuteModeTimeline
     /// <c>UseOneMinuteIntervalsFrom</c>; when non-null it OVERRIDES the derived
     /// timeline entirely (see <see cref="ResolveByEffectiveDate"/>).
     /// </summary>
-    internal OneMinuteModeTimeline(
+    public OneMinuteModeTimeline(
         bool currentFlag,
         IReadOnlyList<(bool UseOneMinuteIntervals, DateTime SavedAt)> versionFlags,
         DateTime? effectiveFrom = null)
@@ -188,7 +188,7 @@ public sealed class OneMinuteModeTimeline
     /// <c>PlanRegistration.Date</c> is a midnight anchor with no time-of-day,
     /// matching the timeline's own granularity rule.
     /// </summary>
-    internal static bool? ResolveByEffectiveDate(
+    public static bool? ResolveByEffectiveDate(
         bool currentFlag, DateTime? effectiveFrom, DateTime rowDate)
         => effectiveFrom == null
             ? null
