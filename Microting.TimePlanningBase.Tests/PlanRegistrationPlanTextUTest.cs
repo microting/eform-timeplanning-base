@@ -146,6 +146,75 @@ public class PlanRegistrationPlanTextUTest
         });
     }
 
+    //  Clearing the columns without clearing PlanHours would leave the row
+    //  saying "no shift, seven planned hours", and the unchanged PlanHours
+    //  would also stop callers noticing the day had changed at all.
+
+    [TestCase("ferie")]
+    [TestCase("fri")]
+    [TestCase("7,5")]
+    [TestCase("0-0")]
+    public void ParseInto_TextWithoutAShiftAlsoZeroesPlanHours(string planText)
+    {
+        var reg = new PlanRegistration { PlanText = "7:00-15:00/1" };
+        PlanRegistrationPlanText.ParseInto(reg);
+        Assert.That(reg.PlanHours, Is.EqualTo(7.0), "arrange");
+
+        reg.PlanText = planText;
+        PlanRegistrationPlanText.ParseInto(reg);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(reg.PlannedStartOfShift1, Is.Zero);
+            Assert.That(reg.PlanHours, Is.Zero, "PlanHours must not survive the shift it came from");
+        });
+    }
+
+    //  An empty PlanText is the exception: the sheet's separate hours column
+    //  owns PlanHours in that case, so it must be left alone.
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void ParseInto_EmptyTextLeavesPlanHoursToTheHoursColumn(string planText)
+    {
+        var reg = new PlanRegistration { PlanText = planText, PlanHours = 7.4 };
+
+        PlanRegistrationPlanText.ParseInto(reg);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(reg.PlannedStartOfShift1, Is.Zero);
+            Assert.That(reg.PlanHours, Is.EqualTo(7.4));
+        });
+    }
+
+    //  A shift whose end is before its start crosses midnight. Summed naively
+    //  it contributes a large negative and drags the whole day down with it.
+
+    [TestCase("22:00-0:00", 2.0)]
+    [TestCase("22:00-06:00", 8.0)]
+    [TestCase("0:00-8:00", 8.0)]
+    [TestCase("6:00-14:00;22:00-0:00", 10.0)]
+    public void ParseInto_MidnightBoundedShiftsSumForwards(string planText, double expectedHours)
+    {
+        var reg = new PlanRegistration { PlanText = planText };
+
+        PlanRegistrationPlanText.ParseInto(reg);
+
+        Assert.That(reg.PlanHours, Is.EqualTo(expectedHours));
+    }
+
+    [Test]
+    public void ParseInto_PlanHoursIsNeverNegative()
+    {
+        var reg = new PlanRegistration { PlanText = "8:00-9:00/4" };
+
+        PlanRegistrationPlanText.ParseInto(reg);
+
+        Assert.That(reg.PlanHours, Is.Zero);
+    }
+
     [Test]
     public void Generate_IsTheInverseOfParseInto()
     {

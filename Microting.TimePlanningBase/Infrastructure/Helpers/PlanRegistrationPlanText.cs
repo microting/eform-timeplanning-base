@@ -38,6 +38,8 @@ namespace Microting.TimePlanningBase.Infrastructure.Helpers;
 /// </summary>
 public static class PlanRegistrationPlanText
 {
+    private const int MinutesPerDay = 24 * 60;
+
     /// <summary>
     /// Parses <see cref="PlanRegistration.PlanText"/> into the shift columns
     /// and recomputes <see cref="PlanRegistration.PlanHours"/>.
@@ -60,7 +62,17 @@ public static class PlanRegistrationPlanText
             SetShift(planRegistration, i + 1, slots[i]);
         }
 
-        RecalculatePlanHours(planRegistration);
+        // PlanText is the source of truth whenever it says anything, so the
+        // recomputed total is written even when it is zero — otherwise text
+        // that stops describing a shift clears the columns and leaves stale
+        // hours behind, and nothing downstream notices the day changed.
+        //
+        // An empty PlanText is the one case that leaves PlanHours alone: the
+        // sheet's separate hours column owns it then.
+        if (!string.IsNullOrWhiteSpace(planRegistration.PlanText))
+        {
+            planRegistration.PlanHours = SumPlannedMinutes(planRegistration) / 60.0;
+        }
     }
 
     /// <summary>
@@ -81,22 +93,53 @@ public static class PlanRegistrationPlanText
             return;
         }
 
-        var totalMinutes = 0;
+        var totalMinutes = SumPlannedMinutes(planRegistration);
 
-        foreach (var slot in ReadShifts(planRegistration))
-        {
-            if (slot is not { } shift || shift.StartMinutes == 0 && shift.EndMinutes == 0)
-            {
-                continue;
-            }
-
-            totalMinutes += shift.EndMinutes - shift.StartMinutes - shift.BreakMinutes;
-        }
-
+        // Callers that reach this directly, rather than through ParseInto, keep
+        // the long-standing behaviour of leaving PlanHours alone when the
+        // columns describe nothing.
         if (totalMinutes > 0)
         {
             planRegistration.PlanHours = totalMinutes / 60.0;
         }
+    }
+
+    /// <summary>
+    /// Total planned minutes across the five shifts, each less its break.
+    /// </summary>
+    private static int SumPlannedMinutes(PlanRegistration planRegistration)
+    {
+        var totalMinutes = 0;
+
+        foreach (var slot in ReadShifts(planRegistration))
+        {
+            if (slot is not { } shift)
+            {
+                continue;
+            }
+
+            var start = shift.StartMinutes;
+            var end = shift.EndMinutes;
+
+            // An empty row, and a shift that begins and ends at the same time,
+            // both describe no work.
+            if (start == end)
+            {
+                continue;
+            }
+
+            // An end before the start crosses midnight: "22:00-0:00" is two
+            // hours, not minus twenty-two. Without this the day's total goes
+            // negative and drags any other shift down with it.
+            if (end < start)
+            {
+                end += MinutesPerDay;
+            }
+
+            totalMinutes += end - start - shift.BreakMinutes;
+        }
+
+        return totalMinutes < 0 ? 0 : totalMinutes;
     }
 
     private static IEnumerable<PlanTextParser.Shift?> ReadShifts(PlanRegistration reg)
