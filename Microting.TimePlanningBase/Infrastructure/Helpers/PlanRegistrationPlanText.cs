@@ -56,20 +56,21 @@ public static class PlanRegistrationPlanText
         }
 
         var slots = PlanTextParser.Parse(planRegistration.PlanText);
+        var parsedAnyShift = false;
 
         for (var i = 0; i < PlanTextParser.MaxShifts; i++)
         {
             SetShift(planRegistration, i + 1, slots[i]);
+            parsedAnyShift |= slots[i] is not null;
         }
 
-        // PlanText is the source of truth whenever it says anything, so the
-        // recomputed total is written even when it is zero — otherwise text
-        // that stops describing a shift clears the columns and leaves stale
-        // hours behind, and nothing downstream notices the day changed.
-        //
-        // An empty PlanText is the one case that leaves PlanHours alone: the
-        // sheet's separate hours column owns it then.
-        if (!string.IsNullOrWhiteSpace(planRegistration.PlanText))
+        // PlanHours is only derived here when the text actually described a
+        // shift. Text that describes none — an absence marker, a planner's
+        // note, or a bare number of hours — leaves it alone, because in that
+        // case the sheet's separate hours column is the authority and callers
+        // assign it from there before calling in. Zeroing it would discard the
+        // real figure and seed the flex chain from it.
+        if (parsedAnyShift)
         {
             planRegistration.PlanHours = SumPlannedMinutes(planRegistration) / 60.0;
         }

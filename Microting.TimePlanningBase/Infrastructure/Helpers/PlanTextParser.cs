@@ -164,6 +164,14 @@ public static class PlanTextParser
                 continue;
             }
 
+            // A shift that begins and ends at the same time describes no work.
+            // "0-0" in particular is an empty cell written out longhand, and
+            // treating it as a shift would let it claim ownership of PlanHours.
+            if (start == end)
+            {
+                continue;
+            }
+
             var breakGroup = match.Groups["break"];
             shift = new Shift(start, end, breakGroup.Success ? ParseBreakMinutes(breakGroup.Value) : 0);
             return true;
@@ -334,7 +342,9 @@ public static class PlanTextParser
 
         foreach (var slot in shifts)
         {
-            if (slot is not { } shift || (shift.StartMinutes == 0 && shift.EndMinutes == 0))
+            // Symmetric with the parser: a shift of no length is not written
+            // out, so what Generate emits always reads back as a shift.
+            if (slot is not { } shift || shift.StartMinutes == shift.EndMinutes)
             {
                 continue;
             }

@@ -178,6 +178,8 @@ public class PlanTextParserUTest
     [TestCase("7:75-15")]
     [TestCase("26.00-30.00")]
     [TestCase("24:30-25:00")]
+    [TestCase("0-0")]
+    [TestCase("8:00-8:00")]
     public void Parse_AmbiguousOrImpossibleIsRejected(string planText)
     {
         AssertNoShifts(planText);

@@ -146,37 +146,21 @@ public class PlanRegistrationPlanTextUTest
         });
     }
 
-    //  Clearing the columns without clearing PlanHours would leave the row
-    //  saying "no shift, seven planned hours", and the unchanged PlanHours
-    //  would also stop callers noticing the day had changed at all.
-
-    [TestCase("ferie")]
-    [TestCase("fri")]
-    [TestCase("7,5")]
-    [TestCase("0-0")]
-    public void ParseInto_TextWithoutAShiftAlsoZeroesPlanHours(string planText)
-    {
-        var reg = new PlanRegistration { PlanText = "7:00-15:00/1" };
-        PlanRegistrationPlanText.ParseInto(reg);
-        Assert.That(reg.PlanHours, Is.EqualTo(7.0), "arrange");
-
-        reg.PlanText = planText;
-        PlanRegistrationPlanText.ParseInto(reg);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(reg.PlannedStartOfShift1, Is.Zero);
-            Assert.That(reg.PlanHours, Is.Zero, "PlanHours must not survive the shift it came from");
-        });
-    }
-
-    //  An empty PlanText is the exception: the sheet's separate hours column
-    //  owns PlanHours in that case, so it must be left alone.
+    //  Text that describes no shift leaves PlanHours alone. The sheet has a
+    //  separate hours column which callers assign from before parsing, and it
+    //  is the authority for exactly these rows: an absence marker, a planner's
+    //  note, or a bare number of hours. Zeroing PlanHours here would discard
+    //  the real figure and then seed the flex chain from the zero.
 
     [TestCase(null)]
     [TestCase("")]
     [TestCase("   ")]
-    public void ParseInto_EmptyTextLeavesPlanHoursToTheHoursColumn(string planText)
+    [TestCase("Ferie")]
+    [TestCase("Helligdag")]
+    [TestCase("8")]
+    [TestCase("7,4")]
+    [TestCase("0-0")]
+    public void ParseInto_TextWithoutAShiftLeavesPlanHoursToTheHoursColumn(string planText)
     {
         var reg = new PlanRegistration { PlanText = planText, PlanHours = 7.4 };
 
@@ -184,9 +168,22 @@ public class PlanRegistrationPlanTextUTest
 
         Assert.Multiple(() =>
         {
-            Assert.That(reg.PlannedStartOfShift1, Is.Zero);
-            Assert.That(reg.PlanHours, Is.EqualTo(7.4));
+            Assert.That(reg.PlannedStartOfShift1, Is.Zero, "the shift columns are still cleared");
+            Assert.That(reg.PlanHours, Is.EqualTo(7.4), "the hours column must survive");
         });
+    }
+
+    //  Shift text, by contrast, does own PlanHours — including when the shifts
+    //  it describes work out to nothing.
+
+    [Test]
+    public void ParseInto_ShiftTextOwnsPlanHours()
+    {
+        var reg = new PlanRegistration { PlanText = "7:00-15:00/1", PlanHours = 99 };
+
+        PlanRegistrationPlanText.ParseInto(reg);
+
+        Assert.That(reg.PlanHours, Is.EqualTo(7.0));
     }
 
     //  A shift whose end is before its start crosses midnight. Summed naively
