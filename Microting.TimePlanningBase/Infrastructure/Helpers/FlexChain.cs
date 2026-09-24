@@ -230,11 +230,93 @@ public static class FlexChain
         pr.NettoHoursInSeconds = (int)nettoSeconds;
         pr.NettoHours = nettoSeconds / 3600.0;
 
+        WriteSecondsChain(pr, nettoSeconds, sumFlexStartInSeconds, hasPreTimePlanning,
+            preferFresherDecimal: false);
+    }
+
+    /// <summary>
+    /// The BALANCE-ONLY step of the chain: carries Flex / SumFlexStart /
+    /// SumFlexEnd from the row's STORED hours. Never reads stamps or shift ids
+    /// and never writes NettoHours / NettoHoursInSeconds — a forward walk that
+    /// recomputed hours re-derived whole histories from stale device stamps.
+    /// Hours are computed only when that day's own inputs change.
+    ///
+    /// When <paramref name="rowIsOneMinute"/> is false it delegates to
+    /// <see cref="ApplyNettoFlexChainDecimal"/>, which is likewise balance-only.
+    ///
+    /// Stale-seconds rule: the row's stored netto, plan hours and paid-out flex
+    /// are each resolved through <see cref="FresherOfSecondsOrDecimal"/> — the
+    /// <c>*InSeconds</c> column is used only when it is non-zero AND within a
+    /// minute of its decimal sibling; otherwise the decimal wins. A walk reaches
+    /// rows no current writer touched, so it cannot trust a seconds column that
+    /// the last writer may not have maintained. The predecessor's balance is
+    /// seeded as before, via <see cref="SumFlexEndSecondsWithFallback"/>.
+    /// </summary>
+    /// <param name="pr">The plan registration to update in place.</param>
+    /// <param name="predecessor">The preceding live row, or null for the first row.</param>
+    /// <param name="rowIsOneMinute">The row's mode at its own date (<see cref="OneMinuteModeTimeline"/>).</param>
+    /// <param name="predecessorIsOneMinute">
+    /// The predecessor's mode, forwarded to <see cref="SumFlexEndSecondsWithFallback"/>.
+    /// </param>
+    public static void CarryChain(PlanRegistration pr, PlanRegistration? predecessor,
+        bool rowIsOneMinute, bool? predecessorIsOneMinute)
+    {
+        if (!rowIsOneMinute)
+        {
+            ApplyNettoFlexChainDecimal(pr, predecessor);
+            return;
+        }
+
+        WriteSecondsChain(
+            pr,
+            FresherOfSecondsOrDecimal(pr.NettoHoursInSeconds, pr.NettoHours),
+            SumFlexEndSecondsWithFallback(predecessor, predecessorIsOneMinute),
+            predecessor != null,
+            preferFresherDecimal: true);
+    }
+
+    /// <summary>
+    /// Resolves an <c>*InSeconds</c> column against its <c>double</c> hour
+    /// sibling for the forward walk (<see cref="CarryChain"/>) only.
+    ///
+    /// Every writer maintains the decimal; only some maintain the seconds
+    /// column. A non-zero seconds value that disagrees with the decimal by more
+    /// than a minute is therefore stale residue from an earlier write — the same
+    /// class of defect as the SumFlexEnd zero-seed incident — and the walk
+    /// prefers the decimal. Within a minute the two agree and the seconds are
+    /// the more precise value, so they win. Zero falls back to the decimal as in
+    /// <see cref="SecondsOrDecimalFallback"/>.
+    /// </summary>
+    private static int FresherOfSecondsOrDecimal(int seconds, double hours)
+    {
+        const int staleThresholdSeconds = 60;
+        var fromDecimal = (int)Math.Round(hours * 3600);
+        var secondsIsFresh = seconds != 0 && Math.Abs(seconds - fromDecimal) <= staleThresholdSeconds;
+        return secondsIsFresh ? seconds : fromDecimal;
+    }
+
+    /// <summary>
+    /// Writes the second-precision Flex / SumFlexStart / SumFlexEnd chain (and
+    /// their decimal siblings) from already-resolved netto seconds; shared by
+    /// ApplyNettoFlexChainSecondPrecision and CarryChain.
+    /// </summary>
+    /// <param name="preferFresherDecimal">
+    /// true from <see cref="CarryChain"/>: plan hours and paid-out flex resolve
+    /// via <see cref="FresherOfSecondsOrDecimal"/>. false from
+    /// <see cref="ApplyNettoFlexChainSecondPrecision(PlanRegistration, int, bool)"/>:
+    /// they resolve via <see cref="SecondsOrDecimalFallback"/>, exactly as before.
+    /// </param>
+    private static void WriteSecondsChain(PlanRegistration pr, long nettoSeconds,
+        int sumFlexStartInSeconds, bool hasPreTimePlanning, bool preferFresherDecimal)
+    {
+        int Resolve(int seconds, double hours) => preferFresherDecimal
+            ? FresherOfSecondsOrDecimal(seconds, hours)
+            : SecondsOrDecimalFallback(seconds, hours);
+
         // Punch-clock / scheduled days and production writers populate only the
         // doubles; the *InSeconds siblings stay 0. See SecondsOrDecimalFallback.
-        var planHoursSeconds = SecondsOrDecimalFallback(pr.PlanHoursInSeconds, pr.PlanHours);
-        var paiedOutFlexSeconds =
-            SecondsOrDecimalFallback(pr.PaiedOutFlexInSeconds, pr.PaiedOutFlex);
+        var planHoursSeconds = Resolve(pr.PlanHoursInSeconds, pr.PlanHours);
+        var paiedOutFlexSeconds = Resolve(pr.PaiedOutFlexInSeconds, pr.PaiedOutFlex);
 
         // Mirror the flag-off override semantics:
         //   Flex      = (override ? NettoHoursOverride : NettoHours) - PlanHours
@@ -247,24 +329,14 @@ public static class FlexChain
         pr.FlexInSeconds = (int)flexSeconds;
         pr.Flex = flexSeconds / 3600.0;
 
-        if (hasPreTimePlanning)
-        {
-            pr.SumFlexStartInSeconds = sumFlexStartInSeconds;
-            pr.SumFlexStart = sumFlexStartInSeconds / 3600.0;
-            var sumFlexEndSeconds = (long)sumFlexStartInSeconds
-                                    + effectiveNettoSecondsForFlex - planHoursSeconds
-                                    - paiedOutFlexSeconds;
-            pr.SumFlexEndInSeconds = (int)sumFlexEndSeconds;
-            pr.SumFlexEnd = sumFlexEndSeconds / 3600.0;
-        }
-        else
-        {
-            pr.SumFlexStartInSeconds = 0;
-            pr.SumFlexStart = 0;
-            var sumFlexEndSeconds = effectiveNettoSecondsForFlex - planHoursSeconds - paiedOutFlexSeconds;
-            pr.SumFlexEndInSeconds = (int)sumFlexEndSeconds;
-            pr.SumFlexEnd = sumFlexEndSeconds / 3600.0;
-        }
+        var startSeconds = hasPreTimePlanning ? sumFlexStartInSeconds : 0;
+        pr.SumFlexStartInSeconds = startSeconds;
+        pr.SumFlexStart = startSeconds / 3600.0;
+        var sumFlexEndSeconds = (long)startSeconds
+                                + effectiveNettoSecondsForFlex - planHoursSeconds
+                                - paiedOutFlexSeconds;
+        pr.SumFlexEndInSeconds = (int)sumFlexEndSeconds;
+        pr.SumFlexEnd = sumFlexEndSeconds / 3600.0;
     }
 
     /// <summary>
@@ -332,6 +404,39 @@ public static class FlexChain
         nettoSeconds += ShiftSeconds(5, pr.Start5StartedAt, pr.Stop5StoppedAt, pr.Start5Id, pr.Stop5Id);
 
         return Math.Max(0, nettoSeconds);
+    }
+
+    /// <summary>
+    /// The FIVE-MINUTE (flag-off) netto in MINUTES — the flag-off twin of
+    /// <see cref="ComputeNettoSecondsFromDateTimeShifts"/> and the one copy the
+    /// plugin and the service share. Per shift 1..5 the work span in 5-minute
+    /// ticks minus the canonical shift pause (<see cref="ComputeShiftPauseSeconds"/>
+    /// with the clock-tick rule).
+    ///
+    /// A shift with a start but no stop (StopId 0), or a stop before its start,
+    /// contributes NOTHING — neither work nor pause. With no end the day's
+    /// worked time cannot be known, so it counts 0, never negative.
+    /// </summary>
+    public static double ComputeNettoMinutesFlagOff(PlanRegistration pr)
+    {
+        const int minutesPerTick = 5;
+
+        double ShiftMinutes(int shift, int startId, int stopId)
+        {
+            if (stopId == 0 || stopId < startId)
+            {
+                return 0;
+            }
+
+            return (stopId - startId) * minutesPerTick
+                   - ComputeShiftPauseSeconds(pr, shift, useOneMinuteIntervals: false) / 60.0;
+        }
+
+        return ShiftMinutes(1, pr.Start1Id, pr.Stop1Id)
+               + ShiftMinutes(2, pr.Start2Id, pr.Stop2Id)
+               + ShiftMinutes(3, pr.Start3Id, pr.Stop3Id)
+               + ShiftMinutes(4, pr.Start4Id, pr.Stop4Id)
+               + ShiftMinutes(5, pr.Start5Id, pr.Stop5Id);
     }
 
     /// <summary>
