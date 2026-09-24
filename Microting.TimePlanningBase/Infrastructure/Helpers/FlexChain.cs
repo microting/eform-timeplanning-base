@@ -230,6 +230,44 @@ public static class FlexChain
         pr.NettoHoursInSeconds = (int)nettoSeconds;
         pr.NettoHours = nettoSeconds / 3600.0;
 
+        WriteSecondsChain(pr, nettoSeconds, sumFlexStartInSeconds, hasPreTimePlanning);
+    }
+
+    /// <summary>
+    /// The BALANCE-ONLY step of the chain: carries Flex / SumFlexStart /
+    /// SumFlexEnd from the row's STORED hours. Never reads stamps or shift ids
+    /// and never writes NettoHours / NettoHoursInSeconds — a forward walk that
+    /// recomputed hours re-derived whole histories from stale device stamps.
+    /// Hours are computed only when that day's own inputs change.
+    ///
+    /// When <paramref name="rowIsOneMinute"/> is false it delegates to
+    /// <see cref="ApplyNettoFlexChainDecimal"/>, which is likewise balance-only.
+    /// </summary>
+    /// <param name="pr">The plan registration to update in place.</param>
+    /// <param name="predecessor">The preceding live row, or null for the first row.</param>
+    /// <param name="rowIsOneMinute">The row's mode at its own date (<see cref="OneMinuteModeTimeline"/>).</param>
+    /// <param name="predecessorIsOneMinute">
+    /// The predecessor's mode, forwarded to <see cref="SumFlexEndSecondsWithFallback"/>.
+    /// </param>
+    public static void CarryChain(PlanRegistration pr, PlanRegistration? predecessor,
+        bool rowIsOneMinute, bool? predecessorIsOneMinute)
+    {
+        if (!rowIsOneMinute)
+        {
+            ApplyNettoFlexChainDecimal(pr, predecessor);
+            return;
+        }
+
+        WriteSecondsChain(
+            pr,
+            SecondsOrDecimalFallback(pr.NettoHoursInSeconds, pr.NettoHours),
+            SumFlexEndSecondsWithFallback(predecessor, predecessorIsOneMinute),
+            predecessor != null);
+    }
+
+    private static void WriteSecondsChain(PlanRegistration pr, long nettoSeconds,
+        int sumFlexStartInSeconds, bool hasPreTimePlanning)
+    {
         // Punch-clock / scheduled days and production writers populate only the
         // doubles; the *InSeconds siblings stay 0. See SecondsOrDecimalFallback.
         var planHoursSeconds = SecondsOrDecimalFallback(pr.PlanHoursInSeconds, pr.PlanHours);
@@ -247,24 +285,14 @@ public static class FlexChain
         pr.FlexInSeconds = (int)flexSeconds;
         pr.Flex = flexSeconds / 3600.0;
 
-        if (hasPreTimePlanning)
-        {
-            pr.SumFlexStartInSeconds = sumFlexStartInSeconds;
-            pr.SumFlexStart = sumFlexStartInSeconds / 3600.0;
-            var sumFlexEndSeconds = (long)sumFlexStartInSeconds
-                                    + effectiveNettoSecondsForFlex - planHoursSeconds
-                                    - paiedOutFlexSeconds;
-            pr.SumFlexEndInSeconds = (int)sumFlexEndSeconds;
-            pr.SumFlexEnd = sumFlexEndSeconds / 3600.0;
-        }
-        else
-        {
-            pr.SumFlexStartInSeconds = 0;
-            pr.SumFlexStart = 0;
-            var sumFlexEndSeconds = effectiveNettoSecondsForFlex - planHoursSeconds - paiedOutFlexSeconds;
-            pr.SumFlexEndInSeconds = (int)sumFlexEndSeconds;
-            pr.SumFlexEnd = sumFlexEndSeconds / 3600.0;
-        }
+        var startSeconds = hasPreTimePlanning ? sumFlexStartInSeconds : 0;
+        pr.SumFlexStartInSeconds = startSeconds;
+        pr.SumFlexStart = startSeconds / 3600.0;
+        var sumFlexEndSeconds = (long)startSeconds
+                                + effectiveNettoSecondsForFlex - planHoursSeconds
+                                - paiedOutFlexSeconds;
+        pr.SumFlexEndInSeconds = (int)sumFlexEndSeconds;
+        pr.SumFlexEnd = sumFlexEndSeconds / 3600.0;
     }
 
     /// <summary>
