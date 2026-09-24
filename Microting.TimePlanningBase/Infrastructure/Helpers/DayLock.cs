@@ -45,6 +45,11 @@ public static class DayLock
             .Where(x => x.SdkSitId == sdkSitId)
             .MaxAsync(x => (DateTime?)x.Date);
 
+    /// <summary>
+    /// True when <paramref name="date"/> falls on or before the reconciled
+    /// boundary <paramref name="lockedThrough"/> (date-only comparison); false
+    /// when there is no boundary.
+    /// </summary>
     public static bool IsLocked(DateTime? lockedThrough, DateTime date)
         => lockedThrough.HasValue && date.Date <= lockedThrough.Value.Date;
 

@@ -240,4 +240,50 @@ public class FlexChainUTest
             Assert.That(pr.SumFlexEndInSeconds, Is.EqualTo(3600));
         });
     }
+
+    [Test]
+    public void CarryChain_OneMinute_PrefersTheDecimalWhenStaleSecondsDisagree()
+    {
+        var pre = new PlanRegistration { SumFlexEnd = 0, SumFlexEndInSeconds = 0 };
+        var pr = new PlanRegistration
+        {
+            NettoHoursInSeconds = 3600, NettoHours = 8.0,   // stale 1 h seconds, decimal 8 h
+            PlanHours = 7.5, PlanHoursInSeconds = 0
+        };
+
+        FlexChain.CarryChain(pr, pre, rowIsOneMinute: true, predecessorIsOneMinute: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(pr.FlexInSeconds, Is.EqualTo(1800));
+            Assert.That(pr.SumFlexEndInSeconds, Is.EqualTo(1800));
+            Assert.That(pr.NettoHoursInSeconds, Is.EqualTo(3600), "the walk never writes hours");
+        });
+    }
+
+    [Test]
+    public void CarryChain_OneMinute_KeepsSecondsWithinAMinuteOfTheDecimal()
+    {
+        var pre = new PlanRegistration { SumFlexEnd = 0, SumFlexEndInSeconds = 0 };
+        var pr = new PlanRegistration { NettoHoursInSeconds = 28830, NettoHours = 8.0, PlanHours = 8.0 };
+
+        FlexChain.CarryChain(pr, pre, rowIsOneMinute: true, predecessorIsOneMinute: true);
+
+        Assert.That(pr.FlexInSeconds, Is.EqualTo(30));
+    }
+
+    [Test]
+    public void CarryChain_OneMinute_PrefersTheDecimalPlanWhenStalePlanSecondsDisagree()
+    {
+        var pre = new PlanRegistration { SumFlexEnd = 0, SumFlexEndInSeconds = 0 };
+        var pr = new PlanRegistration
+        {
+            NettoHoursInSeconds = 28800, NettoHours = 8.0,
+            PlanHours = 7.5, PlanHoursInSeconds = 3600          // stale 1 h plan seconds
+        };
+
+        FlexChain.CarryChain(pr, pre, rowIsOneMinute: true, predecessorIsOneMinute: true);
+
+        Assert.That(pr.FlexInSeconds, Is.EqualTo(1800));
+    }
 }

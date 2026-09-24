@@ -230,7 +230,8 @@ public static class FlexChain
         pr.NettoHoursInSeconds = (int)nettoSeconds;
         pr.NettoHours = nettoSeconds / 3600.0;
 
-        WriteSecondsChain(pr, nettoSeconds, sumFlexStartInSeconds, hasPreTimePlanning);
+        WriteSecondsChain(pr, nettoSeconds, sumFlexStartInSeconds, hasPreTimePlanning,
+            preferFresherDecimal: false);
     }
 
     /// <summary>
@@ -242,6 +243,14 @@ public static class FlexChain
     ///
     /// When <paramref name="rowIsOneMinute"/> is false it delegates to
     /// <see cref="ApplyNettoFlexChainDecimal"/>, which is likewise balance-only.
+    ///
+    /// Stale-seconds rule: the row's stored netto, plan hours and paid-out flex
+    /// are each resolved through <see cref="FresherOfSecondsOrDecimal"/> — the
+    /// <c>*InSeconds</c> column is used only when it is non-zero AND within a
+    /// minute of its decimal sibling; otherwise the decimal wins. A walk reaches
+    /// rows no current writer touched, so it cannot trust a seconds column that
+    /// the last writer may not have maintained. The predecessor's balance is
+    /// seeded as before, via <see cref="SumFlexEndSecondsWithFallback"/>.
     /// </summary>
     /// <param name="pr">The plan registration to update in place.</param>
     /// <param name="predecessor">The preceding live row, or null for the first row.</param>
@@ -260,19 +269,54 @@ public static class FlexChain
 
         WriteSecondsChain(
             pr,
-            SecondsOrDecimalFallback(pr.NettoHoursInSeconds, pr.NettoHours),
+            FresherOfSecondsOrDecimal(pr.NettoHoursInSeconds, pr.NettoHours),
             SumFlexEndSecondsWithFallback(predecessor, predecessorIsOneMinute),
-            predecessor != null);
+            predecessor != null,
+            preferFresherDecimal: true);
     }
 
-    private static void WriteSecondsChain(PlanRegistration pr, long nettoSeconds,
-        int sumFlexStartInSeconds, bool hasPreTimePlanning)
+    /// <summary>
+    /// Resolves an <c>*InSeconds</c> column against its <c>double</c> hour
+    /// sibling for the forward walk (<see cref="CarryChain"/>) only.
+    ///
+    /// Every writer maintains the decimal; only some maintain the seconds
+    /// column. A non-zero seconds value that disagrees with the decimal by more
+    /// than a minute is therefore stale residue from an earlier write — the same
+    /// class of defect as the SumFlexEnd zero-seed incident — and the walk
+    /// prefers the decimal. Within a minute the two agree and the seconds are
+    /// the more precise value, so they win. Zero falls back to the decimal as in
+    /// <see cref="SecondsOrDecimalFallback"/>.
+    /// </summary>
+    private static int FresherOfSecondsOrDecimal(int seconds, double hours)
     {
+        const int staleThresholdSeconds = 60;
+        var fromDecimal = (int)Math.Round(hours * 3600);
+        var secondsIsFresh = seconds != 0 && Math.Abs(seconds - fromDecimal) <= staleThresholdSeconds;
+        return secondsIsFresh ? seconds : fromDecimal;
+    }
+
+    /// <summary>
+    /// Writes the second-precision Flex / SumFlexStart / SumFlexEnd chain (and
+    /// their decimal siblings) from already-resolved netto seconds; shared by
+    /// ApplyNettoFlexChainSecondPrecision and CarryChain.
+    /// </summary>
+    /// <param name="preferFresherDecimal">
+    /// true from <see cref="CarryChain"/>: plan hours and paid-out flex resolve
+    /// via <see cref="FresherOfSecondsOrDecimal"/>. false from
+    /// <see cref="ApplyNettoFlexChainSecondPrecision(PlanRegistration, int, bool)"/>:
+    /// they resolve via <see cref="SecondsOrDecimalFallback"/>, exactly as before.
+    /// </param>
+    private static void WriteSecondsChain(PlanRegistration pr, long nettoSeconds,
+        int sumFlexStartInSeconds, bool hasPreTimePlanning, bool preferFresherDecimal)
+    {
+        int Resolve(int seconds, double hours) => preferFresherDecimal
+            ? FresherOfSecondsOrDecimal(seconds, hours)
+            : SecondsOrDecimalFallback(seconds, hours);
+
         // Punch-clock / scheduled days and production writers populate only the
         // doubles; the *InSeconds siblings stay 0. See SecondsOrDecimalFallback.
-        var planHoursSeconds = SecondsOrDecimalFallback(pr.PlanHoursInSeconds, pr.PlanHours);
-        var paiedOutFlexSeconds =
-            SecondsOrDecimalFallback(pr.PaiedOutFlexInSeconds, pr.PaiedOutFlex);
+        var planHoursSeconds = Resolve(pr.PlanHoursInSeconds, pr.PlanHours);
+        var paiedOutFlexSeconds = Resolve(pr.PaiedOutFlexInSeconds, pr.PaiedOutFlex);
 
         // Mirror the flag-off override semantics:
         //   Flex      = (override ? NettoHoursOverride : NettoHours) - PlanHours

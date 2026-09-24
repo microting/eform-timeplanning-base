@@ -25,7 +25,6 @@ SOFTWARE.
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microting.eForm.Infrastructure.Constants;
 using Microting.TimePlanningBase.Infrastructure.Data.Entities;
 using Microting.TimePlanningBase.Infrastructure.Helpers;
 using NUnit.Framework;

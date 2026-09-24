@@ -26,6 +26,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microting.eForm.Infrastructure.Constants;
 using Microting.TimePlanningBase.Infrastructure.Data.Entities;
 using Microting.TimePlanningBase.Infrastructure.Helpers;
 using NUnit.Framework;
@@ -205,7 +206,7 @@ public class FlexChainRecomputeTests : DbTestFixture
 
         await FlexChainRecompute.RunForwardAsync(DbContext, site, Worker, edited.Date);
 
-        var live = Reload().Where(x => x.WorkflowState != "removed").ToArray();
+        var live = Reload().Where(x => x.WorkflowState != Constants.WorkflowStates.Removed).ToArray();
         Assert.That(live[1].SumFlexStart, Is.EqualTo(1.5).Within(1e-9));
         Assert.That(DbContext.PlanRegistrations.AsNoTracking().Single(x => x.Id == removed.Id).SumFlexEnd,
             Is.EqualTo(99));
@@ -259,6 +260,7 @@ public class FlexChainRecomputeTests : DbTestFixture
     [Test]
     public async Task LockBoundaryBeforeTheStart_DoesNotMoveTheStart()
     {
+        // the walk trusts rows before the start date: callers pass the earliest date they changed
         var site = await Site(oneMinute: false);
         await Row(0, 7.5, 7.5, 0, 10.0, reconciled: true);   // boundary, balance 10
         var open = await Row(1, 9, 7.5);                      // open, stale
@@ -293,6 +295,34 @@ public class FlexChainRecomputeTests : DbTestFixture
             Assert.That(rows[1].SumFlexEnd, Is.EqualTo(33.0));
             Assert.That(rows[2].SumFlexStart, Is.EqualTo(33.0).Within(1e-9));
             Assert.That(rows[2].SumFlexEnd, Is.EqualTo(33.5).Within(1e-9));
+        });
+    }
+
+    [Test]
+    public async Task FirstRow_OneMinute_KeepsADecimalOnlyOpeningBalance()
+    {
+        var site = await Site(oneMinute: true, from: D0.AddDays(-30));
+        var first = new PlanRegistration
+        {
+            SdkSitId = Worker, Date = D0, NettoHours = 8, NettoHoursInSeconds = 28800,
+            PlanHours = 7.5, Flex = 0.5, SumFlexStart = 20, SumFlexEnd = 0   // opening balance in the decimal only
+        };
+        await first.Create(DbContext);
+        var second = new PlanRegistration
+        {
+            SdkSitId = Worker, Date = D0.AddDays(1), NettoHours = 7.5, NettoHoursInSeconds = 27000, PlanHours = 7.5
+        };
+        await second.Create(DbContext);
+
+        await FlexChainRecompute.RunForwardAsync(DbContext, site, Worker, D0);
+
+        var rows = Reload();
+        Assert.Multiple(() =>
+        {
+            Assert.That(rows[0].SumFlexStartInSeconds, Is.EqualTo(72000));
+            Assert.That(rows[0].SumFlexEndInSeconds, Is.EqualTo(73800));
+            Assert.That(rows[1].SumFlexStartInSeconds, Is.EqualTo(73800));
+            Assert.That(rows[1].SumFlexEndInSeconds, Is.EqualTo(73800));
         });
     }
 }
