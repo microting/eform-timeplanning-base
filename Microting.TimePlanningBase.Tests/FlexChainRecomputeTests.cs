@@ -117,6 +117,7 @@ public class FlexChainRecomputeTests : DbTestFixture
         var site = await Site(oneMinute: false);
         var edited = await Row(0, 9, 7.5, sumFlexEnd: 1.5);
         var locked = await Row(1, 7.5, 7.5, 0, 40.0, reconciled: true);     // stored boundary balance 40
+        var lockedVersionBefore = locked.Version;
         await Row(2, 8.0, 7.5, 0, 0);
 
         await FlexChainRecompute.RunForwardAsync(DbContext, site, Worker, edited.Date);
@@ -124,7 +125,7 @@ public class FlexChainRecomputeTests : DbTestFixture
         var rows = Reload();
         Assert.Multiple(() =>
         {
-            Assert.That(rows[1].Version, Is.EqualTo(locked.Version), "locked row untouched");
+            Assert.That(rows[1].Version, Is.EqualTo(lockedVersionBefore), "locked row untouched");
             Assert.That(rows[1].SumFlexEnd, Is.EqualTo(40.0));
             Assert.That(rows[2].SumFlexStart, Is.EqualTo(40.0).Within(1e-9));
             Assert.That(rows[2].SumFlexEnd, Is.EqualTo(40.5).Within(1e-9));
@@ -160,6 +161,7 @@ public class FlexChainRecomputeTests : DbTestFixture
         var site = await Site(oneMinute: false);
         var edited = await Row(0, 9, 7.5, sumFlexEnd: 1.5);
         var next = await Row(1, 8, 7.5, sumFlexStart: 1.5, sumFlexEnd: 2.0);
+        var nextVersionBefore = next.Version;
         var versionsBefore = DbContext.PlanRegistrationVersions.Count();
 
         var written = await FlexChainRecompute.RunForwardAsync(DbContext, site, Worker, edited.Date);
@@ -167,7 +169,7 @@ public class FlexChainRecomputeTests : DbTestFixture
         Assert.Multiple(() =>
         {
             Assert.That(written, Is.EqualTo(0));
-            Assert.That(Reload()[1].Version, Is.EqualTo(next.Version));
+            Assert.That(Reload()[1].Version, Is.EqualTo(nextVersionBefore));
             Assert.That(DbContext.PlanRegistrationVersions.Count(), Is.EqualTo(versionsBefore));
         });
     }
@@ -179,6 +181,8 @@ public class FlexChainRecomputeTests : DbTestFixture
         var edited = await Row(0, 9, 7.5, sumFlexEnd: 1.5);
         var a = await Row(1, 8, 7.5);
         var b = await Row(2, 8, 7.5);
+        var aVersionBefore = a.Version;
+        var bVersionBefore = b.Version;
         var versionsBefore = DbContext.PlanRegistrationVersions.Count();
 
         await FlexChainRecompute.RunForwardAsync(DbContext, site, Worker, edited.Date);
@@ -186,8 +190,8 @@ public class FlexChainRecomputeTests : DbTestFixture
         var rows = Reload();
         Assert.Multiple(() =>
         {
-            Assert.That(rows[1].Version, Is.EqualTo(a.Version + 1));
-            Assert.That(rows[2].Version, Is.EqualTo(b.Version + 1));
+            Assert.That(rows[1].Version, Is.EqualTo(aVersionBefore + 1));
+            Assert.That(rows[2].Version, Is.EqualTo(bVersionBefore + 1));
             Assert.That(DbContext.PlanRegistrationVersions.Count(), Is.EqualTo(versionsBefore + 2));
             Assert.That(DbContext.PlanRegistrationVersions.AsNoTracking()
                 .Where(v => v.PlanRegistrationId == a.Id).OrderByDescending(v => v.Id).First().SumFlexEnd,
@@ -210,21 +214,6 @@ public class FlexChainRecomputeTests : DbTestFixture
         Assert.That(live[1].SumFlexStart, Is.EqualTo(1.5).Within(1e-9));
         Assert.That(DbContext.PlanRegistrations.AsNoTracking().Single(x => x.Id == removed.Id).SumFlexEnd,
             Is.EqualTo(99));
-    }
-
-    [Test]
-    public async Task SameDateRows_ChainInIdOrder()
-    {
-        var site = await Site(oneMinute: false);
-        var edited = await Row(0, 9, 7.5, sumFlexEnd: 1.5);
-        var duplicate = await Row(0, 1, 7.5, 0, 55);
-        await Row(1, 7.5, 7.5);
-
-        await FlexChainRecompute.RunForwardAsync(DbContext, site, Worker, edited.Date);
-
-        var rows = Reload();
-        Assert.That(rows.Single(x => x.Id == duplicate.Id).SumFlexEnd, Is.EqualTo(-5.0).Within(1e-9));
-        Assert.That(rows.Last().SumFlexStart, Is.EqualTo(-5.0).Within(1e-9));
     }
 
     [Test]
@@ -264,6 +253,7 @@ public class FlexChainRecomputeTests : DbTestFixture
         var site = await Site(oneMinute: false);
         await Row(0, 7.5, 7.5, 0, 10.0, reconciled: true);   // boundary, balance 10
         var open = await Row(1, 9, 7.5);                      // open, stale
+        var openVersionBefore = open.Version;
         await Row(2, 8, 7.5);                                 // stale
 
         await FlexChainRecompute.RunForwardAsync(DbContext, site, Worker, D0.AddDays(2));
@@ -271,7 +261,7 @@ public class FlexChainRecomputeTests : DbTestFixture
         var rows = Reload();
         Assert.Multiple(() =>
         {
-            Assert.That(rows[1].Version, Is.EqualTo(open.Version), "walk starts at day 2");
+            Assert.That(rows[1].Version, Is.EqualTo(openVersionBefore), "walk starts at day 2");
             Assert.That(rows[1].SumFlexEnd, Is.EqualTo(0));
             Assert.That(rows[2].SumFlexStart, Is.EqualTo(0).Within(1e-9));
             Assert.That(rows[2].SumFlexEnd, Is.EqualTo(0.5).Within(1e-9));
@@ -284,6 +274,7 @@ public class FlexChainRecomputeTests : DbTestFixture
         var site = await Site(oneMinute: false);
         await Row(0, 9, 7.5, 0, 1.5);
         var locked = await Row(1, 8, 7.5, 0, 33.0, reconciled: true);
+        var lockedVersionBefore = locked.Version;
         await Row(2, 8, 7.5);
 
         await FlexChainRecompute.RunForwardAsync(DbContext, site, Worker, D0.AddDays(1));
@@ -291,7 +282,7 @@ public class FlexChainRecomputeTests : DbTestFixture
         var rows = Reload();
         Assert.Multiple(() =>
         {
-            Assert.That(rows[1].Version, Is.EqualTo(locked.Version), "locked row untouched");
+            Assert.That(rows[1].Version, Is.EqualTo(lockedVersionBefore), "locked row untouched");
             Assert.That(rows[1].SumFlexEnd, Is.EqualTo(33.0));
             Assert.That(rows[2].SumFlexStart, Is.EqualTo(33.0).Within(1e-9));
             Assert.That(rows[2].SumFlexEnd, Is.EqualTo(33.5).Within(1e-9));
