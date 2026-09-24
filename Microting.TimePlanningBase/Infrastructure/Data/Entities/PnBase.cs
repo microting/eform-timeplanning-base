@@ -59,6 +59,13 @@ public class PnBase : BaseEntity
         }
     }
 
+    /// <summary>
+    /// The version-history row for this entity's CURRENT values, for writers that
+    /// batch many updates into one SaveChanges instead of calling
+    /// <see cref="Update"/> per row.
+    /// </summary>
+    internal object CreateVersionSnapshot() => MapVersion(this);
+
     private object MapVersion(object obj)
     {
         var type = obj.GetType().UnderlyingSystemType;
