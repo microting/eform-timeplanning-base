@@ -335,6 +335,39 @@ public static class FlexChain
     }
 
     /// <summary>
+    /// The FIVE-MINUTE (flag-off) netto in MINUTES — the flag-off twin of
+    /// <see cref="ComputeNettoSecondsFromDateTimeShifts"/> and the one copy the
+    /// plugin and the service share. Per shift 1..5 the work span in 5-minute
+    /// ticks minus the canonical shift pause (<see cref="ComputeShiftPauseSeconds"/>
+    /// with the clock-tick rule).
+    ///
+    /// A shift with a start but no stop (StopId 0), or a stop before its start,
+    /// contributes NOTHING — neither work nor pause. With no end the day's
+    /// worked time cannot be known, so it counts 0, never negative.
+    /// </summary>
+    public static double ComputeNettoMinutesFlagOff(PlanRegistration pr)
+    {
+        const int minutesPerTick = 5;
+
+        double ShiftMinutes(int shift, int startId, int stopId)
+        {
+            if (stopId == 0 || stopId < startId)
+            {
+                return 0;
+            }
+
+            return (stopId - startId) * minutesPerTick
+                   - ComputeShiftPauseSeconds(pr, shift, useOneMinuteIntervals: false) / 60.0;
+        }
+
+        return ShiftMinutes(1, pr.Start1Id, pr.Stop1Id)
+               + ShiftMinutes(2, pr.Start2Id, pr.Stop2Id)
+               + ShiftMinutes(3, pr.Start3Id, pr.Stop3Id)
+               + ShiftMinutes(4, pr.Start4Id, pr.Stop4Id)
+               + ShiftMinutes(5, pr.Start5Id, pr.Stop5Id);
+    }
+
+    /// <summary>
     /// Canonical per-shift pause total in SECONDS — the single source of truth
     /// for every netto and display pause computation.
     ///

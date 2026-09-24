@@ -80,4 +80,54 @@ public class FlexChainUTest
             Assert.That(FlexChain.SumFlexEndSecondsWithFallback(null), Is.EqualTo(0));
         });
     }
+
+    [Test]
+    public void ComputeNettoMinutesFlagOff_CountsAClosedShiftMinusItsPause()
+    {
+        // 07:00 (id 85) to 15:00 (id 181) = 96 ticks = 480 min; Pause1Id 7 = 30 min
+        var pr = new PlanRegistration { Start1Id = 85, Stop1Id = 181, Pause1Id = 7 };
+
+        Assert.That(FlexChain.ComputeNettoMinutesFlagOff(pr), Is.EqualTo(450));
+    }
+
+    [Test]
+    public void ComputeNettoMinutesFlagOff_OpenShiftCountsZeroAndIgnoresItsPause()
+    {
+        var pr = new PlanRegistration { Start1Id = 115, Stop1Id = 0, Pause1Id = 7 };
+
+        Assert.That(FlexChain.ComputeNettoMinutesFlagOff(pr), Is.EqualTo(0));
+    }
+
+    [Test]
+    public void ComputeNettoMinutesFlagOff_StopBeforeStartCountsZero()
+    {
+        var pr = new PlanRegistration { Start1Id = 181, Stop1Id = 85, Pause1Id = 1 };
+
+        Assert.That(FlexChain.ComputeNettoMinutesFlagOff(pr), Is.EqualTo(0));
+    }
+
+    [Test]
+    public void ComputeNettoMinutesFlagOff_OneOpenShiftDoesNotCancelAClosedOne()
+    {
+        var pr = new PlanRegistration
+        {
+            Start1Id = 85, Stop1Id = 133, Pause1Id = 1,   // 4 h, no pause
+            Start2Id = 157, Stop2Id = 0, Pause2Id = 4     // open second shift
+        };
+
+        Assert.That(FlexChain.ComputeNettoMinutesFlagOff(pr), Is.EqualTo(240));
+    }
+
+    [Test]
+    public void ComputeNettoMinutesFlagOff_SumsShiftsThreeToFive()
+    {
+        var pr = new PlanRegistration
+        {
+            Start3Id = 13, Stop3Id = 25,   // 60 min
+            Start4Id = 37, Stop4Id = 43,   // 30 min
+            Start5Id = 61, Stop5Id = 64    // 15 min
+        };
+
+        Assert.That(FlexChain.ComputeNettoMinutesFlagOff(pr), Is.EqualTo(105));
+    }
 }
