@@ -270,6 +270,28 @@ public class FlexChainRepairTests : DbTestFixture
     }
 
     [Test]
+    public async Task RowFromTheDumpWithoutExpectedEntry_IsUncovered_AndRollsBack()
+    {
+        await Site();
+        var a = await Row(0, 8, 7.5, 0, 0.5);
+        var b = await Row(1, 5, 7.5, 0.5, -2.0);       // existed at dump time, but the oracle skipped it
+        var c = await Row(2, 7.5, 7.5, -2.0, -2.0);
+        var versionsBefore = VersionRows();
+
+        var res = await FlexChainRepair.RepairWorkerAsync(DbContext, Worker, new[] { Restore(b, 8) },
+            Expect((a, 0, 0.5), (c, 1.0, 1.0)), apply: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(res.Outcome, Is.EqualTo(RepairOutcome.Mismatch));
+            Assert.That(res.Mismatches.Single().Id, Is.EqualTo(b.Id));
+            Assert.That(res.Mismatches.Single().Field, Is.EqualTo("Uncovered"));
+            Assert.That(Reload()[1].NettoHours, Is.EqualTo(5));
+            Assert.That(VersionRows(), Is.EqualTo(versionsBefore));
+        });
+    }
+
+    [Test]
     public async Task ReconciledDay_IsLocked_AndNothingIsWritten()
     {
         await Site();

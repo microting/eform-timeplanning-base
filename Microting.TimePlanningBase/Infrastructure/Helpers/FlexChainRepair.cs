@@ -275,6 +275,12 @@ public static class FlexChainRepair
         // predecessor, and every oracle entry must still be a live row
         var after = await live.AsNoTracking().OrderBy(x => x.Date).ThenBy(x => x.Id).ToListAsync();
         var mismatches = new List<RowMismatch>();
+        // The oracle covers every live row that existed at dump time; only rows
+        // created since (higher Ids — Ids are auto-increment) may lack an entry.
+        // This catches a gap inside the worker's expected range; a file missing
+        // the worker's newest rows is caught by the caller against the whole
+        // file's highest Id (the console's pre-flight does this).
+        var lastExpectedId = expected.Count > 0 ? expected.Keys.Max() : 0;
         for (var i = 0; i < after.Count; i++)
         {
             var row = after[i];
@@ -290,6 +296,10 @@ public static class FlexChainRepair
                     mismatches.Add(new RowMismatch(row.Id, row.Date, nameof(PlanRegistration.SumFlexEnd),
                         exp.SumFlexEnd, row.SumFlexEnd));
                 }
+            }
+            else if (row.Id <= lastExpectedId)
+            {
+                mismatches.Add(new RowMismatch(row.Id, row.Date, "Uncovered", double.NaN, row.SumFlexEnd));
             }
 
             if (i > 0 && Math.Abs(row.SumFlexStart - after[i - 1].SumFlexEnd) > tolerance)

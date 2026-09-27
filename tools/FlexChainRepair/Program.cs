@@ -49,7 +49,8 @@ const string Usage =
     naming a worker that is not active, a restore/expected line naming a
     worker outside the tenant's active set, an expected line whose Id does not
     exist or belongs to another SdkSitId, a restore line whose row belongs to
-    another SdkSitId, or a walked worker with no expected balances).
+    another SdkSitId, a walked worker with no expected balances, or a live row
+    that existed at dump time but has no expected balance).
 
     With --apply, the first worker whose call throws stops the run right
     there (a dry run keeps going past errors, to show every worker's result
@@ -280,6 +281,28 @@ static async Task<int> RunRepair(string connectionString, Dictionary<string, str
             : $"error: expected.csv Id {e.Id} does not exist");
         PrintCappedErrors(badRestores, r =>
             $"error: restore.csv Id {r.Id} names SdkSitId {r.SdkSitId} but the row belongs to {ownerById[r.Id]}");
+        return 2;
+    }
+
+    // Every live row of a walked worker with an Id at or below the file's highest
+    // expected Id existed at dump time, so it must have an entry — this catches a
+    // truncated file anywhere, including a worker's newest rows, which the
+    // library's per-worker check cannot see. Only rows created since may be absent.
+    List<(int Id, int SdkSitId)> uncovered;
+    try
+    {
+        uncovered = await LoadUncoveredRowsAsync(connectionString, workers,
+            expectedList.Count > 0 ? expectedList.Max(e => e.Id) : 0, expectedList.Select(e => e.Id).ToHashSet());
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"error: {ex.Message}");
+        return 1;
+    }
+    if (uncovered.Count > 0)
+    {
+        PrintCappedErrors(uncovered, u =>
+            $"error: row {u.Id} of worker {u.SdkSitId} existed at dump time but has no expected balance");
         return 2;
     }
 
@@ -592,6 +615,22 @@ static async Task<Dictionary<int, int>> LoadRowOwnersAsync(string connectionStri
         }
     }
     return owners;
+}
+
+// Live rows of the given workers with Id <= lastExpectedId that have no expected entry.
+static async Task<List<(int Id, int SdkSitId)>> LoadUncoveredRowsAsync(string connectionString,
+    IReadOnlyCollection<int> workers, int lastExpectedId, IReadOnlySet<int> expectedIds)
+{
+    using var db = CreateDb(connectionString);
+    var rows = await db.PlanRegistrations.AsNoTracking()
+        .Where(x => workers.Contains(x.SdkSitId) && x.WorkflowState != Constants.WorkflowStates.Removed
+                    && x.Id <= lastExpectedId)
+        .Select(x => new { x.Id, x.SdkSitId })
+        .ToListAsync();
+    return rows.Where(x => !expectedIds.Contains(x.Id))
+        .OrderBy(x => x.Id)
+        .Select(x => (x.Id, x.SdkSitId))
+        .ToList();
 }
 
 // Up to MaxListed error lines, then "... and N more".
