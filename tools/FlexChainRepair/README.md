@@ -60,9 +60,10 @@ dotnet run --project tools/FlexChainRepair -- repair \
   and `restore.csv` `Id` to its row's actual `SdkSitId`. An `expected.csv`
   line whose `Id` does not exist or belongs to another worker, or a
   `restore.csv` line whose row belongs to another worker, is refused (up to 20
-  listed). Every worker that will be walked must have at least one
-  `expected.csv` line (`no expected balances for worker <id>`) — otherwise
-  it would be reported OK with only continuity checked.
+  listed). Every worker that will be walked and has live rows must have at
+  least one `expected.csv` line (`no expected balances for worker <id>`) —
+  otherwise it would be reported OK with only continuity checked. A worker
+  with no live rows has nothing to walk and is skipped.
 - `--out` is created if missing. The tool refuses to start if it already
   holds `report.csv`, `before-image.csv` or any `revert-*.csv` from an
   earlier run — always point `--out` at a fresh directory per run.
@@ -126,7 +127,7 @@ dotnet run --project tools/FlexChainRepair -- revert \
 |---|---|
 | `0` | Every worker ended `DryRunOk` / `Applied` (`repair`), or nothing was changed/missing/errored (`revert`). |
 | `1` | A worker or a setup step ran into a real problem: `GuardFailed` / `Mismatch` / `Locked`, a worker's call threw (`state UNKNOWN`, or — `repair` only — `APPLIED but its before-image is NOT durable`), a database query failed, a manifest CSV's *content* was malformed, a duplicate `Id` in `expected.csv`, `restore.csv` or the before-image, or (`revert`) any changed/missing/errored row. |
-| `2` | The invocation itself was wrong: an unknown or missing flag, `--apply` without a matching `--confirm-database`, `--out` already holding a previous run's files, an unreadable input path, `--worker` naming a worker that isn't active, a `restore.csv` / `expected.csv` line naming a worker outside the tenant's active set, an `expected.csv` `Id` that does not exist or belongs to another worker, a `restore.csv` `Id` that belongs to another worker, a walked worker with no expected balances, or a live row of a walked worker that existed at dump time (Id at or below the file's highest expected `Id`) but has no expected balance (a truncated `expected.csv`). A flag that takes a value followed by another `--flag` (e.g. `--out --apply`) is also exit 2, never a dry run. |
+| `2` | The invocation itself was wrong: an unknown or missing flag, `--apply` without a matching `--confirm-database`, `--out` already holding a previous run's files, an unreadable input path, `--worker` naming a worker that isn't active, a `restore.csv` / `expected.csv` line naming a worker outside the tenant's active set, an `expected.csv` `Id` that does not exist or belongs to another worker, a `restore.csv` `Id` that belongs to another worker, a walked worker with live rows but no expected balances (a worker with no rows at all is skipped), or a live row of a walked worker that existed at dump time (Id at or below the file's highest expected `Id`) but has no expected balance (a truncated `expected.csv`). A flag that takes a value followed by another `--flag` (e.g. `--out --apply`) is also exit 2, never a dry run. |
 
 Every exit-2 check — flags, `--confirm-database`, `--worker`, the
 restore/expected outsider checks, the Id→SdkSitId ownership check and the dump-coverage check — runs before `--out` is even created, so

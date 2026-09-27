@@ -49,7 +49,7 @@ const string Usage =
     naming a worker that is not active, a restore/expected line naming a
     worker outside the tenant's active set, an expected line whose Id does not
     exist or belongs to another SdkSitId, a restore line whose row belongs to
-    another SdkSitId, a walked worker with no expected balances, or a live row
+    another SdkSitId, a walked worker with live rows but no expected balances, or a live row
     that existed at dump time but has no expected balance).
 
     With --apply, the first worker whose call throws stops the run right
@@ -253,8 +253,19 @@ static async Task<int> RunRepair(string connectionString, Dictionary<string, str
 
     // Every walked worker's result is only as good as its oracle: a worker with
     // no expected balances would be walked and reported OK with nothing checked
-    // but continuity.
-    var workersWithoutExpected = workers.Where(w => !expectedByWorker.ContainsKey(w)).ToList();
+    // but continuity. A worker with no live rows has nothing to walk or check.
+    HashSet<int> workersWithRows;
+    try
+    {
+        workersWithRows = await LoadWorkersWithLiveRowsAsync(connectionString, workers);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"error: {ex.Message}");
+        return 1;
+    }
+    var workersWithoutExpected = workers
+        .Where(w => workersWithRows.Contains(w) && !expectedByWorker.ContainsKey(w)).ToList();
     if (workersWithoutExpected.Count > 0)
     {
         PrintCappedErrors(workersWithoutExpected, w => $"error: no expected balances for worker {w}");
@@ -634,6 +645,17 @@ static async Task<Dictionary<int, int>> LoadRowOwnersAsync(string connectionStri
         }
     }
     return owners;
+}
+
+// The given workers that have at least one live row.
+static async Task<HashSet<int>> LoadWorkersWithLiveRowsAsync(string connectionString, IReadOnlyCollection<int> workers)
+{
+    using var db = CreateDb(connectionString);
+    return await db.PlanRegistrations.AsNoTracking()
+        .Where(x => workers.Contains(x.SdkSitId) && x.WorkflowState != Constants.WorkflowStates.Removed)
+        .Select(x => x.SdkSitId)
+        .Distinct()
+        .ToHashSetAsync();
 }
 
 // Live rows of the given workers with Id <= lastExpectedId that have no expected entry.
