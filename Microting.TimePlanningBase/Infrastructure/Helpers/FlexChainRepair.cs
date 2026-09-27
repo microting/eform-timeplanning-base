@@ -1,0 +1,300 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2007 - 2026 Microting A/S
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microting.eForm.Infrastructure.Constants;
+using Microting.TimePlanningBase.Infrastructure.Data;
+using Microting.TimePlanningBase.Infrastructure.Data.Entities;
+
+namespace Microting.TimePlanningBase.Infrastructure.Helpers;
+
+/// <summary>
+/// Repairs one worker's flex chain from a restore plan, inside one database
+/// transaction.
+///
+/// Per worker, under a row lock on the worker's rows: (1) snapshot every live
+/// row into a before-image; (2) guard — every restore line must name a live
+/// row of THIS worker whose Version and NettoHours still equal what the plan
+/// was built from, and no Id may appear twice, otherwise nothing is written;
+/// (3) restore NettoHours / NettoHoursInSeconds on those rows (Version + 1,
+/// one version-history row each); (4) walk the whole chain forward from the
+/// worker's first row with <see cref="FlexChainRecompute.RunForwardAsync"/>;
+/// (5) check every row that has an expected balance, and the continuity of
+/// every consecutive pair (start = previous end), within the tolerance, and
+/// that every expected row is still live.
+///
+/// The transaction commits only when <c>apply</c> is true and every check
+/// passed. A dry run does exactly the same work and then rolls back, so it
+/// reports the same counts and mismatches as the real run would, and leaves
+/// rows, versions and version history untouched. A worker with a reconciled
+/// (locked) day is refused before anything is loaded for writing.
+/// </summary>
+public static class FlexChainRepair
+{
+    public const double DefaultTolerance = 0.01;
+    private const int MaxMismatches = 20;
+    private const double HoursGuardTolerance = 1e-6;
+
+    public static async Task<WorkerRepairResult> RepairWorkerAsync(TimePlanningPnDbContext db, int sdkSitId,
+        IReadOnlyList<RestoreLine> restores, IReadOnlyDictionary<int, ExpectedBalance> expected,
+        bool apply, double tolerance = DefaultTolerance)
+    {
+        var result = new WorkerRepairResult { SdkSitId = sdkSitId };
+        db.ChangeTracker.Clear();
+
+        if (await DayLock.LockedThroughAsync(db, sdkSitId) is not null)
+        {
+            result.Outcome = RepairOutcome.Locked;
+            return result;
+        }
+
+        // EnableRetryOnFailure: a user transaction must run inside the execution
+        // strategy, which retries the whole unit on a transient failure.
+        var strategy = db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(
+            result,
+            async (_, res, _) =>
+            {
+                // A retried attempt starts from a clean slate, except the
+                // before-image: it is captured once (see RunAsync), because a
+                // failed attempt may have committed without us hearing about it.
+                res.GuardFailedIds.Clear();
+                res.Mismatches.Clear();
+                res.RowsRestored = 0;
+                res.RowsWalked = 0;
+                res.EndBalanceBefore = null;
+                res.EndBalanceAfter = null;
+                db.ChangeTracker.Clear();
+
+                await using var tx = await db.Database.BeginTransactionAsync();
+                try
+                {
+                    var commit = await RunAsync(db, sdkSitId, restores, expected, apply, tolerance, res);
+                    if (commit)
+                    {
+                        await tx.CommitAsync();
+                    }
+                    else
+                    {
+                        await tx.RollbackAsync();
+                    }
+                    return commit;
+                }
+                finally
+                {
+                    db.ChangeTracker.Clear();
+                }
+            },
+            async (_, res, _) =>
+            {
+                db.ChangeTracker.Clear();
+                if (await RestoresLandedAsync(db, restores, apply))
+                {
+                    // the commit went through but its acknowledgement was lost
+                    res.Outcome = RepairOutcome.Applied;
+                    return new ExecutionResult<bool>(true, true);
+                }
+                return new ExecutionResult<bool>(false, false);
+            });
+        return result;
+    }
+
+    /// <summary>
+    /// Called by the execution strategy when an attempt threw, before it retries:
+    /// did that attempt commit anyway (a lost commit acknowledgement)? True iff
+    /// this was an apply with restore lines and every restore row now carries the
+    /// restored hours at a Version past the one the plan expected. With no restore
+    /// lines there is nothing to recognise the commit by, so the answer is "not
+    /// succeeded" and the strategy re-runs — harmless, since a walk over an
+    /// already-walked chain writes nothing.
+    /// </summary>
+    private static async Task<bool> RestoresLandedAsync(TimePlanningPnDbContext db,
+        IReadOnlyList<RestoreLine> restores, bool apply)
+    {
+        if (!apply || restores.Count == 0)
+        {
+            return false;
+        }
+
+        var ids = restores.Select(x => x.Id).ToList();
+        var now = await db.PlanRegistrations.AsNoTracking()
+            .Where(x => ids.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id);
+        return restores.All(line => now.TryGetValue(line.Id, out var r)
+                                    && r.Version > line.ExpectVersion
+                                    && Math.Abs(r.NettoHours - line.RestoreNettoHours) <= HoursGuardTolerance);
+    }
+
+    /// <returns>true only when <paramref name="apply"/> is set and every check passed.</returns>
+    private static async Task<bool> RunAsync(TimePlanningPnDbContext db, int sdkSitId,
+        IReadOnlyList<RestoreLine> restores, IReadOnlyDictionary<int, ExpectedBalance> expected,
+        bool apply, double tolerance, WorkerRepairResult result)
+    {
+        // PlanRegistration has no concurrency token and this runs against a live
+        // tenant, so the guard below is enforced under a row lock held to commit.
+        await db.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT Id FROM PlanRegistrations WHERE SdkSitId = {sdkSitId} FOR UPDATE");
+
+        var live = db.PlanRegistrations
+            .Where(x => x.SdkSitId == sdkSitId)
+            .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed);
+
+        // 1. before-image — captured by the first attempt that reads rows and
+        // kept on a retry: if an earlier attempt committed despite failing, a
+        // re-read would snapshot the repaired values instead of the originals.
+        // (An empty image is safe to re-capture: an attempt without rows writes nothing.)
+        var rows = await live.OrderBy(x => x.Date).ThenBy(x => x.Id).ToListAsync();
+        result.EndBalanceBefore = rows.LastOrDefault()?.SumFlexEnd;
+        if (result.BeforeImage.Count == 0)
+        {
+            result.BeforeImage.AddRange(rows.Select(ToBeforeImage));
+        }
+
+        if (rows.Count == 0)
+        {
+            result.Outcome = apply ? RepairOutcome.Applied : RepairOutcome.DryRunOk;
+            return apply;
+        }
+
+        // 2. guard — the query is scoped to this worker's live rows, so a missing,
+        // removed or other worker's row is simply absent from byId. A duplicated
+        // Id is a malformed plan: each is reported once.
+        var byId = rows.ToDictionary(x => x.Id);
+        var seen = new HashSet<int>();
+        foreach (var line in restores)
+        {
+            var failed = !seen.Add(line.Id)
+                         || !byId.TryGetValue(line.Id, out var r)
+                         || line.SdkSitId != sdkSitId
+                         || r.Version != line.ExpectVersion
+                         || Math.Abs(r.NettoHours - line.ExpectNettoHours) > HoursGuardTolerance;
+            if (failed && !result.GuardFailedIds.Contains(line.Id))
+            {
+                result.GuardFailedIds.Add(line.Id);
+            }
+        }
+
+        if (result.GuardFailedIds.Count > 0)
+        {
+            result.Outcome = RepairOutcome.GuardFailed;
+            return false;
+        }
+
+        // 3. restore
+        if (restores.Count > 0)
+        {
+            var now = DateTime.UtcNow;
+            foreach (var line in restores)
+            {
+                var r = byId[line.Id];
+                r.NettoHours = line.RestoreNettoHours;
+                r.NettoHoursInSeconds = line.RestoreNettoHoursInSeconds;
+                r.Version += 1;
+                r.UpdatedAt = now;
+            }
+            await db.SaveChangesAsync();
+
+            foreach (var line in restores)
+            {
+                await db.PlanRegistrationVersions.AddAsync(
+                    (PlanRegistrationVersion)byId[line.Id].CreateVersionSnapshot());
+            }
+            await db.SaveChangesAsync();
+        }
+        result.RowsRestored = restores.Count;
+
+        // 4. walk the whole chain from the worker's first row
+        var site = await db.AssignedSites.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.SiteId == sdkSitId && x.WorkflowState != Constants.WorkflowStates.Removed);
+        result.RowsWalked = await FlexChainRecompute.RunForwardAsync(db, site, sdkSitId, rows[0].Date);
+
+        // 5. check — both ways: every live row against the oracle and its
+        // predecessor, and every oracle entry must still be a live row
+        var after = await live.AsNoTracking().OrderBy(x => x.Date).ThenBy(x => x.Id).ToListAsync();
+        var mismatches = new List<RowMismatch>();
+        for (var i = 0; i < after.Count; i++)
+        {
+            var row = after[i];
+            if (expected.TryGetValue(row.Id, out var exp))
+            {
+                if (Math.Abs(row.SumFlexStart - exp.SumFlexStart) > tolerance)
+                {
+                    mismatches.Add(new RowMismatch(row.Id, row.Date, nameof(PlanRegistration.SumFlexStart),
+                        exp.SumFlexStart, row.SumFlexStart));
+                }
+                if (Math.Abs(row.SumFlexEnd - exp.SumFlexEnd) > tolerance)
+                {
+                    mismatches.Add(new RowMismatch(row.Id, row.Date, nameof(PlanRegistration.SumFlexEnd),
+                        exp.SumFlexEnd, row.SumFlexEnd));
+                }
+            }
+
+            if (i > 0 && Math.Abs(row.SumFlexStart - after[i - 1].SumFlexEnd) > tolerance)
+            {
+                mismatches.Add(new RowMismatch(row.Id, row.Date, "Continuity",
+                    after[i - 1].SumFlexEnd, row.SumFlexStart));
+            }
+        }
+
+        var versionAfter = after.ToDictionary(x => x.Id, x => x.Version);
+        foreach (var (id, exp) in expected.OrderBy(x => x.Key))
+        {
+            if (!versionAfter.ContainsKey(id))
+            {
+                mismatches.Add(new RowMismatch(id, default, "Missing", exp.SumFlexEnd, double.NaN));
+            }
+        }
+
+        result.Mismatches.AddRange(mismatches.Take(MaxMismatches));
+        result.EndBalanceAfter = after.Count > 0 ? after[^1].SumFlexEnd : null;
+
+        for (var i = 0; i < result.BeforeImage.Count; i++)
+        {
+            var before = result.BeforeImage[i];
+            if (versionAfter.TryGetValue(before.Id, out var v))
+            {
+                result.BeforeImage[i] = before with { RepairedVersion = v };
+            }
+        }
+
+        if (result.Mismatches.Count > 0)
+        {
+            result.Outcome = RepairOutcome.Mismatch;
+            return false;
+        }
+
+        // 6. done
+        result.Outcome = apply ? RepairOutcome.Applied : RepairOutcome.DryRunOk;
+        return apply;
+    }
+
+    private static BeforeImageRow ToBeforeImage(PlanRegistration r) => new(r.Id, r.SdkSitId, r.Version, r.Version,
+        r.NettoHours, r.NettoHoursInSeconds, r.Flex, r.FlexInSeconds,
+        r.SumFlexStart, r.SumFlexStartInSeconds, r.SumFlexEnd, r.SumFlexEndInSeconds);
+}
