@@ -46,13 +46,19 @@ const string Usage =
     revert with changed/missing/errored rows); 2 the invocation itself was
     wrong (bad/missing/unknown flags, --apply without a matching
     --confirm-database, --out already used, an unreadable input path, --worker
-    naming a worker that is not active, or a restore/expected line naming a
-    worker outside the tenant's active set).
+    naming a worker that is not active, a restore/expected line naming a
+    worker outside the tenant's active set, an expected line whose Id does not
+    exist or belongs to another SdkSitId, a restore line whose row belongs to
+    another SdkSitId, or a walked worker with no expected balances).
 
     With --apply, the first worker whose call throws stops the run right
     there (a dry run keeps going past errors, to show every worker's result
     in one pass).
     """;
+
+// Cap on ids/workers listed per pre-flight error, and ids per owner query.
+const int MaxListed = 20;
+const int OwnerQueryChunk = 1000;
 
 // A setup-time failure that isn't one of the specific argument-validation
 // checks below (a database error, a file that vanished between the earlier
@@ -173,7 +179,7 @@ static async Task<int> RunRepair(string connectionString, Dictionary<string, str
         using var expectedReader = new StreamReader(flags["--expected"]);
         expectedList = FlexChainRepairCsv.ReadExpected(expectedReader);
     }
-    catch (IOException ex)
+    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
     {
         // An unreadable path (missing file, bad permissions, ...) is treated as
         // a bad invocation, the same as any other malformed argument.
@@ -232,6 +238,51 @@ static async Task<int> RunRepair(string connectionString, Dictionary<string, str
         return 2;
     }
 
+    var expectedByWorker = expectedList.GroupBy(e => e.SdkSitId)
+        .ToDictionary(g => g.Key, g => (IReadOnlyDictionary<int, ExpectedBalance>)g.ToDictionary(e => e.Id));
+
+    // Every walked worker's result is only as good as its oracle: a worker with
+    // no expected balances would be walked and reported OK with nothing checked
+    // but continuity.
+    var workersWithoutExpected = workers.Where(w => !expectedByWorker.ContainsKey(w)).ToList();
+    if (workersWithoutExpected.Count > 0)
+    {
+        PrintCappedErrors(workersWithoutExpected, w => $"error: no expected balances for worker {w}");
+        return 2;
+    }
+
+    // A manifest line must name the worker its row actually belongs to — the
+    // library guard would catch a restore line on the wrong worker, but an
+    // expected line on the wrong worker would just be reported "Missing" after
+    // the whole walk. Read-only; checked before anything is written.
+    Dictionary<int, int> ownerById;
+    try
+    {
+        ownerById = await LoadRowOwnersAsync(connectionString,
+            expectedList.Select(e => e.Id).Concat(restores.Select(r => r.Id)));
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"error: {ex.Message}");
+        return 1;
+    }
+
+    var badExpected = expectedList
+        .Where(e => !ownerById.TryGetValue(e.Id, out var owner) || owner != e.SdkSitId)
+        .ToList();
+    var badRestores = restores
+        .Where(r => ownerById.TryGetValue(r.Id, out var owner) && owner != r.SdkSitId)
+        .ToList();
+    if (badExpected.Count > 0 || badRestores.Count > 0)
+    {
+        PrintCappedErrors(badExpected, e => ownerById.TryGetValue(e.Id, out var owner)
+            ? $"error: expected.csv Id {e.Id} names SdkSitId {e.SdkSitId} but the row belongs to {owner}"
+            : $"error: expected.csv Id {e.Id} does not exist");
+        PrintCappedErrors(badRestores, r =>
+            $"error: restore.csv Id {r.Id} names SdkSitId {r.SdkSitId} but the row belongs to {ownerById[r.Id]}");
+        return 2;
+    }
+
     if (CreateOutDirOrConflictExitCode(outDir) is { } conflictExitCode)
     {
         return conflictExitCode;
@@ -239,8 +290,6 @@ static async Task<int> RunRepair(string connectionString, Dictionary<string, str
 
     var restoresByWorker = restores.GroupBy(r => r.SdkSitId)
         .ToDictionary(g => g.Key, g => (IReadOnlyList<RestoreLine>)g.ToList());
-    var expectedByWorker = expectedList.GroupBy(e => e.SdkSitId)
-        .ToDictionary(g => g.Key, g => (IReadOnlyDictionary<int, ExpectedBalance>)g.ToDictionary(e => e.Id));
 
     await using var reportWriter = new StreamWriter(Path.Combine(outDir, "report.csv"));
     await reportWriter.WriteLineAsync("SdkSitId,Outcome,RowsRestored,RowsWalked,EndBalanceBefore,EndBalanceAfter");
@@ -387,7 +436,7 @@ static async Task<int> RunRevert(string connectionString, Dictionary<string, str
         using var reader = new StreamReader(flags["--before-image"]);
         rows = FlexChainRepairCsv.ReadBeforeImage(reader);
     }
-    catch (IOException ex)
+    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
     {
         Console.Error.WriteLine($"error: {ex.Message}");
         return 2;
@@ -521,6 +570,43 @@ static async Task<(List<int> Workers, List<int> RestoreOutsiders, List<int> Expe
     return (workers, restoreOutsiders, expectedOutsiders, workerFilterInvalid);
 }
 
+/// <summary>
+/// Actual SdkSitId of every PlanRegistration among <paramref name="ids"/>
+/// (removed rows included — existence and ownership is all this checks). Ids
+/// that do not exist are absent. Read-only; the IN list is chunked so one
+/// statement never carries more than <c>OwnerQueryChunk</c> ids.
+/// </summary>
+static async Task<Dictionary<int, int>> LoadRowOwnersAsync(string connectionString, IEnumerable<int> ids)
+{
+    using var db = CreateDb(connectionString);
+    var owners = new Dictionary<int, int>();
+    foreach (var chunk in ids.Distinct().Chunk(OwnerQueryChunk))
+    {
+        var rows = await db.PlanRegistrations.AsNoTracking()
+            .Where(x => chunk.Contains(x.Id))
+            .Select(x => new { x.Id, x.SdkSitId })
+            .ToListAsync();
+        foreach (var row in rows)
+        {
+            owners[row.Id] = row.SdkSitId;
+        }
+    }
+    return owners;
+}
+
+// Up to MaxListed error lines, then "... and N more".
+static void PrintCappedErrors<T>(IReadOnlyList<T> items, Func<T, string> formatMessage)
+{
+    foreach (var item in items.Take(MaxListed))
+    {
+        Console.Error.WriteLine(formatMessage(item));
+    }
+    if (items.Count > MaxListed)
+    {
+        Console.Error.WriteLine($"error: ... and {items.Count - MaxListed} more");
+    }
+}
+
 static bool TryParseFlags(string[] args, int startIndex, IReadOnlyCollection<string> allowedFlags,
     out Dictionary<string, string> flags, out bool apply, out string error)
 {
@@ -549,7 +635,10 @@ static bool TryParseFlags(string[] args, int startIndex, IReadOnlyCollection<str
             continue;
         }
 
-        if (i + 1 >= args.Length)
+        // A missing value, or a next token that is itself a flag, is an
+        // invocation error: `--out --apply` must never parse as a dry run
+        // writing to a directory called "--apply".
+        if (i + 1 >= args.Length || args[i + 1].StartsWith("--", StringComparison.Ordinal))
         {
             error = $"flag '{token}' requires a value";
             return false;

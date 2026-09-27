@@ -65,6 +65,20 @@ public static class FlexChainRepair
         IReadOnlyList<RestoreLine> restores, IReadOnlyDictionary<int, ExpectedBalance> expected,
         bool apply, double tolerance = DefaultTolerance)
     {
+        // NaN compares false against everything, so a NaN tolerance would pass
+        // every balance check; a negative one would fail them all.
+        if (double.IsNaN(tolerance) || double.IsInfinity(tolerance) || tolerance < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance,
+                "tolerance must be a finite, non-negative number.");
+        }
+
+        // Lower bound for the UpdatedAt our own restore step writes: lets the
+        // lost-commit-ack check tell our write apart from an earlier one that
+        // happened to leave the same hours. The second of slack covers
+        // datetime precision on the column.
+        var callStartedUtc = DateTime.UtcNow.AddSeconds(-1);
+
         var result = new WorkerRepairResult { SdkSitId = sdkSitId };
         db.ChangeTracker.Clear();
 
@@ -114,7 +128,7 @@ public static class FlexChainRepair
             async (_, res, _) =>
             {
                 db.ChangeTracker.Clear();
-                if (await RestoresLandedAsync(db, restores, apply))
+                if (await RestoresLandedAsync(db, sdkSitId, restores, apply, callStartedUtc))
                 {
                     // the commit went through but its acknowledgement was lost
                     res.Outcome = RepairOutcome.Applied;
@@ -128,14 +142,16 @@ public static class FlexChainRepair
     /// <summary>
     /// Called by the execution strategy when an attempt threw, before it retries:
     /// did that attempt commit anyway (a lost commit acknowledgement)? True iff
-    /// this was an apply with restore lines and every restore row now carries the
-    /// restored hours at a Version past the one the plan expected. With no restore
+    /// this was an apply with restore lines and every restore row is still this
+    /// worker's, carries the restored hours at a Version past the one the plan
+    /// expected, and was updated no earlier than this call started (UpdatedAt is
+    /// written by the restore step itself). With no restore
     /// lines there is nothing to recognise the commit by, so the answer is "not
     /// succeeded" and the strategy re-runs — harmless, since a walk over an
     /// already-walked chain writes nothing.
     /// </summary>
-    private static async Task<bool> RestoresLandedAsync(TimePlanningPnDbContext db,
-        IReadOnlyList<RestoreLine> restores, bool apply)
+    private static async Task<bool> RestoresLandedAsync(TimePlanningPnDbContext db, int sdkSitId,
+        IReadOnlyList<RestoreLine> restores, bool apply, DateTime callStartedUtc)
     {
         if (!apply || restores.Count == 0)
         {
@@ -147,8 +163,10 @@ public static class FlexChainRepair
             .Where(x => ids.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id);
         return restores.All(line => now.TryGetValue(line.Id, out var r)
+                                    && r.SdkSitId == sdkSitId
                                     && r.Version > line.ExpectVersion
-                                    && Math.Abs(r.NettoHours - line.RestoreNettoHours) <= HoursGuardTolerance);
+                                    && Math.Abs(r.NettoHours - line.RestoreNettoHours) <= HoursGuardTolerance
+                                    && r.UpdatedAt >= callStartedUtc);
     }
 
     /// <returns>true only when <paramref name="apply"/> is set and every check passed.</returns>

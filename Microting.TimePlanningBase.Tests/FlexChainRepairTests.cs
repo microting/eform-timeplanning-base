@@ -385,6 +385,15 @@ public class FlexChainRepairTests : DbTestFixture
         });
     }
 
+    [TestCase(double.NaN)]
+    [TestCase(double.PositiveInfinity)]
+    [TestCase(-1.0)]
+    public void NonFiniteTolerance_Throws(double tolerance)
+    {
+        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+            Array.Empty<RestoreLine>(), new Dictionary<int, ExpectedBalance>(), apply: false, tolerance));
+    }
+
     [Test]
     public async Task Revert_AfterApply_RestoresEveryCapturedColumn()
     {

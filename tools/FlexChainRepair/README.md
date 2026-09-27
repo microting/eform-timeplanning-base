@@ -56,6 +56,13 @@ dotnet run --project tools/FlexChainRepair -- repair \
 
   Only `<sdkSitId>` is walked and written to `./out-canary`; every other
   worker's manifest lines are simply not used this run.
+- Also before anything runs, one read-only lookup maps every `expected.csv`
+  and `restore.csv` `Id` to its row's actual `SdkSitId`. An `expected.csv`
+  line whose `Id` does not exist or belongs to another worker, or a
+  `restore.csv` line whose row belongs to another worker, is refused (up to 20
+  listed). Every worker that will be walked must have at least one
+  `expected.csv` line (`no expected balances for worker <id>`) — otherwise
+  it would be reported OK with only continuity checked.
 - `--out` is created if missing. The tool refuses to start if it already
   holds `report.csv`, `before-image.csv` or any `revert-*.csv` from an
   earlier run — always point `--out` at a fresh directory per run.
@@ -119,10 +126,10 @@ dotnet run --project tools/FlexChainRepair -- revert \
 |---|---|
 | `0` | Every worker ended `DryRunOk` / `Applied` (`repair`), or nothing was changed/missing/errored (`revert`). |
 | `1` | A worker or a setup step ran into a real problem: `GuardFailed` / `Mismatch` / `Locked`, a worker's call threw (`state UNKNOWN`, or — `repair` only — `APPLIED but its before-image is NOT durable`), a database query failed, a manifest CSV's *content* was malformed, a duplicate `Id` in `expected.csv`, or (`revert`) any changed/missing/errored row. |
-| `2` | The invocation itself was wrong: an unknown or missing flag, `--apply` without a matching `--confirm-database`, `--out` already holding a previous run's files, an unreadable input path, `--worker` naming a worker that isn't active, or a `restore.csv` / `expected.csv` line naming a worker outside the tenant's active set. |
+| `2` | The invocation itself was wrong: an unknown or missing flag, `--apply` without a matching `--confirm-database`, `--out` already holding a previous run's files, an unreadable input path, `--worker` naming a worker that isn't active, a `restore.csv` / `expected.csv` line naming a worker outside the tenant's active set, an `expected.csv` `Id` that does not exist or belongs to another worker, a `restore.csv` `Id` that belongs to another worker, or a walked worker with no expected balances. A flag that takes a value followed by another `--flag` (e.g. `--out --apply`) is also exit 2, never a dry run. |
 
-Every exit-2 check — flags, `--confirm-database`, `--worker`, and the
-restore/expected outsider checks — runs before `--out` is even created, so
+Every exit-2 check — flags, `--confirm-database`, `--worker`, the
+restore/expected outsider checks and the Id→SdkSitId ownership check — runs before `--out` is even created, so
 nothing is ever written to disk (not `--out` itself, let alone a report file
 or a database row) before the invocation is known to be valid.
 
@@ -133,8 +140,13 @@ Operational detail lives in spec §6; in short:
 1. Build `restore.csv` + `expected.csv` offline from a fresh read-only dump.
 2. `repair` as a dry run against the tenant. Report to the owner. **No
    `--apply` without the owner's go.**
-3. `repair --apply --confirm-database <tenant-db>` outside the nightly walk
+3. Take a fresh read-only snapshot of the tenant's `PlanRegistrations`
+   immediately before `--apply` (e.g.
+   `mysqldump --single-transaction -h <host> -P <port> -u <user> -p <tenant-db> PlanRegistrations > <snapshot>.sql`);
+   it is the recovery record for the moment between a worker's commit and its
+   before-image reaching disk.
+4. `repair --apply --confirm-database <tenant-db>` outside the nightly walk
    window.
-4. Re-dump and verify every worker matches expected balances.
-5. Keep `before-image.csv` until the tenant is verified stable — it is the
-   only way to `revert`.
+5. Re-dump and verify every worker matches expected balances.
+6. Keep `before-image.csv` and the pre-apply snapshot until the tenant is
+   verified stable — `before-image.csv` is the only input `revert` takes.
