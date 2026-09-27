@@ -42,7 +42,7 @@ const string Usage =
 
     Exit codes: 0 every worker OK; 1 a worker/setup ran into a real problem
     (mismatch, guard failure, locked worker, a thrown exception, a database
-    query error, malformed CSV content, a duplicate Id in expected.csv, or a
+    query error, malformed CSV content, a duplicate Id in expected.csv or restore.csv, or a
     revert with changed/missing/errored rows); 2 the invocation itself was
     wrong (bad/missing/unknown flags, --apply without a matching
     --confirm-database, --out already used, an unreadable input path, --worker
@@ -195,12 +195,21 @@ static async Task<int> RunRepair(string connectionString, Dictionary<string, str
         return 1;
     }
 
-    var duplicateExpectedIds = expectedList.GroupBy(e => e.Id).Where(g => g.Count() > 1)
-        .Select(g => g.Key).ToList();
+    var duplicateExpectedIds = DuplicateIds(expectedList, e => e.Id);
     if (duplicateExpectedIds.Count > 0)
     {
         Console.Error.WriteLine(
             $"error: expected.csv contains duplicate Id(s): {string.Join(", ", duplicateExpectedIds)}");
+        return 1;
+    }
+
+    // Found here, not when that worker is reached — with --apply, earlier
+    // workers would already have committed before the bad manifest surfaced.
+    var duplicateRestoreIds = DuplicateIds(restores, r => r.Id);
+    if (duplicateRestoreIds.Count > 0)
+    {
+        Console.Error.WriteLine(
+            $"error: restore.csv contains duplicate Id(s): {string.Join(", ", duplicateRestoreIds)}");
         return 1;
     }
 
@@ -632,6 +641,9 @@ static async Task<List<(int Id, int SdkSitId)>> LoadUncoveredRowsAsync(string co
         .Select(x => (x.Id, x.SdkSitId))
         .ToList();
 }
+
+static List<int> DuplicateIds<T>(IEnumerable<T> items, Func<T, int> id) =>
+    items.GroupBy(id).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
 
 // Up to MaxListed error lines, then "... and N more".
 static void PrintCappedErrors<T>(IReadOnlyList<T> items, Func<T, string> formatMessage)

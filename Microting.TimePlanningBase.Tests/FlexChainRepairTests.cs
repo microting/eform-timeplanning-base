@@ -407,6 +407,25 @@ public class FlexChainRepairTests : DbTestFixture
         });
     }
 
+    [Test]
+    public async Task NonFiniteRestoreOrExpectedValue_Throws()
+    {
+        await Site();
+        var a = await Row(0, 8, 7.5, 0, 0.5);
+        var nanRestore = Restore(a, double.NaN);
+        var infExpected = new Dictionary<int, ExpectedBalance>
+        {
+            [a.Id] = new(Worker, a.Id, 0, double.PositiveInfinity)
+        };
+        var versionsBefore = VersionRows();
+
+        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+            new[] { nanRestore with { RestoreNettoHoursInSeconds = 0 } }, Expect((a, 0, 0.5)), apply: true));
+        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+            Array.Empty<RestoreLine>(), infExpected, apply: true));
+        Assert.That(VersionRows(), Is.EqualTo(versionsBefore));
+    }
+
     [TestCase(double.NaN)]
     [TestCase(double.PositiveInfinity)]
     [TestCase(-1.0)]

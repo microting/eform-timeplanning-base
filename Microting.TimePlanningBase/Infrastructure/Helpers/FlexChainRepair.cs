@@ -73,6 +73,21 @@ public static class FlexChainRepair
                 "tolerance must be a finite, non-negative number.");
         }
 
+        // Every comparison below is `Math.Abs(a - b) > limit`, which a NaN or an
+        // infinity makes false — so a non-finite input would pass every check.
+        var nonFinite = restores
+            .Where(r => !double.IsFinite(r.ExpectNettoHours) || !double.IsFinite(r.RestoreNettoHours))
+            .Select(r => r.Id)
+            .Concat(expected.Values
+                .Where(e => !double.IsFinite(e.SumFlexStart) || !double.IsFinite(e.SumFlexEnd))
+                .Select(e => e.Id))
+            .ToList();
+        if (nonFinite.Count > 0)
+        {
+            throw new ArgumentException(
+                $"restore/expected values must be finite numbers; Id(s) {string.Join(", ", nonFinite)}.");
+        }
+
         // Lower bound for the UpdatedAt our own restore step writes: lets the
         // lost-commit-ack check tell our write apart from an earlier one that
         // happened to leave the same hours. The second of slack covers
