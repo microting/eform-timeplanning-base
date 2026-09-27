@@ -42,7 +42,7 @@ const string Usage =
 
     Exit codes: 0 every worker OK; 1 a worker/setup ran into a real problem
     (mismatch, guard failure, locked worker, a thrown exception, a database
-    query error, malformed CSV content, a duplicate Id in expected.csv or restore.csv, or a
+    query error, malformed CSV content, a duplicate Id in expected.csv, restore.csv or the before-image, or a
     revert with changed/missing/errored rows); 2 the invocation itself was
     wrong (bad/missing/unknown flags, --apply without a matching
     --confirm-database, --out already used, an unreadable input path, --worker
@@ -476,6 +476,16 @@ static async Task<int> RunRevert(string connectionString, Dictionary<string, str
     catch (FormatException ex)
     {
         Console.Error.WriteLine($"error: {ex.Message}");
+        return 1;
+    }
+
+    // RevertAsync rejects a duplicate only inside its own worker's group — by
+    // then earlier groups may have committed. Catch it for the whole file now.
+    var duplicateBeforeImageIds = DuplicateIds(rows, r => r.Id);
+    if (duplicateBeforeImageIds.Count > 0)
+    {
+        Console.Error.WriteLine(
+            $"error: before-image contains duplicate Id(s): {string.Join(", ", duplicateBeforeImageIds)}");
         return 1;
     }
 

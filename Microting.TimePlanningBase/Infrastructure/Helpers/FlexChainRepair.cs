@@ -88,6 +88,19 @@ public static class FlexChainRepair
                 $"restore/expected values must be finite numbers; Id(s) {string.Join(", ", nonFinite)}.");
         }
 
+        // The checks look an oracle entry up by its key, so the key must be the
+        // entry's own row and the entry must be this worker's.
+        var misfiled = expected
+            .Where(x => x.Key != x.Value.Id || x.Value.SdkSitId != sdkSitId)
+            .Select(x => x.Key)
+            .ToList();
+        if (misfiled.Count > 0)
+        {
+            throw new ArgumentException(
+                $"expected entries must be keyed by their own Id and belong to worker {sdkSitId}; " +
+                $"key(s) {string.Join(", ", misfiled)}.");
+        }
+
         // Lower bound for the UpdatedAt our own restore step writes: lets the
         // lost-commit-ack check tell our write apart from an earlier one that
         // happened to leave the same hours. The second of slack covers

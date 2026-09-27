@@ -408,6 +408,29 @@ public class FlexChainRepairTests : DbTestFixture
     }
 
     [Test]
+    public async Task MisfiledExpectedEntry_Throws()
+    {
+        await Site();
+        var a = await Row(0, 8, 7.5, 0, 0.5);
+        var b = await Row(1, 8, 7.5, 0.5, 1.0);
+        var keyedWrong = new Dictionary<int, ExpectedBalance>
+        {
+            [a.Id] = new(Worker, b.Id, 0.5, 1.0)          // row b's values filed under row a
+        };
+        var otherWorker = new Dictionary<int, ExpectedBalance>
+        {
+            [a.Id] = new(OtherWorker, a.Id, 0, 0.5)
+        };
+        var versionsBefore = VersionRows();
+
+        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+            Array.Empty<RestoreLine>(), keyedWrong, apply: true));
+        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+            Array.Empty<RestoreLine>(), otherWorker, apply: true));
+        Assert.That(VersionRows(), Is.EqualTo(versionsBefore));
+    }
+
+    [Test]
     public async Task NonFiniteRestoreOrExpectedValue_Throws()
     {
         await Site();
