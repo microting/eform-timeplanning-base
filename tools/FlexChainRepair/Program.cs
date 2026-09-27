@@ -468,8 +468,8 @@ static async Task<int> RunRevert(string connectionString, Dictionary<string, str
             // have committed the transaction without us hearing back, so this
             // worker's true state is unknown.
             Console.Error.WriteLine(
-                $"worker {sdkSitId}: state UNKNOWN — the commit may have landed; before-image.csv covers only " +
-                $"the workers reported Applied ({ex.Message})");
+                $"worker {sdkSitId}: state UNKNOWN — the revert may have committed; re-run a dry-run revert " +
+                $"for this worker to see which rows are still at their repaired version ({ex.Message})");
             anyError = true;
             stop = apply;
         }
