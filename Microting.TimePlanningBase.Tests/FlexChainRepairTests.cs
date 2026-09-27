@@ -355,4 +355,89 @@ public class FlexChainRepairTests : DbTestFixture
             Assert.That(VersionRows(), Is.EqualTo(versionsBefore));
         });
     }
+
+    [Test]
+    public async Task Revert_AfterApply_RestoresEveryCapturedColumn()
+    {
+        await Site();
+        var a = await Row(0, 8, 7.5, 0, 0.5);
+        var b = await Row(1, 5, 7.5, 0.5, -2.0);
+        var original = Reload();
+        var res = await FlexChainRepair.RepairWorkerAsync(DbContext, Worker, new[] { Restore(b, 8) },
+            Expect((a, 0, 0.5), (b, 0.5, 1.0)), apply: true);
+
+        var rev = await FlexChainRepair.RevertAsync(DbContext, res.BeforeImage, apply: true);
+
+        var rows = Reload();
+        Assert.Multiple(() =>
+        {
+            Assert.That(rev.Reverted, Is.EqualTo(2));
+            Assert.That(rev.ChangedIds, Is.Empty);
+            Assert.That(rows.Select(x => (x.NettoHours, x.NettoHoursInSeconds, x.Flex, x.SumFlexStart, x.SumFlexEnd)),
+                Is.EqualTo(original.Select(x => (x.NettoHours, x.NettoHoursInSeconds, x.Flex, x.SumFlexStart, x.SumFlexEnd))));
+        });
+    }
+
+    [Test]
+    public async Task Revert_SkipsARowChangedAfterTheRepair()
+    {
+        await Site();
+        var a = await Row(0, 8, 7.5, 0, 0.5);
+        var b = await Row(1, 5, 7.5, 0.5, -2.0);
+        var res = await FlexChainRepair.RepairWorkerAsync(DbContext, Worker, new[] { Restore(b, 8) },
+            Expect((a, 0, 0.5), (b, 0.5, 1.0)), apply: true);
+
+        var edited = await DbContext.PlanRegistrations.SingleAsync(x => x.Id == b.Id);
+        edited.NettoHours = 9;
+        await edited.Update(DbContext);          // Version + 1: the customer edited it after the repair
+
+        var rev = await FlexChainRepair.RevertAsync(DbContext, res.BeforeImage, apply: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(rev.ChangedIds, Is.EqualTo(new[] { b.Id }));
+            Assert.That(Reload()[1].NettoHours, Is.EqualTo(9));
+        });
+    }
+
+    [Test]
+    public async Task Revert_DryRun_WritesNothing()
+    {
+        await Site();
+        var a = await Row(0, 8, 7.5, 0, 0.5);
+        var b = await Row(1, 5, 7.5, 0.5, -2.0);
+        var res = await FlexChainRepair.RepairWorkerAsync(DbContext, Worker, new[] { Restore(b, 8) },
+            Expect((a, 0, 0.5), (b, 0.5, 1.0)), apply: true);
+
+        var rev = await FlexChainRepair.RevertAsync(DbContext, res.BeforeImage, apply: false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(rev.Applied, Is.False);
+            Assert.That(rev.Reverted, Is.EqualTo(2));
+            Assert.That(Reload()[1].NettoHours, Is.EqualTo(8));
+        });
+    }
+
+    [Test]
+    public void Revert_MixedWorkers_Throws()
+    {
+        var mixed = new[]
+        {
+            new BeforeImageRow(1, Worker, 1, 1, 8, 28800, 0.5, 1800, 0, 0, 0.5, 1800),
+            new BeforeImageRow(2, OtherWorker, 1, 1, 5, 18000, -2.0, -7200, 0.5, 1800, -2.0, -7200)
+        };
+        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, mixed, apply: true));
+    }
+
+    [Test]
+    public void Revert_DuplicateIds_Throws()
+    {
+        var duplicate = new[]
+        {
+            new BeforeImageRow(1, Worker, 1, 1, 8, 28800, 0.5, 1800, 0, 0, 0.5, 1800),
+            new BeforeImageRow(1, Worker, 2, 2, 9, 32400, 1.5, 5400, 0.5, 1800, 2.0, 7200)
+        };
+        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, duplicate, apply: true));
+    }
 }

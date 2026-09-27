@@ -220,12 +220,7 @@ public static class FlexChainRepair
             }
             await db.SaveChangesAsync();
 
-            foreach (var line in restores)
-            {
-                await db.PlanRegistrationVersions.AddAsync(
-                    (PlanRegistrationVersion)byId[line.Id].CreateVersionSnapshot());
-            }
-            await db.SaveChangesAsync();
+            await SaveVersionSnapshotsAsync(db, restores.Select(x => x.Id), byId);
         }
         result.RowsRestored = restores.Count;
 
@@ -297,4 +292,212 @@ public static class FlexChainRepair
     private static BeforeImageRow ToBeforeImage(PlanRegistration r) => new(r.Id, r.SdkSitId, r.Version, r.Version,
         r.NettoHours, r.NettoHoursInSeconds, r.Flex, r.FlexInSeconds,
         r.SumFlexStart, r.SumFlexStartInSeconds, r.SumFlexEnd, r.SumFlexEndInSeconds);
+
+    /// <summary>
+    /// Reverts one worker's previously applied repair from its before-image,
+    /// inside one database transaction (same shape as
+    /// <see cref="RepairWorkerAsync"/>). One worker per call — callers group a
+    /// multi-worker before-image by SdkSitId themselves — keeps the Galera
+    /// writeset small and matches the repair's own per-worker atomicity.
+    /// A row that no longer exists is reported as missing; a soft-deleted row IS
+    /// reverted (it is still writable, just no longer live). A row whose Version
+    /// has moved past <see cref="BeforeImageRow.RepairedVersion"/> was touched by
+    /// something else since the repair and is reported as changed — neither
+    /// blocks the other rows in the list. The transaction commits only when
+    /// <paramref name="apply"/> is true.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="rows"/> names more than one SdkSitId, or the same Id twice.
+    /// </exception>
+    public static async Task<RevertResult> RevertAsync(TimePlanningPnDbContext db,
+        IReadOnlyList<BeforeImageRow> rows, bool apply)
+    {
+        var sdkSitIds = rows.Select(x => x.SdkSitId).Distinct().ToList();
+        if (sdkSitIds.Count > 1)
+        {
+            throw new ArgumentException(
+                $"RevertAsync takes one worker's before-image; got SdkSitIds {string.Join(", ", sdkSitIds)}.",
+                nameof(rows));
+        }
+
+        var duplicateIds = rows.GroupBy(x => x.Id).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+        if (duplicateIds.Count > 0)
+        {
+            throw new ArgumentException(
+                $"RevertAsync got duplicate before-image Ids: {string.Join(", ", duplicateIds)}.",
+                nameof(rows));
+        }
+
+        var result = new RevertResult();
+        db.ChangeTracker.Clear();
+
+        // The ids counted as Reverted by the attempt the execution strategy is
+        // about to retry: captured outside `result` because `result` is reset to
+        // a clean slate at the top of every attempt (see below), but the retry's
+        // verifySucceeded check needs to know what the FAILED attempt reverted.
+        var revertedIds = new List<int>();
+
+        var strategy = db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(
+            result,
+            async (_, res, _) =>
+            {
+                // A retried attempt starts from a clean result: Reverted/ChangedIds/
+                // MissingIds are all re-derived from the current row state, unlike
+                // RepairWorkerAsync's before-image, there is nothing here that must
+                // survive a retry.
+                res.Reverted = 0;
+                res.ChangedIds.Clear();
+                res.MissingIds.Clear();
+                revertedIds.Clear();
+                db.ChangeTracker.Clear();
+
+                await using var tx = await db.Database.BeginTransactionAsync();
+                try
+                {
+                    var commit = await RunRevertAsync(db, rows, apply, res, revertedIds);
+                    if (commit)
+                    {
+                        await tx.CommitAsync();
+                    }
+                    else
+                    {
+                        await tx.RollbackAsync();
+                    }
+                    return commit;
+                }
+                finally
+                {
+                    db.ChangeTracker.Clear();
+                }
+            },
+            async (_, res, _) =>
+            {
+                db.ChangeTracker.Clear();
+                if (await RevertLandedAsync(db, rows, revertedIds, apply))
+                {
+                    // the commit went through but its acknowledgement was lost
+                    res.Applied = true;
+                    return new ExecutionResult<bool>(true, true);
+                }
+                return new ExecutionResult<bool>(false, false);
+            });
+        return result;
+    }
+
+    /// <summary>
+    /// Called by the execution strategy when an attempt threw, before it retries:
+    /// did that attempt commit anyway (a lost commit acknowledgement)? True iff
+    /// this was an apply with rows this attempt counted as reverted, and every one
+    /// of those rows now carries the captured columns at Version ==
+    /// RepairedVersion + 1. With nothing reverted there is nothing to recognise
+    /// the commit by, so the answer is "not succeeded" and the strategy re-runs —
+    /// harmless, since re-reverting an already-reverted row is a no-op read that
+    /// then reports it as changed instead (its Version has moved on).
+    /// </summary>
+    private static async Task<bool> RevertLandedAsync(TimePlanningPnDbContext db,
+        IReadOnlyList<BeforeImageRow> rows, IReadOnlyList<int> revertedIds, bool apply)
+    {
+        if (!apply || revertedIds.Count == 0)
+        {
+            return false;
+        }
+
+        var byId = rows.ToDictionary(x => x.Id);
+        var now = await db.PlanRegistrations.AsNoTracking()
+            .Where(x => revertedIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id);
+
+        return revertedIds.All(id => now.TryGetValue(id, out var r)
+                                      && byId.TryGetValue(id, out var before)
+                                      && r.Version == before.RepairedVersion + 1
+                                      && Math.Abs(r.NettoHours - before.NettoHours) <= HoursGuardTolerance
+                                      && r.NettoHoursInSeconds == before.NettoHoursInSeconds
+                                      && Math.Abs(r.Flex - before.Flex) <= HoursGuardTolerance
+                                      && r.FlexInSeconds == before.FlexInSeconds
+                                      && Math.Abs(r.SumFlexStart - before.SumFlexStart) <= HoursGuardTolerance
+                                      && r.SumFlexStartInSeconds == before.SumFlexStartInSeconds
+                                      && Math.Abs(r.SumFlexEnd - before.SumFlexEnd) <= HoursGuardTolerance
+                                      && r.SumFlexEndInSeconds == before.SumFlexEndInSeconds);
+    }
+
+    /// <returns>true only when <paramref name="apply"/> is set.</returns>
+    private static async Task<bool> RunRevertAsync(TimePlanningPnDbContext db, IReadOnlyList<BeforeImageRow> rows,
+        bool apply, RevertResult result, List<int> revertedIds)
+    {
+        if (rows.Count == 0)
+        {
+            result.Applied = apply;
+            return apply;
+        }
+
+        var ids = rows.Select(x => x.Id).ToList();
+
+        // PlanRegistration has no concurrency token and this runs against a live
+        // tenant, so the before-image rows are locked to commit before they are
+        // read. The ids are the Ids captured in a prior repair's before-image —
+        // ints produced by this same codebase, never free text — so joining them
+        // straight into the IN list is safe from injection; ExecuteSqlRaw keeps
+        // the lock to one round trip instead of a parameterised statement per id
+        // (MySQL's placeholder limit would otherwise cap how many rows a single
+        // revert could lock).
+        await db.Database.ExecuteSqlRawAsync(
+            $"SELECT Id FROM PlanRegistrations WHERE Id IN ({string.Join(",", ids)}) FOR UPDATE");
+
+        var byId = await db.PlanRegistrations
+            .Where(x => ids.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id);
+
+        var now = DateTime.UtcNow;
+        foreach (var before in rows)
+        {
+            if (!byId.TryGetValue(before.Id, out var r))
+            {
+                result.MissingIds.Add(before.Id);
+                continue;
+            }
+
+            if (r.Version != before.RepairedVersion)
+            {
+                result.ChangedIds.Add(before.Id);
+                continue;
+            }
+
+            r.NettoHours = before.NettoHours;
+            r.NettoHoursInSeconds = before.NettoHoursInSeconds;
+            r.Flex = before.Flex;
+            r.FlexInSeconds = before.FlexInSeconds;
+            r.SumFlexStart = before.SumFlexStart;
+            r.SumFlexStartInSeconds = before.SumFlexStartInSeconds;
+            r.SumFlexEnd = before.SumFlexEnd;
+            r.SumFlexEndInSeconds = before.SumFlexEndInSeconds;
+            r.Version += 1;
+            r.UpdatedAt = now;
+            result.Reverted++;
+            revertedIds.Add(before.Id);
+        }
+        await db.SaveChangesAsync();
+
+        await SaveVersionSnapshotsAsync(db, revertedIds, byId);
+
+        result.Applied = apply;
+        return apply;
+    }
+
+    /// <summary>
+    /// Adds one version-history snapshot per id, for writers that batch several
+    /// row updates into one <c>SaveChangesAsync</c> instead of calling
+    /// <see cref="PnBase.Update"/> per row (the restore step of
+    /// <see cref="RunAsync"/> and the write step of <see cref="RunRevertAsync"/>).
+    /// </summary>
+    private static async Task SaveVersionSnapshotsAsync(TimePlanningPnDbContext db, IEnumerable<int> ids,
+        IReadOnlyDictionary<int, PlanRegistration> byId)
+    {
+        foreach (var id in ids)
+        {
+            await db.PlanRegistrationVersions.AddAsync(
+                (PlanRegistrationVersion)byId[id].CreateVersionSnapshot());
+        }
+        await db.SaveChangesAsync();
+    }
 }
