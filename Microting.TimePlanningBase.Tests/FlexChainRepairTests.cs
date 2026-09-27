@@ -566,4 +566,12 @@ public class FlexChainRepairTests : DbTestFixture
         };
         Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, duplicate, apply: true));
     }
+
+    [TestCase(double.NaN)]
+    [TestCase(double.PositiveInfinity)]
+    public void Revert_NonFiniteValue_Throws(double bad)
+    {
+        var image = new[] { new BeforeImageRow(1, Worker, 1, 1, 8, 28800, 0.5, 1800, 0, 0, bad, 1800) };
+        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, image, apply: true));
+    }
 }

@@ -409,6 +409,20 @@ public static class FlexChainRepair
                 nameof(rows));
         }
 
+        // These values are written back verbatim, so a non-finite one would be
+        // written into the chain.
+        var nonFinite = rows
+            .Where(x => !double.IsFinite(x.NettoHours) || !double.IsFinite(x.Flex)
+                        || !double.IsFinite(x.SumFlexStart) || !double.IsFinite(x.SumFlexEnd))
+            .Select(x => x.Id)
+            .ToList();
+        if (nonFinite.Count > 0)
+        {
+            throw new ArgumentException(
+                $"before-image values must be finite numbers; Id(s) {string.Join(", ", nonFinite)}.",
+                nameof(rows));
+        }
+
         var result = new RevertResult();
         db.ChangeTracker.Clear();
 
