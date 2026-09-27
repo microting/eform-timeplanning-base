@@ -161,6 +161,14 @@ public static class FlexChainRepair
         await db.Database.ExecuteSqlInterpolatedAsync(
             $"SELECT Id FROM PlanRegistrations WHERE SdkSitId = {sdkSitId} FOR UPDATE");
 
+        // A reconciliation committed between the pre-check and the lock is caught
+        // here; once the rows are locked, a reconcile of this worker waits for us.
+        if (await DayLock.LockedThroughAsync(db, sdkSitId) is not null)
+        {
+            result.Outcome = RepairOutcome.Locked;
+            return false;
+        }
+
         var live = db.PlanRegistrations
             .Where(x => x.SdkSitId == sdkSitId)
             .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed);
@@ -178,6 +186,22 @@ public static class FlexChainRepair
 
         if (rows.Count == 0)
         {
+            // No live rows: a restore line cannot name one of them, and an
+            // expected entry cannot still be live, so either is a failed plan.
+            // Only an empty plan is a no-op success.
+            if (restores.Count > 0)
+            {
+                result.GuardFailedIds.AddRange(restores.Select(x => x.Id).Distinct());
+                result.Outcome = RepairOutcome.GuardFailed;
+                return false;
+            }
+            if (expected.Count > 0)
+            {
+                result.Mismatches.AddRange(expected.OrderBy(x => x.Key).Take(MaxMismatches)
+                    .Select(x => new RowMismatch(x.Key, default, "Missing", x.Value.SumFlexEnd, double.NaN)));
+                result.Outcome = RepairOutcome.Mismatch;
+                return false;
+            }
             result.Outcome = apply ? RepairOutcome.Applied : RepairOutcome.DryRunOk;
             return apply;
         }
@@ -302,7 +326,8 @@ public static class FlexChainRepair
     /// A row that no longer exists is reported as missing; a soft-deleted row IS
     /// reverted (it is still writable, just no longer live). A row whose Version
     /// has moved past <see cref="BeforeImageRow.RepairedVersion"/> was touched by
-    /// something else since the repair and is reported as changed — neither
+    /// something else since the repair, and a row that now belongs to another
+    /// SdkSitId than the before-image says; both are reported as changed — neither
     /// blocks the other rows in the list. The transaction commits only when
     /// <paramref name="apply"/> is true.
     /// </summary>
@@ -457,7 +482,9 @@ public static class FlexChainRepair
                 continue;
             }
 
-            if (r.Version != before.RepairedVersion)
+            // a row of another worker (a hand-edited before-image) is treated like
+            // a version mismatch: never written, reported as changed
+            if (r.SdkSitId != before.SdkSitId || r.Version != before.RepairedVersion)
             {
                 result.ChangedIds.Add(before.Id);
                 continue;

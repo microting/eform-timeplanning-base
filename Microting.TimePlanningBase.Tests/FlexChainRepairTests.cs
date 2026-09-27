@@ -314,6 +314,35 @@ public class FlexChainRepairTests : DbTestFixture
     }
 
     [Test]
+    public async Task WorkerWithNoRows_RestoreLine_IsGuardFailed()
+    {
+        await Site();
+        var line = new RestoreLine(123456, Worker, 1, 5, 8, ToSeconds(8), "recompute");
+        var res = await FlexChainRepair.RepairWorkerAsync(DbContext, Worker, new[] { line },
+            new Dictionary<int, ExpectedBalance>(), apply: true);
+        Assert.Multiple(() =>
+        {
+            Assert.That(res.Outcome, Is.EqualTo(RepairOutcome.GuardFailed));
+            Assert.That(res.GuardFailedIds, Is.EqualTo(new[] { 123456 }));
+        });
+    }
+
+    [Test]
+    public async Task WorkerWithNoRows_ExpectedEntry_IsMismatch()
+    {
+        await Site();
+        var expected = new Dictionary<int, ExpectedBalance> { [123456] = new(Worker, 123456, 0, 0.5) };
+        var res = await FlexChainRepair.RepairWorkerAsync(DbContext, Worker, Array.Empty<RestoreLine>(),
+            expected, apply: true);
+        Assert.Multiple(() =>
+        {
+            Assert.That(res.Outcome, Is.EqualTo(RepairOutcome.Mismatch));
+            Assert.That(res.Mismatches.Single().Id, Is.EqualTo(123456));
+            Assert.That(res.Mismatches.Single().Field, Is.EqualTo("Missing"));
+        });
+    }
+
+    [Test]
     public async Task Guard_DuplicateRestoreLine_Fails()
     {
         await Site();
@@ -416,6 +445,30 @@ public class FlexChainRepairTests : DbTestFixture
             Assert.That(rev.Applied, Is.False);
             Assert.That(rev.Reverted, Is.EqualTo(2));
             Assert.That(Reload()[1].NettoHours, Is.EqualTo(8));
+        });
+    }
+
+    [Test]
+    public async Task Revert_RowOfAnotherWorker_IsNotReverted()
+    {
+        await Site();
+        var other = await Row(0, 5, 7.5, 0, -2.5, worker: OtherWorker);
+        var versionsBefore = VersionRows();
+        // a before-image row claiming Worker, but its Id is OtherWorker's row
+        var forged = new BeforeImageRow(other.Id, Worker, other.Version, other.Version,
+            8, 28800, 0.5, 1800, 0, 0, 0.5, 1800);
+
+        var rev = await FlexChainRepair.RevertAsync(DbContext, new[] { forged }, apply: true);
+
+        var row = await DbContext.PlanRegistrations.AsNoTracking().SingleAsync(x => x.Id == other.Id);
+        Assert.Multiple(() =>
+        {
+            Assert.That(rev.ChangedIds, Is.EqualTo(new[] { other.Id }));
+            Assert.That(rev.Reverted, Is.EqualTo(0));
+            Assert.That(row.NettoHours, Is.EqualTo(5));
+            Assert.That(row.SumFlexEnd, Is.EqualTo(-2.5));
+            Assert.That(row.Version, Is.EqualTo(other.Version));
+            Assert.That(VersionRows(), Is.EqualTo(versionsBefore));
         });
     }
 

@@ -48,21 +48,19 @@ public static class FlexChainRepairCsv
 
     /// <summary>Reads a restore-plan CSV (see <see cref="RestoreLine"/>).</summary>
     public static IReadOnlyList<RestoreLine> ReadRestore(TextReader reader) =>
-        ReadRows(reader, RestoreHeader, 7, fields => new RestoreLine(
-            ParseInt(fields[0]), ParseInt(fields[1]), ParseInt(fields[2]), ParseDouble(fields[3]),
-            ParseDouble(fields[4]), ParseInt(fields[5]), fields[6]));
+        ReadRows(reader, RestoreHeader, f => new RestoreLine(
+            f.Int(0), f.Int(1), f.Int(2), f.Double(3), f.Double(4), f.Int(5), f.Text(6)));
 
     /// <summary>Reads an expected-balance CSV (see <see cref="ExpectedBalance"/>).</summary>
     public static IReadOnlyList<ExpectedBalance> ReadExpected(TextReader reader) =>
-        ReadRows(reader, ExpectedHeader, 4, fields => new ExpectedBalance(
-            ParseInt(fields[0]), ParseInt(fields[1]), ParseDouble(fields[2]), ParseDouble(fields[3])));
+        ReadRows(reader, ExpectedHeader, f => new ExpectedBalance(
+            f.Int(0), f.Int(1), f.Double(2), f.Double(3)));
 
     /// <summary>Reads a before-image CSV (see <see cref="BeforeImageRow"/>).</summary>
     public static IReadOnlyList<BeforeImageRow> ReadBeforeImage(TextReader reader) =>
-        ReadRows(reader, BeforeImageHeader, 12, fields => new BeforeImageRow(
-            ParseInt(fields[0]), ParseInt(fields[1]), ParseInt(fields[2]), ParseInt(fields[3]),
-            ParseDouble(fields[4]), ParseInt(fields[5]), ParseDouble(fields[6]), ParseInt(fields[7]),
-            ParseDouble(fields[8]), ParseInt(fields[9]), ParseDouble(fields[10]), ParseInt(fields[11])));
+        ReadRows(reader, BeforeImageHeader, f => new BeforeImageRow(
+            f.Int(0), f.Int(1), f.Int(2), f.Int(3), f.Double(4), f.Int(5), f.Double(6), f.Int(7),
+            f.Double(8), f.Int(9), f.Double(10), f.Int(11)));
 
     /// <summary>
     /// Writes a before-image CSV. Pass <paramref name="header"/> false to append
@@ -95,10 +93,10 @@ public static class FlexChainRepairCsv
         }
     }
 
-    private static List<T> ReadRows<T>(TextReader reader, string header, int columnCount,
-        Func<string[], T> parse)
+    private static List<T> ReadRows<T>(TextReader reader, string header, Func<Fields, T> parse)
     {
         var results = new List<T>();
+        var columns = header.Split(',');
 
         var firstLine = reader.ReadLine();
         if (firstLine != header)
@@ -116,24 +114,40 @@ public static class FlexChainRepairCsv
                 continue;
             }
 
-            var fields = line.Split(',');
-            if (fields.Length != columnCount)
+            var values = line.Split(',');
+            if (values.Length != columns.Length)
             {
                 throw new FormatException(
-                    $"line {lineNumber}: expected {columnCount} columns, got {fields.Length}");
+                    $"line {lineNumber}: expected {columns.Length} columns, got {values.Length}");
             }
 
-            results.Add(parse(fields));
+            results.Add(parse(new Fields(values, columns, lineNumber)));
         }
 
         return results;
     }
 
-    private static double ParseDouble(string s) =>
-        double.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture);
+    /// <summary>One data line's fields, with the context a parse error needs.</summary>
+    private readonly record struct Fields(string[] Values, string[] Columns, int LineNumber)
+    {
+        public string Text(int i) => Values[i];
 
-    private static int ParseInt(string s) =>
-        int.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
+        public int Int(int i) => int.Parse(Values[i], NumberStyles.Integer, CultureInfo.InvariantCulture);
+
+        /// <summary>
+        /// NaN and ±Infinity parse under <see cref="NumberStyles.Float"/> but would
+        /// poison every tolerance comparison downstream, so they are rejected here.
+        /// </summary>
+        public double Double(int i)
+        {
+            var d = double.Parse(Values[i], NumberStyles.Float, CultureInfo.InvariantCulture);
+            if (double.IsNaN(d) || double.IsInfinity(d))
+            {
+                throw new FormatException($"line {LineNumber}: {Columns[i]} is not a finite number ('{Values[i]}')");
+            }
+            return d;
+        }
+    }
 
     private static string WriteDouble(double d) => d.ToString("R", CultureInfo.InvariantCulture);
 

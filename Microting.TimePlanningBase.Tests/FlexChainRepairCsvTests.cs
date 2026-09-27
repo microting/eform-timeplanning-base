@@ -83,6 +83,22 @@ public class FlexChainRepairCsvTests
     }
 
     [Test]
+    public void NonFiniteNumber_Throws()
+    {
+        var restore = Assert.Throws<FormatException>(() => FlexChainRepairCsv.ReadRestore(new StringReader(
+            "Id,SdkSitId,ExpectVersion,ExpectNettoHours,RestoreNettoHours,RestoreNettoHoursInSeconds,Reason\n"
+            + "10,7,3,6.25,7.5,27000,recompute\n"
+            + "11,7,1,NaN,0,0,open-shift\n")));
+        var expected = Assert.Throws<FormatException>(() => FlexChainRepairCsv.ReadExpected(new StringReader(
+            "SdkSitId,Id,SumFlexStart,SumFlexEnd\n7,10,1.5,Infinity\n")));
+        Assert.Multiple(() =>
+        {
+            Assert.That(restore!.Message, Does.Contain("line 3").And.Contain("ExpectNettoHours"));
+            Assert.That(expected!.Message, Does.Contain("line 2").And.Contain("SumFlexEnd"));
+        });
+    }
+
+    [Test]
     public void Parsing_IgnoresCurrentCulture()
     {
         var saved = CultureInfo.CurrentCulture;
