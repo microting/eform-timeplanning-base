@@ -270,6 +270,34 @@ public class FlexChainRepairTests : DbTestFixture
     }
 
     [Test]
+    public async Task Walk_UsesTheActiveSite_NotAnEarlierResignedOne()
+    {
+        // The resigned site (lower Id) is in one-minute mode, the active one is
+        // not. A one-minute walk would write a seconds balance onto these rows;
+        // a five-minute walk leaves them at 0 — so the stored seconds show which
+        // site was used.
+        await new AssignedSite
+        {
+            SiteId = Worker, Resigned = true, UseOneMinuteIntervals = true,
+            UseOneMinuteIntervalsFrom = D0.AddDays(-30)
+        }.Create(DbContext);
+        await new AssignedSite { SiteId = Worker }.Create(DbContext);
+        var a = await Row(0, 8, 7.5, 0, 0.5);
+        var b = await Row(1, 8, 7.5, 0.5, 1.0);
+
+        var res = await FlexChainRepair.RepairWorkerAsync(DbContext, Worker, Array.Empty<RestoreLine>(),
+            Expect((a, 0, 0.5), (b, 0.5, 1.0)), apply: true);
+
+        var rows = Reload();
+        Assert.Multiple(() =>
+        {
+            Assert.That(res.Outcome, Is.EqualTo(RepairOutcome.Applied));
+            Assert.That(rows[1].SumFlexEndInSeconds, Is.EqualTo(0));
+            Assert.That(rows[1].SumFlexEnd, Is.EqualTo(1.0).Within(1e-9));
+        });
+    }
+
+    [Test]
     public async Task RowFromTheDumpWithoutExpectedEntry_IsUncovered_AndRollsBack()
     {
         await Site();

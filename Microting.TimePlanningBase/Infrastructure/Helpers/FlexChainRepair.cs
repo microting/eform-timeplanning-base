@@ -294,9 +294,13 @@ public static class FlexChainRepair
         }
         result.RowsRestored = restores.Count;
 
-        // 4. walk the whole chain from the worker's first row
+        // 4. walk the whole chain from the worker's first row, with the worker's
+        // active site (non-removed, not resigned, lowest Id) — its one-minute
+        // settings decide how each row is carried
         var site = await db.AssignedSites.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.SiteId == sdkSitId && x.WorkflowState != Constants.WorkflowStates.Removed);
+            .Where(x => x.SiteId == sdkSitId && x.WorkflowState != Constants.WorkflowStates.Removed && !x.Resigned)
+            .OrderBy(x => x.Id)
+            .FirstOrDefaultAsync();
         result.RowsWalked = await FlexChainRecompute.RunForwardAsync(db, site, sdkSitId, rows[0].Date);
 
         // 5. check — both ways: every live row against the oracle and its
