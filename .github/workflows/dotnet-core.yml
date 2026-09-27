@@ -31,6 +31,8 @@ jobs:
       run: echo "VERSION=$(echo $GITHUB_REF | cut -d / -f 3 | cut -d 'v' -f 2)" >> $GITHUB_OUTPUT
     - name: Build
       run: dotnet build --configuration Release --no-restore
+    - name: Build repair tool
+      run: dotnet build tools/FlexChainRepair/FlexChainRepair.csproj --configuration Release
     - name: Unit Tests
       run: dotnet test --no-restore -c Release -v n Microting.TimePlanningBase.Tests/Microting.TimePlanningBase.Tests.csproj
     - name: Pack
