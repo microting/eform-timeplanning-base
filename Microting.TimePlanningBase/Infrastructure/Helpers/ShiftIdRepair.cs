@@ -194,6 +194,16 @@ public static class ShiftIdRepair
     {
         var ids = lines.Select(x => x.Id).ToList();
 
+        // Lock every row of the chunk's workers first, not just the manifest rows:
+        // reconciling a later day writes that worker's rows, so it waits for our
+        // commit and the reconciled boundary read below stays valid until then.
+        // SdkSitIds are ints (never free text), so joining them is injection-safe.
+        foreach (var chunk in lines.Select(x => x.SdkSitId).Distinct().Chunk(LockChunk))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "SELECT Id FROM PlanRegistrations WHERE SdkSitId IN (" + string.Join(",", chunk) + ") FOR UPDATE");
+        }
+
         // PlanRegistration has no concurrency token and this runs against a live
         // tenant, so the guard below is enforced under a row lock held to commit.
         // The ids are ints (never free text), so joining them into the IN list is
@@ -209,12 +219,9 @@ public static class ShiftIdRepair
             }
         }
 
-        // Each worker's reconciled-day boundary, read once, after the row lock:
-        // a reconciliation that committed before it is seen, and one that tries
-        // to reconcile a manifest row waits for our commit. Only the manifest's
-        // own rows are locked, so a later day of the same worker reconciled in
-        // the few milliseconds before our commit is not seen; the reconciled
-        // flag itself is set on that later row, never on ours.
+        // Each worker's reconciled-day boundary, read once, after the worker lock:
+        // a reconciliation that committed before it is seen, and one that starts
+        // after it waits for our commit, so the boundary holds until we commit.
         var lockedThrough = new Dictionary<int, DateTime?>();
 
         foreach (var line in lines)
