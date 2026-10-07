@@ -32,6 +32,8 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Build repair tool
       run: dotnet build tools/FlexChainRepair/FlexChainRepair.csproj --configuration Release
+    - name: Build shift-id repair tool
+      run: dotnet build tools/ShiftIdRepair/ShiftIdRepair.csproj --configuration Release
     - name: Unit Tests
       run: dotnet test --no-restore -c Release -v n Microting.TimePlanningBase.Tests/Microting.TimePlanningBase.Tests.csproj
     - name: Notify slack fail
