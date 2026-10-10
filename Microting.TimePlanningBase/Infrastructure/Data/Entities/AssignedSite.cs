@@ -181,7 +181,7 @@ public class AssignedSite: PnBase
     public bool FifthShiftActive { get; set; }
     public bool DaysBackInTimeAllowedEditingEnabled { get; set; }
     public int DaysBackInTimeAllowedEditing { get; set; } = 2;
-    public DateTime ResignedAtDate { get; set; }
+    public DateTime? ResignedAtDate { get; set; }
     public bool UseOneMinuteIntervals { get; set; }
 
     /// <summary>
