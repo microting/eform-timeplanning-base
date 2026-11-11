@@ -309,10 +309,10 @@ public class ShiftIdRepairTests : DbTestFixture
     }
 
     [Test]
-    public void DuplicateIds_AreRejectedBeforeAnythingRuns()
+    public async Task DuplicateIds_AreRejectedBeforeAnythingRuns()
     {
         var line = new ShiftIdRepairLine(1, Worker, D0, 1, BadStart, BadStop, GoodStart, GoodStop, null, null, "x");
-        Assert.ThrowsAsync<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             ShiftIdRepair.ApplyAsync(DbContext, new[] { line, line }, apply: false));
     }
 

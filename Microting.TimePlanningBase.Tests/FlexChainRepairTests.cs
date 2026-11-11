@@ -451,9 +451,9 @@ public class FlexChainRepairTests : DbTestFixture
         };
         var versionsBefore = VersionRows();
 
-        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+        await Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
             Array.Empty<RestoreLine>(), keyedWrong, apply: true));
-        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+        await Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
             Array.Empty<RestoreLine>(), otherWorker, apply: true));
         Assert.That(VersionRows(), Is.EqualTo(versionsBefore));
     }
@@ -470,9 +470,9 @@ public class FlexChainRepairTests : DbTestFixture
         };
         var versionsBefore = VersionRows();
 
-        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+        await Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
             new[] { nanRestore with { RestoreNettoHoursInSeconds = 0 } }, Expect((a, 0, 0.5)), apply: true));
-        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+        await Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
             Array.Empty<RestoreLine>(), infExpected, apply: true));
         Assert.That(VersionRows(), Is.EqualTo(versionsBefore));
     }
@@ -480,9 +480,9 @@ public class FlexChainRepairTests : DbTestFixture
     [TestCase(double.NaN)]
     [TestCase(double.PositiveInfinity)]
     [TestCase(-1.0)]
-    public void NonFiniteTolerance_Throws(double tolerance)
+    public async Task NonFiniteTolerance_Throws(double tolerance)
     {
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => FlexChainRepair.RepairWorkerAsync(DbContext, Worker,
             Array.Empty<RestoreLine>(), new Dictionary<int, ExpectedBalance>(), apply: false, tolerance));
     }
 
@@ -574,32 +574,32 @@ public class FlexChainRepairTests : DbTestFixture
     }
 
     [Test]
-    public void Revert_MixedWorkers_Throws()
+    public async Task Revert_MixedWorkers_Throws()
     {
         var mixed = new[]
         {
             new BeforeImageRow(1, Worker, 1, 1, 8, 28800, 0.5, 1800, 0, 0, 0.5, 1800),
             new BeforeImageRow(2, OtherWorker, 1, 1, 5, 18000, -2.0, -7200, 0.5, 1800, -2.0, -7200)
         };
-        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, mixed, apply: true));
+        await Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, mixed, apply: true));
     }
 
     [Test]
-    public void Revert_DuplicateIds_Throws()
+    public async Task Revert_DuplicateIds_Throws()
     {
         var duplicate = new[]
         {
             new BeforeImageRow(1, Worker, 1, 1, 8, 28800, 0.5, 1800, 0, 0, 0.5, 1800),
             new BeforeImageRow(1, Worker, 2, 2, 9, 32400, 1.5, 5400, 0.5, 1800, 2.0, 7200)
         };
-        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, duplicate, apply: true));
+        await Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, duplicate, apply: true));
     }
 
     [TestCase(double.NaN)]
     [TestCase(double.PositiveInfinity)]
-    public void Revert_NonFiniteValue_Throws(double bad)
+    public async Task Revert_NonFiniteValue_Throws(double bad)
     {
         var image = new[] { new BeforeImageRow(1, Worker, 1, 1, 8, 28800, 0.5, 1800, 0, 0, bad, 1800) };
-        Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, image, apply: true));
+        await Assert.ThrowsAsync<ArgumentException>(() => FlexChainRepair.RevertAsync(DbContext, image, apply: true));
     }
 }

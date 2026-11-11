@@ -476,7 +476,7 @@ namespace Microting.TimePlanningBase.Tests
 
             // The unique constraint should prevent this from being saved
             // Both records have the same SdkSitId, Date, and WorkflowState (Created)
-            Assert.ThrowsAsync<DbUpdateException>(async () => await planRegistration2.Create(DbContext));
+            await Assert.ThrowsAsync<DbUpdateException>(async () => await planRegistration2.Create(DbContext));
         }
 
         [Test]

@@ -137,7 +137,7 @@ public class DeviceTokenUTest : DbTestFixture
 
         // Act & Assert
         // This is the whole point of the re-key: one row per app install.
-        Assert.ThrowsAsync<DbUpdateException>(async () =>
+        await Assert.ThrowsAsync<DbUpdateException>(async () =>
             await NewDeviceToken("install-dup", "tok-second", 211).Create(DbContext).ConfigureAwait(false));
     }
 
@@ -175,7 +175,7 @@ public class DeviceTokenUTest : DbTestFixture
     }
 
     [Test]
-    public void DeviceToken_WithoutInstallationId_DoesThrow()
+    public async Task DeviceToken_WithoutInstallationId_DoesThrow()
     {
         // Act & Assert
         // AppId and InstallationId are [Required]. Nullable reference types are
@@ -183,7 +183,7 @@ public class DeviceTokenUTest : DbTestFixture
         // which is exactly why it is worth pinning.
         var deviceToken = NewDeviceToken(null, "tok-null", 240);
 
-        Assert.ThrowsAsync<DbUpdateException>(async () =>
+        await Assert.ThrowsAsync<DbUpdateException>(async () =>
             await deviceToken.Create(DbContext).ConfigureAwait(false));
     }
 

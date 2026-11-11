@@ -173,7 +173,7 @@ public class AssignedSiteManagingTagUTest : DbTestFixture
         };
 
         // Act & Assert
-        Assert.ThrowsAsync<DbUpdateException>(async () =>
+        await Assert.ThrowsAsync<DbUpdateException>(async () =>
         {
             await managingTag2.Create(DbContext).ConfigureAwait(false);
         });
