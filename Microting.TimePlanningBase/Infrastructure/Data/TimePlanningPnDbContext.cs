@@ -95,6 +95,10 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
         public DbSet<PayrollIntegrationSettingsVersion> PayrollIntegrationSettingsVersions { get; set; }
         public DbSet<DeviceToken> DeviceTokens { get; set; }
         public DbSet<DeviceTokenVersion> DeviceTokenVersions { get; set; }
+        public DbSet<PlanPattern> PlanPatterns { get; set; }
+        public DbSet<PlanPatternVersion> PlanPatternVersions { get; set; }
+        public DbSet<PlanPatternDay> PlanPatternDays { get; set; }
+        public DbSet<PlanPatternDayVersion> PlanPatternDayVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -161,6 +165,12 @@ namespace Microting.TimePlanningBase.Infrastructure.Data
             // Prune-by-token after an FCM permanent failure.
             modelBuilder.Entity<DeviceToken>()
                 .HasIndex(e => e.FcmToken);
+
+            // Lookup of a worker's active pattern. Deliberately NOT unique: every
+            // replaced pattern leaves a removed row for the same AssignedSiteId,
+            // so "one active pattern per worker" is enforced by the writer.
+            modelBuilder.Entity<PlanPattern>()
+                .HasIndex(p => new { p.AssignedSiteId, p.WorkflowState });
 
             modelBuilder.SeedLatest();
         }
