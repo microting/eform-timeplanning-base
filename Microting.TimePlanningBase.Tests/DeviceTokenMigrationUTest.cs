@@ -252,7 +252,7 @@ public class DeviceTokenMigrationUTest
             .ConfigureAwait(false);
 
         // Act
-        Assert.DoesNotThrowAsync(async () =>
+        await Assert.DoesNotThrowAsync(async () =>
             await MigrateToAsync(_dbContext, MigrationUnderTest).ConfigureAwait(false));
 
         // Assert
@@ -298,7 +298,7 @@ public class DeviceTokenMigrationUTest
             .ConfigureAwait(false);
 
         await using var replayContext = NewDbContext();
-        Assert.DoesNotThrowAsync(async () =>
+        await Assert.DoesNotThrowAsync(async () =>
             await MigrateToAsync(replayContext, MigrationUnderTest).ConfigureAwait(false));
 
         // Assert
@@ -379,7 +379,7 @@ public class DeviceTokenMigrationUTest
             .ConfigureAwait(false);
 
         // Act & Assert
-        Assert.ThrowsAsync<MySqlConnector.MySqlException>(async () =>
+        await Assert.ThrowsAsync<MySqlConnector.MySqlException>(async () =>
             await MigrateToAsync(_dbContext, PreviousMigration).ConfigureAwait(false));
 
         // The probe runs before anything is destroyed, so the columns needed to
