@@ -17,7 +17,7 @@ namespace Microting.TimePlanningBase.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -2706,6 +2706,192 @@ namespace Microting.TimePlanningBase.Migrations
                     b.ToTable("PictureSnapshotVersions");
                 });
 
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanPattern", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AnchorDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("AssignedSiteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RotationWeeks")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedSiteId", "WorkflowState");
+
+                    b.ToTable("PlanPatterns");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanPatternDay", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlanPatternId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PlanText")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WeekIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanPatternId");
+
+                    b.ToTable("PlanPatternDays");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanPatternDayVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlanPatternDayId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlanPatternId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PlanText")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WeekIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlanPatternDayVersions");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanPatternVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AnchorDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("AssignedSiteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlanPatternId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RotationWeeks")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlanPatternVersions");
+                });
+
             modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistration", b =>
                 {
                     b.Property<int>("Id")
@@ -4872,6 +5058,28 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Navigation("PlanRegistration");
                 });
 
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanPattern", b =>
+                {
+                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.AssignedSite", "AssignedSite")
+                        .WithMany()
+                        .HasForeignKey("AssignedSiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssignedSite");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanPatternDay", b =>
+                {
+                    b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanPattern", "PlanPattern")
+                        .WithMany("Days")
+                        .HasForeignKey("PlanPatternId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlanPattern");
+                });
+
             modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanRegistration", b =>
                 {
                     b.HasOne("Microting.TimePlanningBase.Infrastructure.Data.Entities.Message", "Message")
@@ -4928,6 +5136,11 @@ namespace Microting.TimePlanningBase.Migrations
                     b.Navigation("DayRules");
 
                     b.Navigation("DayTypeRules");
+                });
+
+            modelBuilder.Entity("Microting.TimePlanningBase.Infrastructure.Data.Entities.PlanPattern", b =>
+                {
+                    b.Navigation("Days");
                 });
 #pragma warning restore 612, 618
         }
