@@ -195,6 +195,52 @@ public class FlexChainUTest
         });
     }
 
+    // 4.1 h is 14760 s, but 4.1 * 3600 evaluates to 14759.999… in double
+    // arithmetic. The override must round to whole seconds, not truncate, or
+    // the day's flex — and every SumFlexEnd after it — comes out 1 s short.
+    [Test]
+    public void CarryChain_OneMinute_OverrideIsRoundedToWholeSecondsNotTruncated()
+    {
+        var pre = new PlanRegistration { SumFlexEnd = 0, SumFlexEndInSeconds = 0 };
+        var pr = new PlanRegistration
+        {
+            NettoHoursInSeconds = 14400, NettoHours = 4.0,
+            NettoHoursOverrideActive = true, NettoHoursOverride = 4.1,
+            PlanHours = 4.0
+        };
+
+        FlexChain.CarryChain(pr, pre, rowIsOneMinute: true, predecessorIsOneMinute: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(pr.FlexInSeconds, Is.EqualTo(360),
+                "override 4.1 h = 14760 s minus plan 14400 s is 360 s of flex");
+            Assert.That(pr.SumFlexEndInSeconds, Is.EqualTo(360),
+                "SumFlexEnd carries the same rounded override");
+        });
+    }
+
+    [Test]
+    public void ApplyNettoFlexChainSecondPrecision_OverrideIsRoundedToWholeSecondsNotTruncated()
+    {
+        var pr = new PlanRegistration
+        {
+            NettoHoursInSeconds = 14400, NettoHours = 4.0,
+            NettoHoursOverrideActive = true, NettoHoursOverride = 4.1,
+            PlanHours = 4.0
+        };
+
+        FlexChain.ApplyNettoFlexChainSecondPrecision(pr, sumFlexStartInSeconds: 0, hasPreTimePlanning: false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(pr.FlexInSeconds, Is.EqualTo(360),
+                "override 4.1 h = 14760 s minus plan 14400 s is 360 s of flex");
+            Assert.That(pr.SumFlexEndInSeconds, Is.EqualTo(360),
+                "SumFlexEnd carries the same rounded override");
+        });
+    }
+
     [Test]
     public void CarryChain_FiveMinute_MatchesTheDecimalChainAndClearsSeconds()
     {

@@ -212,7 +212,7 @@ public static class FlexChain
     /// Caller passes <paramref name="sumFlexStartInSeconds"/> from the previous
     /// day's <c>SumFlexEndInSeconds</c> (or 0 when there is no preceding row).
     /// When the override is active, the override (in hours) is converted to
-    /// seconds via <c>* 3600</c> for the chain.
+    /// seconds (rounded to the nearest second, <c>Math.Round(* 3600)</c>) for the chain.
     /// </summary>
     /// <param name="pr">The plan registration to update in place.</param>
     /// <param name="sumFlexStartInSeconds">
@@ -322,7 +322,7 @@ public static class FlexChain
         //   Flex      = (override ? NettoHoursOverride : NettoHours) - PlanHours
         //   SumFlexEnd uses the same numerator.
         var effectiveNettoSecondsForFlex = pr.NettoHoursOverrideActive
-            ? (long)(pr.NettoHoursOverride * 3600)
+            ? (long)Math.Round(pr.NettoHoursOverride * 3600)
             : nettoSeconds;
 
         var flexSeconds = effectiveNettoSecondsForFlex - planHoursSeconds;
